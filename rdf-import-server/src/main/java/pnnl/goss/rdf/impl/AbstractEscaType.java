@@ -17,7 +17,7 @@ import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 import pnnl.goss.rdf.EscaType;
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 public class AbstractEscaType implements EscaType {
 	private static Logger log = LoggerFactory.getLogger(AbstractEscaType.class);
@@ -228,7 +228,7 @@ public class AbstractEscaType implements EscaType {
 		// Not all of the elements have a name so if they don't then use the mrid
 		// as the name until we have something better.
 		// TODO find something better that is unique than the mrid
-		Literal val = this.literals.get(Esca60Vocab.IDENTIFIEDOBJECT_NAME);
+		Literal val = this.literals.get(EscaVocab.IDENTIFIEDOBJECT_NAME);
 		if (val != null){
 			return val.getString();
 		}

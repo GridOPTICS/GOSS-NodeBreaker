@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.impl.DefaultEscaType;
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 /**
  * The goal of this class is to be able to group differing VoltageLevel classes
@@ -38,8 +38,8 @@ public class VoltageLevelGrouper {
 	public Collection<Double> getVoltageLevels(){
 		List<Double> nominalLevels = new ArrayList<>();
 		for(EscaType t: voltageLevels.values()){
-			for (EscaType b: t.getDirectLinkedResources(Esca60Vocab.BASEVOLTAGE_OBJECT)){
-				nominalLevels.add(Double.parseDouble(b.getLiteralValue(Esca60Vocab.BASEVOLTAGE_NOMINALVOLTAGE).toString()));
+			for (EscaType b: t.getDirectLinkedResources(EscaVocab.BASEVOLTAGE_OBJECT)){
+				nominalLevels.add(Double.parseDouble(b.getLiteralValue(EscaVocab.BASEVOLTAGE_NOMINALVOLTAGE).toString()));
 			}
 		}
 		return Collections.unmodifiableCollection(nominalLevels);

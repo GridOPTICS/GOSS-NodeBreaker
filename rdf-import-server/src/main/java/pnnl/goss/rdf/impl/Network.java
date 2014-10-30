@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -55,7 +55,7 @@ public class Network {
 		try {
 			
 			// Preload connectivity nodes and processable items with nodes and terminals.
-			for(EscaType t: escaTypes.getByResourceType(Esca60Vocab.CONNECTIVITYNODE_OBJECT)){
+			for(EscaType t: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)){
 				ConnectivityNode cn = (ConnectivityNode)t;
 				connectivityNodes.add(cn);
 				processableItems.add(cn);			
@@ -88,11 +88,11 @@ public class Network {
 	 */
 	private void buildTopology() throws InvalidArgumentException{
 		
-		Resource terminalRes = Esca60Vocab.TERMINAL_OBJECT;
-		Resource connectivityNodeRes = Esca60Vocab.CONNECTIVITYNODE_OBJECT;
-		Resource breakerRes = Esca60Vocab.BREAKER_OBJECT;
+		Resource terminalRes = EscaVocab.TERMINAL_OBJECT;
+		Resource connectivityNodeRes = EscaVocab.CONNECTIVITYNODE_OBJECT;
+		Resource breakerRes = EscaVocab.BREAKER_OBJECT;
 		
-		Property switchOpenProp = Esca60Vocab.SWITCH_NORMALOPEN;
+		Property switchOpenProp = EscaVocab.SWITCH_NORMALOPEN;
 		
 		
 		while (processableItems.hasNextUnproccessed(connectivityNodeRes)){
@@ -260,8 +260,8 @@ public class Network {
 	}
 	
 	private static void debugStep(String message, EscaType escaType){
-		if (escaType.getLiteralValue(Esca60Vocab.IDENTIFIEDOBJECT_PATHNAME) != null){
-			log.debug(message+" "+escaType.getDataType()+ " ("+escaType.getMrid()+ ") ["+escaType.getLiteralValue(Esca60Vocab.IDENTIFIEDOBJECT_PATHNAME)+ "]");
+		if (escaType.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME) != null){
+			log.debug(message+" "+escaType.getDataType()+ " ("+escaType.getMrid()+ ") ["+escaType.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME)+ "]");
 			//System.out.println(message+" "+escaType.getDataType()+ " ("+escaType.getMrid()+ ") ["+escaType.getLiteralValue(Esca60Vocab.IDENTIFIEDOBJECT_PATHNAME)+ "]");
 		}
 		else{

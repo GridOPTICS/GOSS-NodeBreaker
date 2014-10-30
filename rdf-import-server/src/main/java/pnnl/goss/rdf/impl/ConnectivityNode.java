@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 public class ConnectivityNode extends AbstractEscaType {
 
@@ -38,12 +38,12 @@ public class ConnectivityNode extends AbstractEscaType {
 	private void setupProperties(){
 		if(baseVoltage == null){
 			for(EscaType t: getDirectLinks()){
-				if (t.isResourceType(Esca60Vocab.VOLTAGELEVEL_OBJECT)){
+				if (t.isResourceType(EscaVocab.VOLTAGELEVEL_OBJECT)){
 					voltageLevel = t;
-					baseVoltage = voltageLevel.getLink(Esca60Vocab.VOLTAGELEVEL_BASEVOLTAGE);
-					baseVoltageDbl = baseVoltage.getLiteralValue(Esca60Vocab.BASEVOLTAGE_NOMINALVOLTAGE).getDouble();
+					baseVoltage = voltageLevel.getLink(EscaVocab.VOLTAGELEVEL_BASEVOLTAGE);
+					baseVoltageDbl = baseVoltage.getLiteralValue(EscaVocab.BASEVOLTAGE_NOMINALVOLTAGE).getDouble();
 					if (voltageLevel != null){
-						substation = voltageLevel.getLink(Esca60Vocab.VOLTAGELEVEL_MEMBEROF_SUBSTATION);
+						substation = voltageLevel.getLink(EscaVocab.VOLTAGELEVEL_MEMBEROF_SUBSTATION);
 					}
 				}
 			}
@@ -58,7 +58,7 @@ public class ConnectivityNode extends AbstractEscaType {
 	public Terminals getTerminals(){
 		if(terminals == null){
 			terminals = new Terminals();
-			for(EscaType t: this.getRefersToMe(Esca60Vocab.TERMINAL_OBJECT)) {
+			for(EscaType t: this.getRefersToMe(EscaVocab.TERMINAL_OBJECT)) {
 				Terminal tt = (Terminal)t;
 				try {
 					tt.setConnectivityNode(this);

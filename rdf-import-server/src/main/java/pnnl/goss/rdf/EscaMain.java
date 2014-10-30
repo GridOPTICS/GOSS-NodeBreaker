@@ -19,7 +19,7 @@ import pnnl.goss.rdf.impl.EscaTypes;
 import pnnl.goss.rdf.impl.Network;
 import pnnl.goss.rdf.impl.Terminal;
 import pnnl.goss.rdf.impl.TopologicalNode;
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 //import pnnl.goss.topology.nodebreaker.dao.NodeBreakerDao;
 
 
@@ -95,7 +95,7 @@ public class EscaMain {
 	
 	private static ConnectivityNodes getConnectivityNodes(EscaTypes types){
 		ConnectivityNodes nodes = new ConnectivityNodes();
-		for(EscaType t: types.getByResourceType(Esca60Vocab.CONNECTIVITYNODE_OBJECT)){
+		for(EscaType t: types.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)){
 			nodes.add((ConnectivityNode)t);
 			
 		}
@@ -158,12 +158,12 @@ public class EscaMain {
 		
 		
 				
-		System.out.println("Breaker count: "+ types.where(Esca60Vocab.BREAKER_OBJECT).size());
-		System.out.println("Terminal count: "+types.where(Esca60Vocab.TERMINAL_OBJECT).size());
-		System.out.println("Connectivity Node count: "+types.where(Esca60Vocab.CONNECTIVITYNODE_OBJECT).size());
-		System.out.println("Substation count: "+types.where(Esca60Vocab.SUBSTATION_OBJECT).size());
-		System.out.println("Voltage Level count: "+types.where(Esca60Vocab.VOLTAGELEVEL_OBJECT).size());
-		System.out.println("BaseVoltage: "+types.where(Esca60Vocab.BASEVOLTAGE_OBJECT).size());
+		System.out.println("Breaker count: "+ types.where(EscaVocab.BREAKER_OBJECT).size());
+		System.out.println("Terminal count: "+types.where(EscaVocab.TERMINAL_OBJECT).size());
+		System.out.println("Connectivity Node count: "+types.where(EscaVocab.CONNECTIVITYNODE_OBJECT).size());
+		System.out.println("Substation count: "+types.where(EscaVocab.SUBSTATION_OBJECT).size());
+		System.out.println("Voltage Level count: "+types.where(EscaVocab.VOLTAGELEVEL_OBJECT).size());
+		System.out.println("BaseVoltage: "+types.where(EscaVocab.BASEVOLTAGE_OBJECT).size());
 		
 		
 //		Collection<EscaType> substations = mainProg.getObjectType(Esca60Vocab.SUBSTATION_OBJECT);

@@ -8,7 +8,7 @@ import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.util.FileManager;
 
-public class Esca60Vocab {
+public class EscaVocab {
 
 	protected static final String uri ="http://fpgi.pnnl.gov/esca60";
 

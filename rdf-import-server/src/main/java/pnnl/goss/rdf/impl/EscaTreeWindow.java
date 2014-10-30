@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
@@ -185,7 +185,7 @@ public class EscaTreeWindow {
 		}
 
 		if (isCimFile) {
-			rdfModel = Esca60Vocab.readModel(file.getAbsoluteFile());
+			rdfModel = EscaVocab.readModel(file.getAbsoluteFile());
 		} else {
 			throw new InvalidArgumentException("Unsupported file type");
 		}
@@ -232,7 +232,7 @@ public class EscaTreeWindow {
 	}
 
 	private boolean hasTypePredicate(Resource subject) {
-		return subject.hasProperty(Esca60Vocab.TYPE);
+		return subject.hasProperty(EscaVocab.TYPE);
 	}
 
 	private List<Resource> findRdfType(Resource resource) {
@@ -250,7 +250,7 @@ public class EscaTreeWindow {
 	}
 
 	private List<Resource> findSubstations() {
-		return findRdfType(Esca60Vocab.TERMINAL_OBJECT); // .SUBSTATION_OBJECT);
+		return findRdfType(EscaVocab.TERMINAL_OBJECT); // .SUBSTATION_OBJECT);
 		// List<Resource> resources = new ArrayList<Resource>();
 		// StmtIterator stmtIter = rdfModel.listStatements(new
 		// SimpleSelector(null, RDF.type, Esca60Vocab.SUBSTATION_OBJECT));

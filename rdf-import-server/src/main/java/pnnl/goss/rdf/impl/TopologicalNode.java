@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 /**
  * For a detailed substation model a TopologicalNode is a set of 

@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -22,7 +22,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
 /**
  * An EscaType is a generic class for containing information about the different
  * rdf classes.  Each EscaType contains a unique mrid.  All {@link Resource}  are
- * defined in {@link Esca60Vocab}.
+ * defined in {@link EscaVocab}.
  * 
  * @author Craig Allwardt
  *
@@ -50,8 +50,8 @@ public class DefaultEscaType extends AbstractEscaType {
 		AbstractEscaType escaType = null;
 
 		// Must match up with the order in the switch statement below.
-		String[] dataTypeList = {Esca60Vocab.CONNECTIVITYNODE_OBJECT.getLocalName(),
-				Esca60Vocab.TERMINAL_OBJECT.getLocalName()
+		String[] dataTypeList = {EscaVocab.CONNECTIVITYNODE_OBJECT.getLocalName(),
+				EscaVocab.TERMINAL_OBJECT.getLocalName()
 		};
 		
 		int i= 0;
