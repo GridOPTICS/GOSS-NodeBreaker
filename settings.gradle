@@ -1,0 +1,14 @@
+// These are the properties that are in this feature set.
+include 'rdf-import-server'
+        
+
+rootProject.name = 'node-breaker'
+
+// loop over the sub-projects declared above.
+rootProject.children.each {
+    // The build file for each of the children is the original name.gradle
+    it.buildFileName = it.name + '.gradle'
+}
+
+
+
