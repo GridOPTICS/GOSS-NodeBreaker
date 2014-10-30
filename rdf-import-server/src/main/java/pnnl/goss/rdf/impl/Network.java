@@ -54,7 +54,7 @@ public class Network {
 		this.escaTypes = escaTypes;
 		try {
 			
-			// Preload connectivity nodes and processable items with nodes and terminals.
+			// Preload connectivity nodes
 			for(EscaType t: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)){
 				ConnectivityNode cn = (ConnectivityNode)t;
 				connectivityNodes.add(cn);
@@ -108,11 +108,12 @@ public class Network {
 			debugStep("Creating new topology node " + topologicalNode.getIdentifier());
 
 			// Add the connectivity node to the topological node.
-			topologicalNode.addConnectivityNode(processingNode);
+			topologicalNode.getConnectivityNodes().add(processingNode);
+			processableItems.setProcessed(processingNode);
 			
 			// Add all of the terminals connected to the currently processing node.
 			processableItems.addItems(processingNode.getTerminals().toEscaTypeCollection());
-			
+						
 			while(processableItems.hasNextUnproccessed(terminalRes)) {
 				// Get a terminal to process
 				Terminal processingTerminal = (Terminal)processableItems.nextUnProcessed(terminalRes);
@@ -138,7 +139,7 @@ public class Network {
 						ConnectivityNode node = (ConnectivityNode)eq;
 						processableItems.setProcessed(node);
 						processableItems.addItems(node.getTerminals().toEscaTypeCollection());
-						topologicalNode.addConnectivityNode(node);
+						topologicalNode.getConnectivityNodes().add(node);
 					}
 					debugStep("Equipment: ", eq);
 				}
@@ -196,7 +197,7 @@ public class Network {
 				
 			}
 			
-			processableItems.setProcessed(processingNode);
+			
 		}
 		
 		

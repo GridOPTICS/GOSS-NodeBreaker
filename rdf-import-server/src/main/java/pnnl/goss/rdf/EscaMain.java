@@ -20,14 +20,6 @@ import pnnl.goss.rdf.impl.Network;
 import pnnl.goss.rdf.impl.Terminal;
 import pnnl.goss.rdf.impl.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
-//import pnnl.goss.topology.nodebreaker.dao.NodeBreakerDao;
-
-
-
-
-
-
-
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
@@ -116,7 +108,7 @@ public class EscaMain {
 		for(TopologicalNode n: network.getTopologicalNodes()){
 			log.debug("TN: "+n.getIdentifier());
 			
-			EscaType vl = n.getVoltageLevelRes();
+			EscaType vl = n.getVoltageLevel();
 			
 			if (vl != null){
 				log.debug("\tVL <"+vl.getMrid()+"> Direct Links");
@@ -157,7 +149,7 @@ public class EscaMain {
 		}
 		
 		
-				
+		System.out.println("Topology Nodes: "+ network.getTopologicalNodes().size());
 		System.out.println("Breaker count: "+ types.where(EscaVocab.BREAKER_OBJECT).size());
 		System.out.println("Terminal count: "+types.where(EscaVocab.TERMINAL_OBJECT).size());
 		System.out.println("Connectivity Node count: "+types.where(EscaVocab.CONNECTIVITYNODE_OBJECT).size());
