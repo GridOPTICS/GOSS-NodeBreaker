@@ -8,7 +8,7 @@ import java.util.List;
 
 import pnnl.goss.rdf.impl.DefaultEscaType;
 import pnnl.goss.rdf.impl.EscaTypes;
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Resource;
 
@@ -24,10 +24,10 @@ public class EscaTypeFixtures {
 	private static List<EscaType> createEscaTypes(Resource res, String[] mrids){
 		List<EscaType> types = new ArrayList<>();
 		
-		for(int i=0; i<mrids.length; i++){
-			EscaType t=new DefaultEscaType(res, res.getLocalName(), mrids[i]);
-			types.add(t);
-		}
+//		for(int i=0; i<mrids.length; i++){
+//			//EscaType t= DefaultEscaType.construct(resource,, mrid)new DefaultEscaType(res, res.getLocalName(), mrids[i]);
+//			types.add(t);
+//		}
 		
 		return types;
 	}
@@ -76,19 +76,19 @@ public class EscaTypeFixtures {
 		when(bRes.getLocalName()).thenReturn("Breaker");
 		// ConnectivityNode Resource
 		Resource cnRes = mock(Resource.class);
-		when(cnRes.getLocalName()).thenReturn(Esca60Vocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
+		when(cnRes.getLocalName()).thenReturn(EscaVocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
 		// VoltageLevel Resource
 		Resource vlRes = mock(Resource.class);
 		when(vlRes.getLocalName()).thenReturn("VoltageLevel");
 		
 		// Link the terminals to the connectivity node directly
-		addDirectLink(types, "_597196580683024629_t", "_3705119779910468614", Esca60Vocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
-		addDirectLink(types, "_5986050453675674768",  "_3705119779910468614", Esca60Vocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
-		addDirectLink(types, "_8231210467179973538",  "_3705119779910468614", Esca60Vocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
-		addDirectLink(types, "_4963536783062858854",  "_3705119779910468614", Esca60Vocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
+		addDirectLink(types, "_597196580683024629_t", "_3705119779910468614", EscaVocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
+		addDirectLink(types, "_5986050453675674768",  "_3705119779910468614", EscaVocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
+		addDirectLink(types, "_8231210467179973538",  "_3705119779910468614", EscaVocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
+		addDirectLink(types, "_4963536783062858854",  "_3705119779910468614", EscaVocab.TERMINAL_CONNECTIVITYNODE.getLocalName());
 		
 		// Link from terminal to the breaker
-		addDirectLink(types, "_5986050453675674768", "_8425939105332198299", Esca60Vocab.TERMINAL_CONDUCTINGEQUIPMENT.getLocalName());
+		addDirectLink(types, "_5986050453675674768", "_8425939105332198299", EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT.getLocalName());
 				
 		
 		addToEscaTypes(types, createEscaTypes(tRes, terminals));

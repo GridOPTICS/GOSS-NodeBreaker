@@ -22,7 +22,7 @@ public class EscaTypeTests {
 		when(linked.getResource()).thenReturn(res);
 		when(res.getLocalName()).thenReturn("Terminal");
 								
-		EscaType original = new DefaultEscaType(res, "Terminal", "M1");
+		EscaType original = DefaultEscaType.construct(res,  "Terminal", "M1");
 		original.addDirectLink("property", linked);
 		
 		verify(linked, atLeastOnce()).addRefersToMe(original);

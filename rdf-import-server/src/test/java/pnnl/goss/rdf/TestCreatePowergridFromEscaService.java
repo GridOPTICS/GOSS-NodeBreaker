@@ -9,7 +9,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -22,7 +22,7 @@ public class TestCreatePowergridFromEscaService {
 	public void setupClass(){
 		URL url = Thread.currentThread().getContextClassLoader().getResource("esca60_cim.xml");
 		esca60File = new File(url.getPath());
-		rdfModel = Esca60Vocab.readModel(esca60File.getAbsoluteFile());
+		rdfModel = EscaVocab.readModel(esca60File.getAbsoluteFile());
 	}
 	
 	@Before

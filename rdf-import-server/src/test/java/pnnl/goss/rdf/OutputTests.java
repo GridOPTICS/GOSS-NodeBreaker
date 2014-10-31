@@ -3,7 +3,7 @@ package pnnl.goss.rdf;
 import java.io.File;
 import java.net.URL;
 
-import pnnl.goss.rdf.server.Esca60Vocab;
+import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -24,7 +24,7 @@ public class OutputTests {
 		File file = new File(url.getPath());
 
 		// creates a new, empty in-memory model
-		Model m = Esca60Vocab.readModel(file.getAbsoluteFile()); // ModelFactory.createDefaultModel();
+		Model m = EscaVocab.readModel(file.getAbsoluteFile()); // ModelFactory.createDefaultModel();
 
 		
 /*		StmtIterator iter1 = m.listStatements();
@@ -36,7 +36,7 @@ public class OutputTests {
 			System.out.println(subject.getURI());
 		}*/
 		
-		StmtIterator stmtIter = m.listStatements(new SimpleSelector(null, RDF.type, Esca60Vocab.SUBSTATION_OBJECT));
+		StmtIterator stmtIter = m.listStatements(new SimpleSelector(null, RDF.type, EscaVocab.SUBSTATION_OBJECT));
 		
 		while(stmtIter.hasNext()){
 			Statement stmt = stmtIter.nextStatement();
@@ -53,7 +53,7 @@ public class OutputTests {
 		
 		if(true)return;
 		
-		ResIterator pathNameIter = m.listSubjectsWithProperty(Esca60Vocab.IDENTIFIEDOBJECT_PATHNAME);
+		ResIterator pathNameIter = m.listSubjectsWithProperty(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
 		// Because subjects of statements are Resources, the method returned a ResIterator
 		while (pathNameIter.hasNext()) {
 
@@ -73,7 +73,7 @@ public class OutputTests {
 		
 
 		
-/*		StmtIterator iter = m.listStatements(null, RDF.type, Esca60Vocab.TerminalResource); // "http://iec.ch/TC57/2007/CIM-schema-cim12#Line"); // Esca60Vocab.LineResource); // null, null);
+/*		StmtIterator iter = m.listStatements(null, RDF.type, EscaVocab.TerminalResource); // "http://iec.ch/TC57/2007/CIM-schema-cim12#Line"); // EscaVocab.LineResource); // null, null);
 
 		while (iter.hasNext()) {
 		    String entityID = iter.next().getSubject().getURI();
