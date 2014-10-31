@@ -11,7 +11,7 @@ import pnnl.goss.rdf.server.EscaVocab;
 
 public class Terminal extends AbstractEscaType {
 	
-	private ConnectivityNode connectivityNode;
+	ConnectivityNode connectivityNode;
 	private static Logger log = LoggerFactory.getLogger(Terminal.class);
 	
 	public void setConnectivityNode(ConnectivityNode node) throws InvalidObjectException{
