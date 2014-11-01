@@ -1,5 +1,6 @@
 package pnnl.goss.rdf.impl
 
+import groovy.transform.EqualsAndHashCode;
 import pnnl.goss.rdf.EscaType
 import pnnl.goss.rdf.Terminal
 import pnnl.goss.rdf.TopologicalNode
@@ -7,7 +8,7 @@ import pnnl.goss.rdf.server.EscaVocab
 
 import com.hp.hpl.jena.rdf.model.Resource
 
-
+@EqualsAndHashCode
 class TopologicalNodeImpl implements TopologicalNode{
 	
 	EscaType substation;

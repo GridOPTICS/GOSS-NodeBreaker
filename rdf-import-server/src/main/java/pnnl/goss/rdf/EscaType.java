@@ -3,8 +3,6 @@ package pnnl.goss.rdf;
 import java.util.Collection;
 import java.util.Map;
 
-import pnnl.goss.rdf.impl.DefaultEscaType;
-
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
