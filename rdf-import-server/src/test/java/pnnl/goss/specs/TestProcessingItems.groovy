@@ -49,8 +49,33 @@ class TestProcessingItems  extends Specification{
 		processingItems.processItem(items.pop())
 		processingItems.processItem(items.pop())
 		then: 'All items should be processed'
-		processingItems.areAllProcessed() == true
+		processingItems.areAllProcessed() == true			
+	}
+	
+	def "Testing pop of item"() {
+		given: "A processing item with two items"
+		ProcessingItems processingItems = new ProcessingItems();
+		def items = [DefaultEscaType.construct(null, 'Terminal', 'm1'),
+			DefaultEscaType.construct(null, 'Terminal', 'm2')]
+		processingItems.addItemsToProcess(items)
 		
+		when: "nextItem is called"
+		def item = processingItems.nextItem()
+		assert item != null
+		and: "item is marked as processed"
+		processingItems.processItem(item)
+		then: 'A call to next gives a different item'
+		def item2 = processingItems.nextItem() 
+		assert item2 != item
+		and: 'Are all processed is false'
+		assert processingItems.areAllProcessed() == false
+		when: "processing second item"
+		processingItems.processItem(item2)
+		then: 'All items are processed'
+		assert processingItems.areAllProcessed() == true
+		and: 'A call to next item returns null'
+		assert processingItems.nextItem() == null
 		
+		assert processingItems.nextItem() == null
 	}
 }

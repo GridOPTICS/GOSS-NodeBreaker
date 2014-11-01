@@ -21,13 +21,17 @@ public class ProcessableItems extends HashMap<EscaType, Boolean> {
 	private Map<String, Set<EscaType>> processedTypes = new HashMap<>();
 
 	public void add(EscaType item){
-		this.put(item, false);				
+		if (!containsKey(item)){
+			log.debug("add: Adding item type: " + item.getDataType()+ " <"+item.getMrid()+">");
+			this.put(item, false);
+		}
 	}
 	
 	public void addItems(Collection<EscaType> items){
 		// Only add items that haven't already been processed.
 		for(EscaType item: items){
 			if (!containsKey(item)){
+				log.debug("addItems: Adding item type: " + item.getDataType()+ " <"+item.getMrid()+">");
 				add(item);
 			}
 		}
