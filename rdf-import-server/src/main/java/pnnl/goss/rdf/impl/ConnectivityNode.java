@@ -1,6 +1,9 @@
 package pnnl.goss.rdf.impl;
 
 import java.io.InvalidObjectException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +13,7 @@ import pnnl.goss.rdf.server.EscaVocab;
 
 public class ConnectivityNode extends AbstractEscaType {
 
-	private Terminals terminals;
+	private Set<Terminal> terminals;
 	private static Logger log = LoggerFactory.getLogger(ConnectivityNode.class);
 	private EscaType voltageLevel;
 	private EscaType baseVoltage;
@@ -55,9 +58,9 @@ public class ConnectivityNode extends AbstractEscaType {
 	 * 
 	 * @return set of terminals connected to this node.
 	 */
-	public Terminals getTerminals(){
+	public Set<Terminal> getTerminals(){
 		if(terminals == null){
-			terminals = new Terminals();
+			terminals = new HashSet<Terminal>();
 			for(EscaType t: this.getRefersToMe(EscaVocab.TERMINAL_OBJECT)) {
 				Terminal tt = (Terminal)t;
 				try {
@@ -71,5 +74,10 @@ public class ConnectivityNode extends AbstractEscaType {
 		}
 		
 		return terminals;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Set<EscaType> getTerminalsAsEscaType(){
+		return (Set) getTerminals(); // Collections.unmodifiableSet((Set<EscaType>) getTerminals());
 	}
 }
