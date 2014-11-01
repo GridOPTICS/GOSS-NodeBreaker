@@ -3,6 +3,8 @@ package pnnl.goss.rdf.impl
 import java.beans.PropertyChangeListener
 import java.util.HashMap;
 
+import com.hp.hpl.jena.tdb.base.record.Record;
+
 import pnnl.goss.rdf.EscaType;
 
 /**
@@ -21,10 +23,10 @@ class ProcessingItems {
 	
 	def areAllProcessed(){
 		// if all are processed then all should not be false			
-		return record.values().find({it == false}) == null
+		return record.values().every({it == true})
 	}
 	
-	def addItemsToProcess(List<EscaType> items){
+	def addItemsToProcess(Collection<EscaType> items){
 		items.each {addItemToProcess(it)}
 	}
 	
@@ -43,5 +45,7 @@ class ProcessingItems {
 		return record[item] == true
 	}
 	
-
+	def nextItem() {
+		return record.find { it.value == false }?.key				
+	}
 }
