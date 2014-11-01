@@ -13,11 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.impl.ConnectivityNode;
-import pnnl.goss.rdf.impl.ConnectivityNodes;
 import pnnl.goss.rdf.impl.EscaTreeWindow;
 import pnnl.goss.rdf.impl.EscaTypes;
 import pnnl.goss.rdf.impl.Network;
 import pnnl.goss.rdf.impl.Terminal;
+import pnnl.goss.rdf.impl.TopologicalBranch;
+import pnnl.goss.rdf.impl.TopologicalIsland;
 import pnnl.goss.rdf.impl.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
 
@@ -84,16 +85,17 @@ public class EscaMain {
 		}
 		
 	}
-	
-	private static ConnectivityNodes getConnectivityNodes(EscaTypes types){
-		ConnectivityNodes nodes = new ConnectivityNodes();
-		for(EscaType t: types.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)){
-			nodes.add((ConnectivityNode)t);
-			
+
+	public static void logLinkAndReferring(EscaType type){
+		log.debug("\tDirectly Linked "+type.toString());
+		for(EscaType d: type.getDirectLinks()){
+			log.debug("\t\t"+d.toString());
 		}
-		return nodes;
+		log.debug("\tReferred To: "+type.toString());
+		for(EscaType d: type.getRefersToMe()){
+			log.debug("\t\t"+d.toString());
+		}
 	}
-	//private static NodeBreakerDao nodeBreakerDao = new NodeBreakerDao(PERSISTANCE_UNIT);
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -103,12 +105,28 @@ public class EscaMain {
 		
 		Network network = new Network(types);
 		
+		int i=1;
+		for (TopologicalIsland island: network.getTopologicalIslands()){
+			log.debug("Island: " + i++);
+			log.debug("Branches");
+			for(TopologicalBranch br: island.getTopologicalBranchs()){
+				log.debug("\tfrom: "+ br.getTerminalFrom() + " " + br.getTerminalTo());
+			}
+			log.debug("Nodes");
+			for(TopologicalNode tn: island.getTopologicalNodes()){
+				log.debug("\t"+tn.getIdentifier());
+			}
+		}
+		
 		log.debug("# Topo Nodes: "+ network.getTopologicalNodes().size());
 		
 		for (TopologicalNode n: network.getTopologicalNodes()){
-			n.initialize();
 			
-			log.debug(n.getIdentifier()+ " voltage: "+n.getBaseVoltage());
+//			log.debug(n.getIdentifier()+ " voltage: "+n.getBaseVoltage());
+//			for (EscaType t: n.getTerminals()){
+//				logLinkAndReferring(t);
+//			}
+			
 //			EscaType vl = n.getVoltageLevel();
 //			if (vl != null){
 //				for (EscaType eq: vl.getDirectLinks()){
@@ -118,14 +136,14 @@ public class EscaMain {
 //			else{
 //				log.debug("Dead Bus!");
 //			}
-			if (n.getSubstation() != null){
-				for (EscaType s: n.getSubstation().getDirectLinks()){
-					log.debug("\tlinkto: "+ s);
-				}
-				for (EscaType s: n.getSubstation().getRefersToMe()){
-					log.debug("\treffrom: "+ s);
-				}
-			}
+//			if (n.getSubstation() != null){
+//				for (EscaType s: n.getSubstation().getDirectLinks()){
+//					log.debug("\tlinkto: "+ s);
+//				}
+//				for (EscaType s: n.getSubstation().getRefersToMe()){
+//					log.debug("\treffrom: "+ s);
+//				}
+//			}
 //			if (n.getBreakers() != null) {
 //				for (EscaType b: n.getBreakers()){
 //					for(EscaType dir: b.getDirectLinks()){
