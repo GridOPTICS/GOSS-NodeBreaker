@@ -12,6 +12,7 @@ import groovy.transform.EqualsAndHashCode
 class TopologicalNode {
 	
 	EscaType substation;
+	
 	boolean hasBeenInitialized = false;
 	protected void setHasBeenInitialized(v) {this.hasBeenInitialized = v}
 	
@@ -20,6 +21,9 @@ class TopologicalNode {
 	
 	EscaType baseVoltageEsca;
 	protected void setBaseVoltageEsca(v){this.baseVoltageEsca = v}
+	
+	Set<ConnectivityNode> connectivityNodes = new HashSet<ConnectivityNode>();
+	protected void setConnectivityNodes(Set<ConnectivityNodes> nodes) {this.connectivityNodes = nodes}
 	
 	Set<EscaType> breakers = new HashSet<EscaType>();
 	protected void setBreakers(v){this.breakers = breakers}
@@ -34,19 +38,15 @@ class TopologicalNode {
 	Set<EscaType> shunts  = new HashSet<EscaType>()
 	protected void setShunts(Set<EscaType> shunts) {this.shunts = shunts}
 	
+	Set<Terminal> terminals = new HashSet<Terminal>()
+	protected void setTerminals(Set<Terminal> terminals) {this.terminals = terminals}
+	
 	Set<EscaType> transformers = new HashSet<EscaType>();
 	protected void setTransformers(Set<EscaType> transformers) {this.transformers = transformers}
 	
 	EscaType voltageLevel;
 	protected void setVoltageLevel(EscaType item) {this.voltageLevel = item}
 	
-	Set<ConnectivityNode> connectivityNodes = new HashSet<ConnectivityNode>();
-	protected void setConnectivityNodes(Set<ConnectivityNodes> nodes) {this.connectivityNodes = nodes}
-	
-	
-	//ConnectivityNodes connectivityNodes = new ConnectivityNodes();
-	//Terminals terminals = new Terminals();
-	Set<Terminal> terminals = new HashSet<Terminal>();
 
 	def initialize(){
 
@@ -55,11 +55,14 @@ class TopologicalNode {
 		connectivityNodes.each {
 			if (this.voltageLevel == null){
 				this.voltageLevel = it.getDirectLinks()?.find({it.isResourceType(EscaVocab.VOLTAGELEVEL_OBJECT)})
+				return;
 			}
 		}
 		
+		/**
+		 * VoltageLevels only link to substation and base voltage objects.
+		 */
 		voltageLevel?.getDirectLinks()?.each {
-			
 			if (it.isResourceType(EscaVocab.SUBSTATION_OBJECT)){
 				substation = it
 			}
@@ -86,6 +89,9 @@ class TopologicalNode {
 			else if (it.isResourceType(EscaVocab.BREAKER_OBJECT)){
 				breakers.add(it)
 			}
+			else if (it.isResourceType(EscaVocab.TERMINAL_OBJECT)){
+				terminals.add(it)
+			}
 			else{
 				def printIt = true
 				noPrint.each{ other->
@@ -94,7 +100,7 @@ class TopologicalNode {
 					}
 				}
 				
-				//if (printIt) println "Unadded: "+ it
+				if (printIt) printf "Unadded: %s\n", it.toString()
 			}
 		}
 		 
@@ -122,4 +128,9 @@ class TopologicalNode {
 //		}	
 		hasBeenInitialized = true
 	}	
+	
+	@Override
+	public String toString() {
+		return this.identifier;
+	}
 }

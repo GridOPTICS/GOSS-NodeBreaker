@@ -29,10 +29,10 @@ public class Network {
 	 * Full network of esca types.
 	 */
 	private EscaTypes escaTypes;
-	private Set<TopologicalNode> topoNodes = new HashSet<TopologicalNode>();
+	private Set<TopologicalNode> topologicalNodes = new HashSet<TopologicalNode>();
 	
 	private ProcessingItems connectivityItems = new ProcessingItems();
-	
+	private ProcessingItems topologicalNodeItems = new ProcessingItems();
 
 	public Network(EscaTypes escaTypes){
 		log.debug("Creating nework with: " + escaTypes.keySet().size() + " elements.");
@@ -42,10 +42,32 @@ public class Network {
 			// Preload connectivity nodes
 			connectivityItems.addItemsToProcess(escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT));
 			
+			// Build TopologicalNodes up
 			this.buildTopology();
+			
+			// Initialize all of the topo nodes so that the properties are properly populated.
+			for(TopologicalNode n: topologicalNodes) n.initialize();
+			
+			// Build TopologicalIslands, TopologicalBranches up.
+			topologicalNodeItems.addItemsToProcess(topologicalNodes);
+			this.buildTopoIslands();
+			
 		} catch (InvalidArgumentException e) {
 			log.error("Error building topology", e);
 		}
+	}
+	
+	private void buildTopoIslands(){
+		
+		TopologicalNode processingNode = (TopologicalNode) topologicalNodeItems.nextItem();
+		while(processingNode != null){
+			
+			log.debug(processingNode.toString());
+			topologicalNodeItems.processItem(processingNode);
+			processingNode = (TopologicalNode) topologicalNodeItems.nextItem();
+		}
+		
+		
 	}
 	
 	/**
@@ -83,8 +105,8 @@ public class Network {
 			
 			// Define a new node/bus
 			TopologicalNode topologicalNode = new TopologicalNode();
-			topoNodes.add(topologicalNode);
-			topologicalNode.setIdentifier("T"+topoNodes.size());
+			topologicalNodes.add(topologicalNode);
+			topologicalNode.setIdentifier("T"+topologicalNodes.size());
 			debugStep("Creating new topology node " + topologicalNode.getIdentifier());
 
 			// Add the connectivity node to the topological node.
@@ -222,6 +244,6 @@ public class Network {
 	}
 
 	public Set<TopologicalNode> getTopologicalNodes() {
-		return topoNodes;
+		return topologicalNodes;
 	}
 }

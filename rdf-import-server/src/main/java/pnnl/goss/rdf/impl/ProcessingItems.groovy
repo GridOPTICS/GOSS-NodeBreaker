@@ -19,29 +19,31 @@ class ProcessingItems {
 	/**
 	 * Keep a record of what has/hasn't been processed.
 	 */
-	Map<EscaType, Boolean> record = new HashMap<EscaType, Boolean>();
+	Map<Object, Boolean> record = new HashMap<Object, Boolean>();
+	private void setRecord(Map record){this.record = record}
+	private Map getRecord(){return record}
 	
 	def areAllProcessed(){
 		// if all are processed then all should not be false			
 		return record.values().every({it == true})
 	}
 	
-	def addItemsToProcess(Collection<EscaType> items){
+	def addItemsToProcess(Collection items){
 		items.each {addItemToProcess(it)}
 	}
 	
 	// Add an item to the processable elemnts.
-	def addItemToProcess(EscaType item){
+	def addItemToProcess(Object item){
 		if (!record.containsKey(item)){
 			record.put(item, false)
 		}
 	}
 	
-	def processItem(EscaType item) {
+	def processItem(Object item) {
 		record[item] = true
 	}
 	
-	def wasProcessed(EscaType item) {
+	def wasProcessed(Object item) {
 		return record[item] == true
 	}
 	
