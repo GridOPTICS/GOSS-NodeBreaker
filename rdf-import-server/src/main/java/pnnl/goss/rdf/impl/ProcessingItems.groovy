@@ -43,7 +43,7 @@ class ProcessingItems {
 		record[item] = true
 	}
 	
-	def wasProcessed(Object item) {
+	Boolean wasProcessed(Object item) {
 		return record[item] == true
 	}
 	

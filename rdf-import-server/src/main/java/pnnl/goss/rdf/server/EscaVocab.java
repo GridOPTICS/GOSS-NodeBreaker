@@ -66,6 +66,7 @@ public class EscaVocab {
 	public final static Resource SUBGEOGRAPHICALREGION_OBJECT = m.createProperty(uri0 + "SubGeographicalRegion");
 	public final static Resource ANALOGLIMIT_OBJECT = m.createProperty(uri0 + "AnalogLimit");
 	public final static Resource LINE_OBJECT = m.createProperty(uri0 + "Line");
+	public final static Resource ACLINESEGMENT_OBJECT = m.createProperty(uri0 + "ACLineSegment");
 	public final static Property MEASUREMENT_MEMBEROF_PSR = m.createProperty(uri0 + "Measurement.MemberOf_PSR");
 	public final static Property IEC61970CIMVERSION_DATE = m.createProperty(uri0 + "IEC61970CIMVersion.date");
 	public final static Property STATICVARCOMPENSATOR_SVCCONTROLMODE = m.createProperty(uri0 + "StaticVarCompensator.sVCControlMode");

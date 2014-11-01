@@ -13,12 +13,21 @@ import pnnl.goss.rdf.server.EscaVocab;
 
 public class ConnectivityNode extends AbstractEscaType {
 
+	private TopologicalNode topologicalNode;
 	private Set<Terminal> terminals;
 	private static Logger log = LoggerFactory.getLogger(ConnectivityNode.class);
 	private EscaType voltageLevel;
 	private EscaType baseVoltage;
 	private EscaType substation;
 	private double baseVoltageDbl;
+	
+	public TopologicalNode getTopologicalNode(){
+		return this.topologicalNode;
+	}
+	
+	public void setToplogicalNode(TopologicalNode topologicalNode){
+		this.topologicalNode = topologicalNode;
+	}
 	
 	public EscaType getSubstationRes(){
 		return substation;

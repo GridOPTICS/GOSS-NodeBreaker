@@ -23,7 +23,7 @@ class TopologicalNode {
 	protected void setBaseVoltageEsca(v){this.baseVoltageEsca = v}
 	
 	Set<ConnectivityNode> connectivityNodes = new HashSet<ConnectivityNode>();
-	protected void setConnectivityNodes(Set<ConnectivityNodes> nodes) {this.connectivityNodes = nodes}
+	protected void setConnectivityNodes(Set<ConnectivityNode> nodes) {this.connectivityNodes = nodes}
 	
 	Set<EscaType> breakers = new HashSet<EscaType>();
 	protected void setBreakers(v){this.breakers = breakers}
@@ -47,15 +47,26 @@ class TopologicalNode {
 	EscaType voltageLevel;
 	protected void setVoltageLevel(EscaType item) {this.voltageLevel = item}
 	
+	Boolean hasTerminal(String mrid){
+		return terminals.find({it.getMrid() == mrid}) != null
+	}
 
 	def initialize(){
 
 		if (hasBeenInitialized) return
 		
-		connectivityNodes.each {
+		connectivityNodes.each { element ->
+			element.setToplogicalNode(this)
+			
 			if (this.voltageLevel == null){
-				this.voltageLevel = it.getDirectLinks()?.find({it.isResourceType(EscaVocab.VOLTAGELEVEL_OBJECT)})
-				return;
+				this.voltageLevel = element.getDirectLinks()?.find({it.isResourceType(EscaVocab.VOLTAGELEVEL_OBJECT)})
+			}
+			
+			element.getRefersToMe().each {
+				if (it.isResourceType(EscaVocab.TERMINAL_OBJECT)){
+					((Terminal)it).setTopologicalNode(this)
+					terminals.add(it)					
+				}
 			}
 		}
 		
@@ -100,9 +111,10 @@ class TopologicalNode {
 					}
 				}
 				
-				if (printIt) printf "Unadded: %s\n", it.toString()
+				//if (printIt) printf "Unadded: %s\n", it.toString()
 			}
 		}
+		
 		 
 //		connectivityNodes.each {
 //			it.getDirectLinks().each {

@@ -30,9 +30,14 @@ public class Network {
 	 */
 	private EscaTypes escaTypes;
 	private Set<TopologicalNode> topologicalNodes = new HashSet<TopologicalNode>();
+	private Set<TopologicalIsland> topologicalIslands = new HashSet<TopologicalIsland>();
 	
 	private ProcessingItems connectivityItems = new ProcessingItems();
 	private ProcessingItems topologicalNodeItems = new ProcessingItems();
+	
+	public Set<TopologicalIsland> getTopologicalIslands(){
+		return topologicalIslands;
+	}
 
 	public Network(EscaTypes escaTypes){
 		log.debug("Creating nework with: " + escaTypes.keySet().size() + " elements.");
@@ -59,11 +64,60 @@ public class Network {
 	
 	private void buildTopoIslands(){
 		
+		debugStep("Building Islands");
+		
 		TopologicalNode processingNode = (TopologicalNode) topologicalNodeItems.nextItem();
 		while(processingNode != null){
-			
-			log.debug(processingNode.toString());
+			debugStep("Processing: "+processingNode.toString());
+			TopologicalIsland island = new TopologicalIsland();
+			topologicalIslands.add(island);
 			topologicalNodeItems.processItem(processingNode);
+			
+			ProcessingItems terminalItems = new ProcessingItems();
+			terminalItems.addItemsToProcess(processingNode.getTerminals());
+			Terminal processingTerminal = (Terminal) terminalItems.nextItem();
+			while(processingTerminal != null){
+				debugStep("Processing: ", processingTerminal);
+				for (EscaType ty: processingTerminal.getDirectLinks()){
+					
+					if (ty.isResourceType(EscaVocab.ACLINESEGMENT_OBJECT)){
+						TopologicalBranch branch = new TopologicalBranch();
+						branch.setTerminalFrom(processingTerminal);
+						branch.setPowerTransferEquipment(ty);
+//						for (EscaType tz: ty.getDirectLinks()) {
+//							log.debug("Echo: "+tz.toString());
+//						}
+						for (EscaType tz: ty.getRefersToMe()) {
+							if (tz.isResourceType(EscaVocab.TERMINAL_OBJECT) && !processingTerminal.getMrid().equals(tz.getMrid())){
+								Terminal otherTerminal = (Terminal)tz;
+								TopologicalNode otherNode = otherTerminal.getTopologicalNode();
+								
+								branch.setTerminalTo((Terminal)tz);		
+								if (!topologicalNodeItems.wasProcessed(otherTerminal.getTopologicalNode())){
+									island.getTopologicalNodes().add(otherNode);
+									topologicalNodeItems.processItem(otherNode);
+									terminalItems.addItemsToProcess(otherNode.getTerminals());									
+								}
+							}
+						}
+						
+						island.getTopologicalBranchs().add(branch);
+						//debugStep("Log it: ", ty);
+					}
+					else{
+						log.debug(ty.toString());
+					}
+
+					//debugStep(ty.toString());
+				}
+				
+				terminalItems.processItem(processingTerminal);
+				processingTerminal = (Terminal) terminalItems.nextItem();
+			}
+			
+			
+			
+			
 			processingNode = (TopologicalNode) topologicalNodeItems.nextItem();
 		}
 		
@@ -101,13 +155,13 @@ public class Network {
 		ConnectivityNode processingNode = (ConnectivityNode) connectivityItems.nextItem();
 		while (processingNode != null){
 			
-			debugStep("Processing ",  processingNode);
+//			debugStep("Processing ",  processingNode);
 			
 			// Define a new node/bus
 			TopologicalNode topologicalNode = new TopologicalNode();
 			topologicalNodes.add(topologicalNode);
 			topologicalNode.setIdentifier("T"+topologicalNodes.size());
-			debugStep("Creating new topology node " + topologicalNode.getIdentifier());
+//			debugStep("Creating new topology node " + topologicalNode.getIdentifier());
 
 			// Add the connectivity node to the topological node.
 			topologicalNode.getConnectivityNodes().add(processingNode);
@@ -119,14 +173,14 @@ public class Network {
 			// Get a terminal to process
 			Terminal processingTerminal = (Terminal) terminalItems.nextItem();
 			while(processingTerminal != null) {
-				debugStep("Processing ",  processingTerminal);
+//				debugStep("Processing ",  processingTerminal);
 				
 				// Equipment associated with the terminal.
 				Collection<EscaType> equipment = processingTerminal.getEquipment();
 				
 				for(EscaType eq: equipment){
 					if (eq.isResourceType(breakerRes)){
-						debugStep("Found Breaker: <"+eq.getMrid()+">");
+//						debugStep("Found Breaker: <"+eq.getMrid()+">");
 						
 						// Switch closed then add the terminals on the other side.
 						if (!eq.getLiteralValue(switchOpenProp).getBoolean()){
@@ -142,10 +196,10 @@ public class Network {
 						connectivityItems.processItem(node);
 						terminalItems.addItemsToProcess(node.getTerminalsAsEscaType());
 						topologicalNode.getConnectivityNodes().add(node);
-						debugStep("Adding: "+node.dataType + " <"+node.mrid+"> " + " to " + topologicalNode.getIdentifier()); //+topologicalNode.getIdentifier());
+//						debugStep("Adding: "+node.dataType + " <"+node.mrid+"> " + " to " + topologicalNode.getIdentifier()); //+topologicalNode.getIdentifier());
 					}
 					else{
-						debugStep("Other Equipment Found: ", eq);
+//						debugStep("Other Equipment Found: ", eq);
 					}
 				}
 				
@@ -156,8 +210,7 @@ public class Network {
 			
 			// mark the current node as processed and get the next one to be processed.
 			connectivityItems.processItem(processingNode);
-			processingNode = (ConnectivityNode) connectivityItems.nextItem();			
-			
+			processingNode = (ConnectivityNode) connectivityItems.nextItem();					
 		}
 	}
 	

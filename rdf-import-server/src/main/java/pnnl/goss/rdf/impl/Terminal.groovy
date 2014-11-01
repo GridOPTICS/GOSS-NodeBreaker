@@ -11,14 +11,17 @@ import pnnl.goss.rdf.server.EscaVocab;
 
 public class Terminal extends AbstractEscaType {
 	
-	ConnectivityNode connectivityNode;
 	private static Logger log = LoggerFactory.getLogger(Terminal.class);
+	
+	ConnectivityNode connectivityNode;
+	TopologicalNode topologicalNode;
 	
 	public void setConnectivityNode(ConnectivityNode node) throws InvalidObjectException{
 		if(connectivityNode != null){
 			throw new InvalidObjectException("ConnectivityNode has already been set!");
 		}
 		this.connectivityNode = node;
+		
 	}
 	
 	public Collection<EscaType> getEquipment(){
