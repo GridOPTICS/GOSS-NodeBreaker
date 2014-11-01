@@ -105,24 +105,53 @@ public class EscaMain {
 		
 		log.debug("# Topo Nodes: "+ network.getTopologicalNodes().size());
 		
-		for(TopologicalNode n: network.getTopologicalNodes()){
-			log.debug("TN: "+n.getIdentifier());
+		for (TopologicalNode n: network.getTopologicalNodes()){
+			n.initialize();
 			
-			EscaType vl = n.getVoltageLevel();
-			
-			if (vl != null){
-				log.debug("\tVL <"+vl.getMrid()+"> Direct Links");
-				for(EscaType esca: vl.getDirectLinks()){
-					log.debug("\t\t"+esca.getDataType()+" <"+esca.getMrid()+">");
+			log.debug(n.getIdentifier()+ " voltage: "+n.getBaseVoltage());
+//			EscaType vl = n.getVoltageLevel();
+//			if (vl != null){
+//				for (EscaType eq: vl.getDirectLinks()){
+//					log.debug(eq.toString());
+//				}
+//			}
+//			else{
+//				log.debug("Dead Bus!");
+//			}
+			if (n.getSubstation() != null){
+				for (EscaType s: n.getSubstation().getDirectLinks()){
+					log.debug("\tlinkto: "+ s);
 				}
-				log.debug("\tVL <"+vl.getMrid()+"> Refers to me");
-				for(EscaType esca: vl.getRefersToMe()){
-					log.debug("\t\t"+esca.getDataType()+" <"+esca.getMrid()+">");
+				for (EscaType s: n.getSubstation().getRefersToMe()){
+					log.debug("\treffrom: "+ s);
 				}
 			}
-			else{
-				log.debug("Dead Bus");
-			}
+//			if (n.getBreakers() != null) {
+//				for (EscaType b: n.getBreakers()){
+//					for(EscaType dir: b.getDirectLinks()){
+//						log.debug("\t"+dir.toString());
+//					}
+//					
+//					for(EscaType dir: b.getRefersToMe()){
+//						log.debug("\tREF: "+dir.toString());
+//					}
+//				}
+//			}
+			
+			
+//			if (vl != null){
+//				log.debug("\tVL <"+vl.getMrid()+"> Direct Links");
+//				for(EscaType esca: vl.getDirectLinks()){
+//					log.debug("\t\t"+esca.getDataType()+" <"+esca.getMrid()+">");
+//				}
+//				log.debug("\tVL <"+vl.getMrid()+"> Refers to me");
+//				for(EscaType esca: vl.getRefersToMe()){
+//					log.debug("\t\t"+esca.getDataType()+" <"+esca.getMrid()+">");
+//				}
+//			}
+//			else{
+//				log.debug("Dead Bus");
+//			}
 			
 			
 //			for (ConnectivityNode cn: n.getConnectivityNodes()){
