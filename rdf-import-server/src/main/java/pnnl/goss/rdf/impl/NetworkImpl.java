@@ -1,16 +1,17 @@
 package pnnl.goss.rdf.impl;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.felix.ipojo.annotations.Provides;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
+import pnnl.goss.rdf.Network;
 import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Property;
@@ -22,7 +23,8 @@ import com.hp.hpl.jena.rdf.model.Resource;
  * @author d3m614
  *
  */
-public class Network {
+@Provides
+public class NetworkImpl implements Network {
 	
 	private static Logger log = LoggerFactory.getLogger(Network.class);
 	/*
