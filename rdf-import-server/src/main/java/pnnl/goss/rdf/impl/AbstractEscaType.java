@@ -261,57 +261,60 @@ public class AbstractEscaType implements EscaType {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("<EscaType: "+dataType+ ">"+mrid+"\n");
-		sb.append("\tLiterals: ");
-		boolean first = true;
-		for (String s: literals.keySet()){
-			if (first){
-				sb.append(s+" => "+this.literals.get(s));
-				first= false;
-			}
-			else{
-				sb.append(", "+s+" => "+this.literals.get(s));
-			}
-		}
-		sb.append("\n");
 		
-		first = true;
-		sb.append("\tDirect Links: ");		
+		return this.dataType + " <"+this.mrid+"> # direct links: "+this.directLinks.size()+" # referred to me: "+this.refersToMe.size();
 		
-		for(EscaType t: directLinks.values()){
-			if (t == null){
-				sb.append("directLink is null!!");
-				continue;
-			}
-			if (first){
-				sb.append(t.getDataType() + " => "+t.getMrid());
-				first= false;
-			}
-			else{
-				sb.append(", "+t.getDataType() + " => "+t.getMrid()); 
-			}
-		}
-		
-		first = true;
-		sb.append("\n\tRefers to me: ");		
-		
-		for(EscaType t: refersToMe){
-			if (t == null){
-				sb.append("refersToMe value is null!!");
-				continue;
-			}
-			
-			if (first){
-				sb.append(t.getDataType() + " => "+t.getMrid());
-				first= false;
-			}
-			else {
-				sb.append(", "+t.getDataType() + " => "+t.getMrid()); 
-			}
-		}
-		
-		return sb.toString();
+//		StringBuilder sb = new StringBuilder();
+//		sb.append("<EscaType: "+dataType+ ">"+mrid+"\n");
+//		sb.append("\tLiterals: ");
+//		boolean first = true;
+//		for (String s: literals.keySet()){
+//			if (first){
+//				sb.append(s+" => "+this.literals.get(s));
+//				first= false;
+//			}
+//			else{
+//				sb.append(", "+s+" => "+this.literals.get(s));
+//			}
+//		}
+//		sb.append("\n");
+//		
+//		first = true;
+//		sb.append("\tDirect Links: ");		
+//		
+//		for(EscaType t: directLinks.values()){
+//			if (t == null){
+//				sb.append("directLink is null!!");
+//				continue;
+//			}
+//			if (first){
+//				sb.append(t.getDataType() + " => "+t.getMrid());
+//				first= false;
+//			}
+//			else{
+//				sb.append(", "+t.getDataType() + " => "+t.getMrid()); 
+//			}
+//		}
+//		
+//		first = true;
+//		sb.append("\n\tRefers to me: ");		
+//		
+//		for(EscaType t: refersToMe){
+//			if (t == null){
+//				sb.append("refersToMe value is null!!");
+//				continue;
+//			}
+//			
+//			if (first){
+//				sb.append(t.getDataType() + " => "+t.getMrid());
+//				first= false;
+//			}
+//			else {
+//				sb.append(", "+t.getDataType() + " => "+t.getMrid()); 
+//			}
+//		}
+//		
+//		return sb.toString();
 	}
 
 }
