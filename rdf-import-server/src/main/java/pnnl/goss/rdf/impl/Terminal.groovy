@@ -21,10 +21,6 @@ public class Terminal extends AbstractEscaType {
 		this.connectivityNode = node;
 	}
 	
-	public ConnectivityNode getConnectivityNode(){
-		return connectivityNode;
-	}
-	
 	public Collection<EscaType> getEquipment(){
 		return getDirectLinks();
 	}
