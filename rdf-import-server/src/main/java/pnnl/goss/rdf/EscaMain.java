@@ -15,11 +15,12 @@ import org.slf4j.LoggerFactory;
 import pnnl.goss.rdf.impl.ConnectivityNode;
 import pnnl.goss.rdf.impl.EscaTreeWindow;
 import pnnl.goss.rdf.impl.EscaTypes;
-import pnnl.goss.rdf.impl.Network;
-import pnnl.goss.rdf.impl.Terminal;
-import pnnl.goss.rdf.impl.TopologicalBranch;
-import pnnl.goss.rdf.impl.TopologicalIsland;
-import pnnl.goss.rdf.impl.TopologicalNode;
+import pnnl.goss.rdf.impl.NodeBreakerServicImpl;
+import pnnl.goss.rdf.Network;
+import pnnl.goss.rdf.impl.TerminalImpl;
+import pnnl.goss.rdf.impl.TopologicalBranchImpl;
+import pnnl.goss.rdf.TopologicalIsland;
+import pnnl.goss.rdf.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Property;
@@ -99,17 +100,23 @@ public class EscaMain {
 	
 	public static void main(String[] args) throws Exception {
 		
-		EscaMain mainProg = new EscaMain(ESCA_TEST, true, "esca_tree.txt");
-			
-		EscaTypes types = mainProg.getEscaTypes();
+		NodeBreakerService service = new NodeBreakerServicImpl();
 		
-		Network network = new Network(types);
+		String key = service.processNetwork(ESCA_TEST);
+		
+		Network network = service.getNetwork(key);
+//		
+//		EscaMain mainProg = new EscaMain(ESCA_TEST, true, "esca_tree.txt");
+//			
+//		EscaTypes types = mainProg.getEscaTypes();
+//		
+//		Network network = new Network(types);
 		
 		int i=1;
 		for (TopologicalIsland island: network.getTopologicalIslands()){
 			log.debug("Island: " + i++);
 			log.debug("Branches");
-			for(TopologicalBranch br: island.getTopologicalBranchs()){
+			for(TopologicalBranch br: island.getTopologicalBranches()){
 				log.debug("\tfrom: "+ br.getTerminalFrom() + " " + br.getTerminalTo());
 			}
 			log.debug("Nodes");
@@ -197,13 +204,13 @@ public class EscaMain {
 		
 		
 		System.out.println("Topology Nodes: "+ network.getTopologicalNodes().size());
-		System.out.println("Breaker count: "+ types.where(EscaVocab.BREAKER_OBJECT).size());
-		System.out.println("Terminal count: "+types.where(EscaVocab.TERMINAL_OBJECT).size());
-		System.out.println("Connectivity Node count: "+types.where(EscaVocab.CONNECTIVITYNODE_OBJECT).size());
-		System.out.println("Substation count: "+types.where(EscaVocab.SUBSTATION_OBJECT).size());
-		System.out.println("Voltage Level count: "+types.where(EscaVocab.VOLTAGELEVEL_OBJECT).size());
-		System.out.println("BaseVoltage: "+types.where(EscaVocab.BASEVOLTAGE_OBJECT).size());
-		
+//		System.out.println("Breaker count: "+ types.where(EscaVocab.BREAKER_OBJECT).size());
+//		System.out.println("Terminal count: "+types.where(EscaVocab.TERMINAL_OBJECT).size());
+//		System.out.println("Connectivity Node count: "+types.where(EscaVocab.CONNECTIVITYNODE_OBJECT).size());
+//		System.out.println("Substation count: "+types.where(EscaVocab.SUBSTATION_OBJECT).size());
+//		System.out.println("Voltage Level count: "+types.where(EscaVocab.VOLTAGELEVEL_OBJECT).size());
+//		System.out.println("BaseVoltage: "+types.where(EscaVocab.BASEVOLTAGE_OBJECT).size());
+//		
 		
 //		Collection<EscaType> substations = mainProg.getObjectType(Esca60Vocab.SUBSTATION_OBJECT);
 //		

@@ -7,11 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
+import pnnl.goss.rdf.Terminal
+import pnnl.goss.rdf.TopologicalNode
 import pnnl.goss.rdf.server.EscaVocab;
 
-public class Terminal extends AbstractEscaType {
+public class TerminalImpl extends AbstractEscaType implements Terminal {
 	
-	private static Logger log = LoggerFactory.getLogger(Terminal.class);
+	private static Logger log = LoggerFactory.getLogger(TerminalImpl.class);
 	
 	ConnectivityNode connectivityNode;
 	TopologicalNode topologicalNode;

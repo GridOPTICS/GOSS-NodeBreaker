@@ -1,11 +1,6 @@
 package pnnl.goss.rdf.impl
 
-import java.beans.PropertyChangeListener
 import java.util.HashMap;
-
-import com.hp.hpl.jena.tdb.base.record.Record;
-
-import pnnl.goss.rdf.EscaType;
 
 /**
  * ProcessingItems includes a container of items that are to be processed.  It

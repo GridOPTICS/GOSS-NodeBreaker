@@ -37,8 +37,8 @@ class TopologicalNodeImpl implements TopologicalNode{
 	Set<EscaType> shunts  = new HashSet<EscaType>()
 	protected void setShunts(Set<EscaType> shunts) {this.shunts = shunts}
 	
-	Set<Terminal> terminals = new HashSet<Terminal>()
-	protected void setTerminals(Set<Terminal> terminals) {this.terminals = terminals}
+	Set<TerminalImpl> terminals = new HashSet<TerminalImpl>()
+	protected void setTerminals(Set<TerminalImpl> terminals) {this.terminals = terminals}
 	
 	Set<EscaType> transformers = new HashSet<EscaType>();
 	protected void setTransformers(Set<EscaType> transformers) {this.transformers = transformers}
@@ -63,7 +63,7 @@ class TopologicalNodeImpl implements TopologicalNode{
 			
 			element.getRefersToMe().each {
 				if (it.isResourceType(EscaVocab.TERMINAL_OBJECT)){
-					((Terminal)it).setTopologicalNode(this)
+					((TerminalImpl)it).setTopologicalNode(this)
 					terminals.add(it)					
 				}
 			}

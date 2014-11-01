@@ -9,12 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
+import pnnl.goss.rdf.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
 
 public class ConnectivityNode extends AbstractEscaType {
 
 	private TopologicalNode topologicalNode;
-	private Set<Terminal> terminals;
+	private Set<TerminalImpl> terminals;
 	private static Logger log = LoggerFactory.getLogger(ConnectivityNode.class);
 	private EscaType voltageLevel;
 	private EscaType baseVoltage;
@@ -67,11 +68,11 @@ public class ConnectivityNode extends AbstractEscaType {
 	 * 
 	 * @return set of terminals connected to this node.
 	 */
-	public Set<Terminal> getTerminals(){
+	public Set<TerminalImpl> getTerminals(){
 		if(terminals == null){
-			terminals = new HashSet<Terminal>();
+			terminals = new HashSet<TerminalImpl>();
 			for(EscaType t: this.getRefersToMe(EscaVocab.TERMINAL_OBJECT)) {
-				Terminal tt = (Terminal)t;
+				TerminalImpl tt = (TerminalImpl)t;
 				try {
 					tt.setConnectivityNode(this);
 				} catch (InvalidObjectException e) {

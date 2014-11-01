@@ -67,7 +67,7 @@ public class DefaultEscaType extends AbstractEscaType {
 			escaType = new ConnectivityNode();
 			break;
 		case 1:
-			escaType = new Terminal();
+			escaType = new TerminalImpl();
 			break;
 		 default:
 			 escaType = new DefaultEscaType(); 

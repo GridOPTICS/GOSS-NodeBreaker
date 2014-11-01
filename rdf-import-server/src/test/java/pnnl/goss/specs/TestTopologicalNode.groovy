@@ -1,16 +1,16 @@
 package pnnl.goss.specs
 import pnnl.goss.rdf.impl.ConnectivityNode
-import pnnl.goss.rdf.impl.TopologicalNode
+import pnnl.goss.rdf.impl.TopologicalNodeImpl
 import spock.lang.Specification;
 
-class TestTopologicalNode extends Specification {
+class TestTopologicalNodeImpl extends Specification {
 		
 	def "When two instances of topological nodes are created, they are eequivelent"() {
 		
 		given: "The creation of two topological nodes with no attributes defined."
 		
-		TopologicalNode t1 = new TopologicalNode()
-		TopologicalNode t2 = new TopologicalNode()
+		TopologicalNodeImpl t1 = new TopologicalNodeImpl()
+		TopologicalNodeImpl t2 = new TopologicalNodeImpl()
 		
 		expect: "The two should equal each other"
 		assert t1 == t2
@@ -19,8 +19,8 @@ class TestTopologicalNode extends Specification {
 	def "When two instances are changed by identifier"() {
 		given: "Two instances with different identifiers"
 		
-		TopologicalNode t1 = new TopologicalNode("identifier": "F1")
-		TopologicalNode t2 = new TopologicalNode("identifier": "F2")
+		TopologicalNodeImpl t1 = new TopologicalNodeImpl("identifier": "F1")
+		TopologicalNodeImpl t2 = new TopologicalNodeImpl("identifier": "F2")
 		
 		expect: "The two aren't equal"
 		assert t1 != t2
@@ -32,8 +32,8 @@ class TestTopologicalNode extends Specification {
 		ConnectivityNode node = new ConnectivityNode('mrid': 'dadfadfe');
 		def nodes = [new ConnectivityNode('mrid': 'dadfadfe'), new ConnectivityNode('mrid': 'dadfa'), new ConnectivityNode('mrid': 'fadfe')]
 		
-		TopologicalNode t1 = new TopologicalNode()
-		TopologicalNode t2 = new TopologicalNode()
+		TopologicalNodeImpl t1 = new TopologicalNodeImpl()
+		TopologicalNodeImpl t2 = new TopologicalNodeImpl()
 		
 		assert t1.connectivityNodes.size() == 0
 		assert node != null
@@ -53,8 +53,8 @@ class TestTopologicalNode extends Specification {
 		def nodes = [new ConnectivityNode('mrid': 'dadfadfe'), new ConnectivityNode('mrid': 'dadfa'), new ConnectivityNode('mrid': 'fadfe')]
 		def othernodes = [new ConnectivityNode('mrid': 'dad'), new ConnectivityNode('mrid': 'dadfa'), new ConnectivityNode('mrid': 'fadfe')]
 		
-		TopologicalNode t1 = new TopologicalNode()
-		TopologicalNode t2 = new TopologicalNode()
+		TopologicalNodeImpl t1 = new TopologicalNodeImpl()
+		TopologicalNodeImpl t2 = new TopologicalNodeImpl()
 		
 		assert t1.connectivityNodes.size() == 0
 		assert node != null
