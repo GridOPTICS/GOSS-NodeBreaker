@@ -1,4 +1,5 @@
 package pnnl.goss.specs
+import pnnl.goss.rdf.TopologicalNode
 import pnnl.goss.rdf.impl.ConnectivityNode
 import pnnl.goss.rdf.impl.TopologicalNodeImpl
 import spock.lang.Specification;
@@ -9,8 +10,8 @@ class TestTopologicalNodeImpl extends Specification {
 		
 		given: "The creation of two topological nodes with no attributes defined."
 		
-		TopologicalNodeImpl t1 = new TopologicalNodeImpl()
-		TopologicalNodeImpl t2 = new TopologicalNodeImpl()
+		TopologicalNode t1 = new TopologicalNodeImpl()
+		TopologicalNode t2 = new TopologicalNodeImpl()
 		
 		expect: "The two should equal each other"
 		assert t1 == t2

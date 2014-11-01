@@ -1,13 +1,13 @@
 package pnnl.goss.rdf.impl
 
-import groovy.transform.EqualsAndHashCode
 import pnnl.goss.rdf.EscaType
-import pnnl.goss.rdf.TopologicalNode;
+import pnnl.goss.rdf.Terminal
+import pnnl.goss.rdf.TopologicalNode
 import pnnl.goss.rdf.server.EscaVocab
 
 import com.hp.hpl.jena.rdf.model.Resource
 
-@EqualsAndHashCode
+
 class TopologicalNodeImpl implements TopologicalNode{
 	
 	EscaType substation;
@@ -37,8 +37,8 @@ class TopologicalNodeImpl implements TopologicalNode{
 	Set<EscaType> shunts  = new HashSet<EscaType>()
 	protected void setShunts(Set<EscaType> shunts) {this.shunts = shunts}
 	
-	Set<TerminalImpl> terminals = new HashSet<TerminalImpl>()
-	protected void setTerminals(Set<TerminalImpl> terminals) {this.terminals = terminals}
+	Set<Terminal> terminals = new HashSet<Terminal>()
+	protected void setTerminals(Set<Terminal> terminals) {this.terminals = terminals}
 	
 	Set<EscaType> transformers = new HashSet<EscaType>();
 	protected void setTransformers(Set<EscaType> transformers) {this.transformers = transformers}
