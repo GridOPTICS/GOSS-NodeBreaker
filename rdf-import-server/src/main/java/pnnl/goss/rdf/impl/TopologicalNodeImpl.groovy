@@ -13,6 +13,14 @@ class TopologicalNodeImpl implements TopologicalNode{
 	
 	EscaType substation;
 	
+	String getSubstationName(){
+		return this.substation?.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME)
+	}
+	
+	String getSubstationMrid(){
+		return this.substation?.getMrid() 
+	}
+	
 	boolean hasBeenInitialized = false;
 	protected void setHasBeenInitialized(v) {this.hasBeenInitialized = v}
 	
@@ -83,6 +91,11 @@ class TopologicalNodeImpl implements TopologicalNode{
 			}
 		}
 		
+		if (substation == null){
+			println "No substation presnt!"
+		}
+		//substation = voltageLevel.getLink(EscaVocab.VOLTAGELEVEL_MEMBEROF_SUBSTATION)
+		
 		def noPrint = [EscaVocab.CONNECTIVITYNODE_OBJECT, EscaVocab.TERMINAL_OBJECT, EscaVocab.BREAKER_OBJECT]
 		voltageLevel?.getRefersToMe()?.each{
 			if (it.isResourceType(EscaVocab.SHUNTCOMPENSATOR_OBJECT)){
@@ -143,6 +156,9 @@ class TopologicalNodeImpl implements TopologicalNode{
 	
 	@Override
 	public String toString() {
-		return this.identifier;
+		if (!hasBeenInitialized){
+			initialize()
+		}
+		return this.identifier + " Substation: " +this.getSubstationName() + " <"+getSubstationMrid() + ">";
 	}
 }

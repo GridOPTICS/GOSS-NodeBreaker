@@ -7,5 +7,7 @@ public interface TopologicalNode {
 	Set<Terminal> getTerminals();
 	
 	String getIdentifier();
+	
+	String getSubstationName();
 
 }
