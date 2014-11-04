@@ -30,4 +30,7 @@ public class TerminalImpl extends AbstractEscaType implements Terminal {
 		return getDirectLinks();
 	}
 	
+	public String toString(){
+		return this.dataType + ": <"+ this.getMrid() + "> " + this.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME)
+	}
 }
