@@ -197,17 +197,18 @@ public class NetworkImpl implements Network {
 		
 		Property switchOpenProp = EscaVocab.SWITCH_NORMALOPEN;
 		
+		log.debug("Building Topology");
 		// Grab the next connectivity node that hasn't been processed.
 		ConnectivityNode processingNode = (ConnectivityNode) connectivityItems.nextItem();
 		while (processingNode != null){
 			
-//			debugStep("Processing ",  processingNode);
+			debugStep("Processing ",  processingNode);
 			
 			// Define a new node/bus
 			TopologicalNodeImpl topologicalNode = new TopologicalNodeImpl();
 			topologicalNodes.add(topologicalNode);
 			topologicalNode.setIdentifier("T"+topologicalNodes.size());
-//			debugStep("Creating new topology node " + topologicalNode.getIdentifier());
+			debugStep("\tCreating new topology node " + topologicalNode.getIdentifier());
 
 			// Add the connectivity node to the topological node.
 			topologicalNode.getConnectivityNodes().add(processingNode);
@@ -219,14 +220,14 @@ public class NetworkImpl implements Network {
 			// Get a terminal to process
 			Terminal processingTerminal = (Terminal) terminalItems.nextItem();
 			while(processingTerminal != null) {
-//				debugStep("Processing ",  processingTerminal);
+				log.debug("\tProcessing " + processingTerminal.toString());
 				
 				// Equipment associated with the terminal.
 				Collection<EscaType> equipment = ((TerminalImpl)processingTerminal).getEquipment();
 				
 				for(EscaType eq: equipment){
 					if (eq.isResourceType(breakerRes)){
-//						debugStep("Found Breaker: <"+eq.getMrid()+">");
+						debugStep("\t\tFound Breaker: <"+eq.getMrid()+"> "+eq.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME));
 						
 						// Switch closed then add the terminals on the other side.
 						if (!eq.getLiteralValue(switchOpenProp).getBoolean()){
@@ -242,7 +243,7 @@ public class NetworkImpl implements Network {
 						connectivityItems.processItem(node);
 						terminalItems.addItemsToProcess(node.getTerminalsAsEscaType());
 						topologicalNode.getConnectivityNodes().add(node);
-//						debugStep("Adding: "+node.dataType + " <"+node.mrid+"> " + " to " + topologicalNode.getIdentifier()); //+topologicalNode.getIdentifier());
+						debugStep("\t\tAdding: "+node.dataType + " <"+node.mrid+"> " + " to " + topologicalNode.getIdentifier()); //+topologicalNode.getIdentifier());
 					}
 					else{
 //						debugStep("Other Equipment Found: ", eq);
