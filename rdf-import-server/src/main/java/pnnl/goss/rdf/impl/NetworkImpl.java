@@ -31,15 +31,16 @@ import com.hp.hpl.jena.rdf.model.Resource;
 @Provides
 public class NetworkImpl implements Network {
 	
-	private static Logger log = LoggerFactory.getLogger(Network.class);
+	private static Logger log = LoggerFactory.getLogger(NetworkImpl.class);
 	/*
 	 * Full network of esca types.
 	 */
 	private EscaTypes escaTypes;
+	private Set<EscaType> substations = new HashSet<EscaType>();
 	private Set<TopologicalNode> topologicalNodes = new HashSet<TopologicalNode>();
 	private Set<TopologicalIsland> topologicalIslands = new HashSet<TopologicalIsland>();
 	
-	private Set<TopologicalBranch> topologicalBranchess = new HashSet<TopologicalBranch>();
+	private Set<TopologicalBranch> topologicalBranches = new HashSet<TopologicalBranch>();
 	
 	private ProcessingItems connectivityItems = new ProcessingItems();
 	private ProcessingItems topologicalNodeItems = new ProcessingItems();
@@ -50,6 +51,9 @@ public class NetworkImpl implements Network {
 
 	public NetworkImpl(EscaTypes escaTypes){
 		log.debug("Creating nework with: " + escaTypes.keySet().size() + " elements.");
+		log.debug("# AcLineSegments: " + escaTypes.getByResourceType(EscaVocab.ACLINESEGMENT_OBJECT));
+		log.debug("# TransformerWinding: " + escaTypes.getByResourceType(EscaVocab.TRANSFORMERWINDING_OBJECT));
+		log.debug("# Substations: " + escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT));
 		this.escaTypes = escaTypes;
 		try {
 			
@@ -66,6 +70,8 @@ public class NetworkImpl implements Network {
 			topologicalNodeItems.addItemsToProcess(topologicalNodes);
 			this.buildTopoIslands();
 			
+			
+			
 		} catch (InvalidArgumentException e) {
 			log.error("Error building topology", e);
 		}
@@ -75,22 +81,33 @@ public class NetworkImpl implements Network {
 		
 		debugStep("Building Islands");
 		
+		Set<String> directLinks = new HashSet();
+		Set<String> inDirectLinks = new HashSet();
 		TopologicalNode processingNode = (TopologicalNode) topologicalNodeItems.nextItem();
 		while(processingNode != null){
 			debugStep("Processing: "+processingNode.toString());
 			TopologicalIsland island = new TopologicalIslandImpl();
 			topologicalIslands.add(island);
 			topologicalNodeItems.processItem(processingNode);
-			
+						
 			ProcessingItems terminalItems = new ProcessingItems();
 			terminalItems.addItemsToProcess(processingNode.getTerminals());
 			EscaType processingTerminal = (EscaType) terminalItems.nextItem();
+		
+			
 			while(processingTerminal != null){
-				debugStep("Processing: "+processingTerminal.toString());
+				debugStep("\tProcessing: "+processingTerminal.toString());
 				for (EscaType ty: processingTerminal.getDirectLinks()){
-					
-					if (ty.isResourceType(EscaVocab.ACLINESEGMENT_OBJECT)){
+					directLinks.add(ty.getDataType());
+					for (EscaType indirect: ty.getRefersToMe()){
+						inDirectLinks.add(indirect.getDataType());
+					}
+					if (ty.isResourceType(EscaVocab.ACLINESEGMENT_OBJECT)) {
+							//|| ty.isResourceType(EscaVocab.TRANSFORMERWINDING_OBJECT)) { 
+//							|| ty.isResourceType(EscaVocab.LOADBREAKSWITCH_OBJECT)){
+						
 						TopologicalBranchImpl branch = new TopologicalBranchImpl();
+						topologicalBranches.add(branch);
 						branch.setTerminalFrom((Terminal)processingTerminal);
 						branch.setPowerTransferEquipment(ty);
 //						for (EscaType tz: ty.getDirectLinks()) {
@@ -100,9 +117,10 @@ public class NetworkImpl implements Network {
 							if (tz.isResourceType(EscaVocab.TERMINAL_OBJECT) && !processingTerminal.getMrid().equals(tz.getMrid())){
 								Terminal otherTerminal = (Terminal)tz;
 								TopologicalNode otherNode = ((TerminalImpl)otherTerminal).getTopologicalNode();
-								
+								debugStep("\tOther Node is: "+ otherNode.toString());
 								branch.setTerminalTo((Terminal)tz);		
 								if (!topologicalNodeItems.wasProcessed(otherNode)){
+									debugStep("\t\tAdding other node's terminals");
 									island.getTopologicalNodes().add(otherNode);
 									topologicalNodeItems.processItem(otherNode);
 									terminalItems.addItemsToProcess(otherNode.getTerminals());									
@@ -113,9 +131,9 @@ public class NetworkImpl implements Network {
 						island.getTopologicalBranches().add(branch);
 						//debugStep("Log it: ", ty);
 					}
-					else{
-						log.debug(ty.toString());
-					}
+//					else{
+//						log.debug("\tOther connected resources: " + ty.toString());
+//					}
 
 					//debugStep(ty.toString());
 				}
@@ -124,10 +142,32 @@ public class NetworkImpl implements Network {
 				processingTerminal = (EscaType) terminalItems.nextItem();
 			}		
 			
+			topologicalNodeItems.processItem(processingNode);
 			processingNode = (TopologicalNode) topologicalNodeItems.nextItem();
 		}
 		
-		
+		for (TopologicalNode n: topologicalNodes){
+			TopologicalNodeImpl nImpl = (TopologicalNodeImpl)n;
+			
+			if (nImpl.getSubstation() == null){
+				String nodeString = "";
+				for (ConnectivityNode cn: nImpl.getConnectivityNodes()){
+					nodeString += "\n\t"+cn.toString();
+				}
+				log.debug(n.toString() + " Doesn't have a substation Connectivity Nodes are "+nodeString);
+			}
+			else{
+				substations.add(((TopologicalNodeImpl)n).getSubstation());
+			}
+		}
+		log.debug("DIRECT LINKS");
+		for(String s: directLinks){
+			log.debug("\t"+s);
+		}
+		log.debug("IN-DIRECT LINKS");
+		for(String s: inDirectLinks){
+			log.debug("\t"+s);
+		}
 	}
 	
 	/**
@@ -301,6 +341,10 @@ public class NetworkImpl implements Network {
 			}
 		}
 	}
+	
+	public Set<EscaType> getSubstations(){
+		return substations;
+	}
 
 	public Set<TopologicalNode> getTopologicalNodes() {
 		return topologicalNodes;
@@ -308,7 +352,7 @@ public class NetworkImpl implements Network {
 
 	@Override
 	public Set<TopologicalBranch> getTopologicalBranches() {
-		return topologicalBranchess;
+		return topologicalBranches;
 	}
 	
 }
