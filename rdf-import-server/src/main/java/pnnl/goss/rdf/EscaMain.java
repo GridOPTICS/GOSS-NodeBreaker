@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import pnnl.goss.rdf.impl.ConnectivityNode;
 import pnnl.goss.rdf.impl.EscaTreeWindow;
 import pnnl.goss.rdf.impl.EscaTypes;
+import pnnl.goss.rdf.impl.NetworkImpl;
 import pnnl.goss.rdf.impl.NodeBreakerServicImpl;
+import pnnl.goss.rdf.impl.TopologicalNodeImpl;
 import pnnl.goss.rdf.Network;
 import pnnl.goss.rdf.impl.TerminalImpl;
 import pnnl.goss.rdf.impl.TopologicalBranchImpl;
@@ -23,6 +25,7 @@ import pnnl.goss.rdf.TopologicalIsland;
 import pnnl.goss.rdf.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
 
+import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -121,18 +124,38 @@ public class EscaMain {
 			}
 			log.debug("Nodes");
 			for(TopologicalNode tn: island.getTopologicalNodes()){
-				log.debug("\t"+tn.getIdentifier());
+				log.debug("\t"+tn.toString());
 			}
 		}
 		
-		log.debug("# Topo Nodes: "+ network.getTopologicalNodes().size());
+		NetworkImpl netImpl = (NetworkImpl)network;
+		log.debug("# Substations: "+netImpl.getSubstations().size());
+		log.debug("SUBSTATIONS");
+		for (EscaType s: netImpl.getSubstations()){
+			if (s == null){
+				log.debug("S is null!");
+			}
+			else{
+				Literal path = s.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
+				if (path != null){
+					log.debug(s.getDataType()+" <"+s.getMrid()+"> No path!");
+				}
+				else{
+					log.debug(s.getDataType()+" <"+s.getMrid()+"> " + path.getString());
+				}
+			}
+		}
 		
-		for (TopologicalNode n: network.getTopologicalNodes()){
-			
-//			log.debug(n.getIdentifier()+ " voltage: "+n.getBaseVoltage());
-//			for (EscaType t: n.getTerminals()){
-//				logLinkAndReferring(t);
-//			}
+		log.debug("# TOPO NODES: "+ network.getTopologicalNodes().size());
+		
+		for (TopologicalNode n2: network.getTopologicalNodes()){
+			TopologicalNodeImpl n = (TopologicalNodeImpl)n2;
+			log.debug(n.toString());
+			log.debug(n.getIdentifier()+ " voltage: "+n.getBaseVoltage());
+			log.debug("TERMINALS");
+			for (Terminal t: n.getTerminals()){
+				logLinkAndReferring((EscaType)t);
+			}
 			
 //			EscaType vl = n.getVoltageLevel();
 //			if (vl != null){
@@ -202,8 +225,11 @@ public class EscaMain {
 //			}			
 		}
 		
+		log.debug("Islands: " + network.getTopologicalIslands().size());
+		log.debug("Topology Nodes: "+ network.getTopologicalNodes().size());
+		log.debug("Topology Branches: "+ network.getTopologicalBranches().size());
 		
-		System.out.println("Topology Nodes: "+ network.getTopologicalNodes().size());
+		
 //		System.out.println("Breaker count: "+ types.where(EscaVocab.BREAKER_OBJECT).size());
 //		System.out.println("Terminal count: "+types.where(EscaVocab.TERMINAL_OBJECT).size());
 //		System.out.println("Connectivity Node count: "+types.where(EscaVocab.CONNECTIVITYNODE_OBJECT).size());
