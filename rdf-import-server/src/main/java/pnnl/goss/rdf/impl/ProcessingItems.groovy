@@ -14,35 +14,74 @@ class ProcessingItems {
 	/**
 	 * Keep a record of what has/hasn't been processed.
 	 */
-	Map<Object, Boolean> record = new HashMap<Object, Boolean>();
-	private void setRecord(Map record){this.record = record}
-	private Map getRecord(){return record}
+	private Map recordToProcessed = [:]
+	
+	/**
+	 * A map from propertykey to index in the elements list. 
+	 */
+	private Map recordToIndex = [:]
+	
+	/**
+	 * An ordered list of elements.
+	 */
+	private List elements = []
+	
+	/**
+	 * Keeps track of what function/property should be used to lookup the key on
+	 * each of the objects.
+	 */
+	private String propertyKey;
+	
+	public ProcessingItems(String propertyKey){
+		this.propertyKey = propertyKey;
+	}
 	
 	def areAllProcessed(){
 		// if all are processed then all should not be false			
-		return record.values().every({it == true})
+		return recordToProcessed.values().every({it == true})
 	}
-	
+
 	def addItemsToProcess(Collection items){
 		items.each {addItemToProcess(it)}
 	}
 	
 	// Add an item to the processable elemnts.
-	def addItemToProcess(Object item){
-		if (!record.containsKey(item)){
-			record.put(item, false)
+	def addItemToProcess(def item){
+		if (item == null){
+			throw new Exception("Trying to add null item!");
+		}
+		
+		def realKey = item."$propertyKey"()
+		
+		if (!recordToProcessed.containsKey(realKey)){
+			recordToIndex[realKey] = elements.size()
+			elements.add(item)
+			recordToProcessed[realKey] = false
 		}
 	}
 	
 	def processItem(Object item) {
-		record[item] = true
+		def realKey = item."$propertyKey"()
+		
+		if (!recordToProcessed.containsKey(realKey)) throw new Exception("Invalid key in processItem")
+				
+		recordToProcessed[realKey] = true
+		elements[recordToIndex[realKey]] = item
 	}
 	
 	Boolean wasProcessed(Object item) {
-		return record[item] == true
+		def realKey = item."$propertyKey"()
+		
+		if (!recordToProcessed.containsKey(realKey)) throw new Exception("Invalid key in wasProcessed")
+		
+		return recordToProcessed[realKey] == true
 	}
 	
 	def nextItem() {
-		return record.find { it.value == false }?.key				
+		def item =  elements.find {
+			def realkey = it."$propertyKey"()
+			return recordToProcessed[realkey] == false
+			}		
+		return item	
 	}
 }
