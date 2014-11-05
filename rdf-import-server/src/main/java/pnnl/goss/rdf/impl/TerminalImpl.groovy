@@ -17,6 +17,8 @@ public class TerminalImpl extends AbstractEscaType implements Terminal {
 	
 	ConnectivityNode connectivityNode;
 	TopologicalNode topologicalNode;
+	boolean processed;
+	
 	
 	public void setConnectivityNode(ConnectivityNode node) throws InvalidObjectException{
 		if(connectivityNode != null){
