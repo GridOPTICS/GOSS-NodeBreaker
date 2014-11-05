@@ -317,4 +317,9 @@ public class AbstractEscaType implements EscaType {
 //		return sb.toString();
 	}
 
+	@Override
+	public String getIdentifier() {
+		return mrid;
+	}
+
 }

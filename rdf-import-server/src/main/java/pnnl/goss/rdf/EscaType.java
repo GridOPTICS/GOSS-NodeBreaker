@@ -9,6 +9,8 @@ import com.hp.hpl.jena.rdf.model.Resource;
 
 public interface EscaType {
 
+	public abstract String getIdentifier();
+	
 	public abstract void addDirectLink(String propertyName, EscaType link);
 
 	public abstract boolean isResourceType(Resource resourceType);
