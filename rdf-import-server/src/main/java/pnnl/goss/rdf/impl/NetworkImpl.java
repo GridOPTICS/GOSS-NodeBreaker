@@ -17,7 +17,6 @@ import pnnl.goss.rdf.Terminal;
 import pnnl.goss.rdf.TopologicalBranch;
 import pnnl.goss.rdf.TopologicalIsland;
 import pnnl.goss.rdf.TopologicalNode;
-import pnnl.goss.rdf.impl.TopologicalNodeImpl;
 import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Property;
@@ -42,6 +41,7 @@ public class NetworkImpl implements Network {
 	private List<TopologicalIsland> topologicalIslands = new ArrayList<TopologicalIsland>();
 
 	private List<TopologicalBranch> topologicalBranches = new ArrayList<TopologicalBranch>();
+	private List<String> branchMridList = new ArrayList<>();
 
 	private ProcessingItems connectivityItems = new ProcessingItems(
 			"getIdentifier");
@@ -96,14 +96,14 @@ public class NetworkImpl implements Network {
 			debugStep("Terminal test: " + t.toString());
 		}
 
+		List otherNodes = new ArrayList();
 		// bag of currently unprocessed terminals.
 		ProcessingItems terminalItems = new ProcessingItems("getIdentifier");
-
+		TopologicalIsland island = new TopologicalIslandImpl();
+		topologicalIslands.add(island);
+		
 		while (processingNode != null) {
 						
-			debugStep("Processing Topology Node: " + processingNode.toString());
-			TopologicalIsland island = new TopologicalIslandImpl();
-			topologicalIslands.add(island);
 			island.getTopologicalNodes().add(processingNode);
 			((TopologicalNodeImpl) processingNode).setTopologicalIsland(island);
 
@@ -173,13 +173,17 @@ public class NetworkImpl implements Network {
 							TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerm
 									.getTopologicalNode();
 							debugStep("\t\tOther Node is: " + otherNode.toString());
-	
-							if (!topologicalNodeItems.wasProcessed(otherNode)) {
-								island.getTopologicalNodes().add(otherNode);
-								topologicalNodeItems.processItem(otherNode);
-								terminalItems.addItemsToProcess(otherNode
-										.getTerminals());
+							
+							if (!otherNodes.contains(otherNode) && !topologicalNodeItems.wasProcessed(otherNode)){
+								otherNodes.add(otherNode);								
 							}
+	
+							//if (!topologicalNodeItems.wasProcessed(otherNode)) {
+							//	island.getTopologicalNodes().add(otherNode);
+							//	topologicalNodeItems.processItem(otherNode);
+							//	terminalItems.addItemsToProcess(otherNode
+							//			.getTerminals());
+							//}
 						}
 						// This is an ACLINESEGMENT_OBJECT
 						else {
@@ -190,25 +194,34 @@ public class NetworkImpl implements Network {
 							TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerminal
 									.getTopologicalNode();
 							branch.setTerminalTo(otherTerminal);
-							if (!topologicalNodeItems.wasProcessed(otherNode)) {
-								debugStep("\t\tAdding other node's terminals");
-								island.getTopologicalNodes().add(otherNode);
-								// topologicalNodeItems.addItemToProcess(otherNode);
-								topologicalNodeItems.processItem(otherNode);
-								for(Terminal t: otherNode.getTerminals()){
-									debugStep("\tTerminal test: " + t.toString());
-								}
-								terminalItems.addItemsToProcess(otherNode
-										.getTerminals());
-								
+							branch.setPowerTransferEquipment(currentCanidate);
+							if (!otherNodes.contains(otherNode) && !topologicalNodeItems.wasProcessed(otherNode)){
+								otherNodes.add(otherNode);								
 							}
+//							if (!topologicalNodeItems.wasProcessed(otherNode)) {
+//								debugStep("\t\tAdding other node's terminals");
+//								island.getTopologicalNodes().add(otherNode);
+//								// topologicalNodeItems.addItemToProcess(otherNode);
+//								topologicalNodeItems.processItem(otherNode);
+//								for(Terminal t: otherNode.getTerminals()){
+//									debugStep("\tTerminal test: " + t.toString());
+//								}
+//								terminalItems.addItemsToProcess(otherNode
+//										.getTerminals());
+//								
+//							}
 						}
 						
-						if (!containsBranch(branch.getTerminalFrom(),
-								branch.getTerminalTo())) {
+						if (!containsBranch(branch)){
+							branchMridList.add(currentCanidate.getMrid());
 							topologicalBranches.add(branch);
 							island.getTopologicalBranches().add(branch);
 						}
+//						if (!containsBranch(branch.getTerminalFrom(),
+//								branch.getTerminalTo())) {
+//							topologicalBranches.add(branch);
+//							island.getTopologicalBranches().add(branch);
+//						}
 					}
 					
 	
@@ -218,11 +231,26 @@ public class NetworkImpl implements Network {
 				processingTerminal = (EscaType) terminalItems.nextItem();
 			}
 
+			debugStep("Done processing topology node " + processingNode);
+			
+			if (otherNodes.size()> 0){
+				processingNode = (TopologicalNodeImpl) otherNodes.get(0);
+				otherNodes.remove(processingNode);
+			}
+			else{
+				for(TopologicalNode n: island.getTopologicalNodes()){
+					debugStep(n.getSubstationName()+ " "+((TopologicalNodeImpl)n).getBaseVoltage());
+				}
+				
+				island = new TopologicalIslandImpl();
+				topologicalIslands.add(island);
+				processingNode = (TopologicalNodeImpl) topologicalNodeItems.nextItem();
+			}
+						
 			printIsland(island);
 
-			debugStep("Done processing topology node " + processingNode);
-			processingNode = (TopologicalNodeImpl) topologicalNodeItems
-					.nextItem();
+//			processingNode = (TopologicalNodeImpl) topologicalNodeItems
+//					.nextItem();
 		}
 
 		for (TopologicalNode n : topologicalNodes) {
@@ -335,8 +363,10 @@ public class NetworkImpl implements Network {
 						.getEquipment();
 
 				for (EscaType eq : equipment) {
-					if (eq.isResourceType(breakerRes)) {
-						debugStep("\t\tFound Breaker: <"
+					
+					if (eq.hasLiteralProperty(EscaVocab.SWITCH_NORMALOPEN)){
+					//if (eq.isResourceType(breakerRes)) {
+						debugStep("\t\tFound Equipment With Property: <"
 								+ eq.getMrid()
 								+ "> "
 								+ eq.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME));
@@ -478,6 +508,10 @@ public class NetworkImpl implements Network {
 				log.debug(c.getDataType() + " " + c.getName());
 			}
 		}
+	}
+	
+	private boolean containsBranch(TopologicalBranch branch) {
+		return branchMridList.contains(((TopologicalBranchImpl)branch).getPowerTransferEquipment().getMrid());
 	}
 
 	private boolean containsBranch(EscaType item1, EscaType item2) {
