@@ -17,8 +17,8 @@ import pnnl.goss.rdf.server.EscaVocab;
 import sun.util.logging.resources.logging;
 
 @Provides
-public class NodeBreakerServicImpl implements NodeBreakerService {
-	private static Logger log = LoggerFactory.getLogger(NodeBreakerServicImpl.class);
+public class NodeBreakerServiceImpl implements NodeBreakerService {
+	private static Logger log = LoggerFactory.getLogger(NodeBreakerServiceImpl.class);
 			
 	Map<String, Network> processedNetworks = new HashMap<>();
 

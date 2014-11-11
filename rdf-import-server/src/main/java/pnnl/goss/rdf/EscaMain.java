@@ -16,7 +16,7 @@ import pnnl.goss.rdf.impl.ConnectivityNode;
 import pnnl.goss.rdf.impl.EscaTreeWindow;
 import pnnl.goss.rdf.impl.EscaTypes;
 import pnnl.goss.rdf.impl.NetworkImpl;
-import pnnl.goss.rdf.impl.NodeBreakerServicImpl;
+import pnnl.goss.rdf.impl.NodeBreakerServiceImpl;
 import pnnl.goss.rdf.impl.TopologicalNodeImpl;
 import pnnl.goss.rdf.Network;
 import pnnl.goss.rdf.impl.TerminalImpl;
@@ -103,7 +103,7 @@ public class EscaMain {
 	
 	public static void main(String[] args) throws Exception {
 		
-		NodeBreakerService service = new NodeBreakerServicImpl();
+		NodeBreakerService service = new NodeBreakerServiceImpl();
 		
 		String key = service.processNetwork(ESCA_TEST);
 		
