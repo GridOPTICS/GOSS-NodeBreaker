@@ -363,8 +363,10 @@ public class NetworkImpl implements Network {
 						.getEquipment();
 
 				for (EscaType eq : equipment) {
-					if (eq.isResourceType(breakerRes)) {
-						debugStep("\t\tFound Breaker: <"
+					
+					if (eq.hasLiteralProperty(EscaVocab.SWITCH_NORMALOPEN)){
+					//if (eq.isResourceType(breakerRes)) {
+						debugStep("\t\tFound Equipment With Property: <"
 								+ eq.getMrid()
 								+ "> "
 								+ eq.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME));
