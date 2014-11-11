@@ -1,10 +1,10 @@
 package pnnl.goss.rdf;
 
-import java.util.Set;
+import java.util.List;
 
 public interface TopologicalNode {
 	
-	Set<Terminal> getTerminals();
+	List<Terminal> getTerminals();
 	
 	String getIdentifier();
 	

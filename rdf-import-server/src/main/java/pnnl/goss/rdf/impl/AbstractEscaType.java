@@ -50,11 +50,13 @@ public class AbstractEscaType implements EscaType {
 	public void addDirectLink(String propertyName, EscaType link) {
 		if (link != null){
 			log.debug("Adding link property: "+propertyName+" to esca obj: "+link.getName());
+			directLinks.put(propertyName, link);
 		}
 		else{
 			log.debug("Adding null property for: " + propertyName);
+			// No null links			
 		}
-		directLinks.put(propertyName, link);
+		
 		// TODO Add the "types" to the dataset so that we don't end up with null pointers here.
 		if (link != null){
 			link.addRefersToMe(this);
@@ -103,6 +105,8 @@ public class AbstractEscaType implements EscaType {
 		this.refersToMe.add(refersToMe);
 	}
 	
+	
+	
 	/* (non-Javadoc)
 	 * @see pnnl.goss.rdf.EscaType#getLink(String property)
 	 */
@@ -140,10 +144,25 @@ public class AbstractEscaType implements EscaType {
 	 * @see pnnl.goss.rdf.EscaType#getRefersToMe(Resource resourceType)
 	 */
 	public Collection<EscaType> getRefersToMe(Resource resourceType){
+		return getRefersToMe(resourceType, null);
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see pnnl.goss.rdf.EscaType#addRefersToMe(com.hp.hpl.jena.rdf.model.Resource, EscaType notThisOne)
+	 */
+	public Collection<EscaType> getRefersToMe(Resource resourceType, EscaType notThisOne){
 		List<EscaType> items = new ArrayList<>();
 		for(EscaType t: refersToMe){
 			if(t.isResourceType(resourceType)){
-				items.add(t);
+				if (notThisOne == null){
+					items.add(t);
+				}
+				else{
+					if (!t.getMrid().equals(notThisOne.getMrid())){
+						items.add(t);
+					}
+				}
 			}
 		}
 		return items;
@@ -261,8 +280,8 @@ public class AbstractEscaType implements EscaType {
 
 	@Override
 	public String toString() {
-		
-		return this.dataType + " <"+this.mrid+"> # direct links: "+this.directLinks.size()+" # referred to me: "+this.refersToMe.size();
+		return this.dataType + " <"+this.mrid+">Path: "+ this.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
+		//return this.dataType + " <"+this.mrid+"> # direct links: "+this.directLinks.size()+" # referred to me: "+this.refersToMe.size();
 		
 //		StringBuilder sb = new StringBuilder();
 //		sb.append("<EscaType: "+dataType+ ">"+mrid+"\n");

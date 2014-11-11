@@ -31,6 +31,7 @@ public class EscaVocab {
 
 	public final static Resource SUBSTATION_OBJECT = m.createProperty(uri0 + "Substation");
 	public final static Resource SWITCH_OBJECT = m.createProperty(uri0 + "Switch");
+	public final static Resource LOADBREAKSWITCH_OBJECT = m.createProperty(uri0 + "LoadBreakSwitch");
 	public final static Resource MEASUREMENT_OBJECT = m.createProperty(uri0 + "Measurement");
 	public final static Resource BASEVOLTAGE_OBJECT = m.createProperty(uri0 + "BaseVoltage");
 	public final static Resource CURVEDATA_OBJECT = m.createProperty(uri0 + "CurveData");

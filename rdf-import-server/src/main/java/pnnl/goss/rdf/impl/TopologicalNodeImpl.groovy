@@ -3,6 +3,7 @@ package pnnl.goss.rdf.impl
 import groovy.transform.EqualsAndHashCode;
 import pnnl.goss.rdf.EscaType
 import pnnl.goss.rdf.Terminal
+import pnnl.goss.rdf.TopologicalIsland;
 import pnnl.goss.rdf.TopologicalNode
 import pnnl.goss.rdf.server.EscaVocab
 
@@ -11,7 +12,8 @@ import com.hp.hpl.jena.rdf.model.Resource
 @EqualsAndHashCode
 class TopologicalNodeImpl implements TopologicalNode{
 	
-	EscaType substation;
+	EscaType substation
+	TopologicalIsland topologicalIsland
 	
 	String getSubstationName(){
 		return this.substation?.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME)
@@ -30,27 +32,27 @@ class TopologicalNodeImpl implements TopologicalNode{
 	EscaType baseVoltageEsca;
 	protected void setBaseVoltageEsca(v){this.baseVoltageEsca = v}
 	
-	Set<ConnectivityNode> connectivityNodes = new HashSet<ConnectivityNode>();
-	protected void setConnectivityNodes(Set<ConnectivityNode> nodes) {this.connectivityNodes = nodes}
+	List<ConnectivityNode> connectivityNodes = []
+	protected void setConnectivityNodes(List<ConnectivityNode> nodes) {this.connectivityNodes = nodes}
 	
-	Set<EscaType> breakers = new HashSet<EscaType>();
+	List<EscaType> breakers = []
 	protected void setBreakers(v){this.breakers = breakers}
 	
-	Set<EscaType> generators = new HashSet<EscaType>();
-	protected void setGenerators(Set<EscaType> generators) {this.generators = generators}
+	List<EscaType> generators = [];
+	protected void setGenerators(List<EscaType> generators) {this.generators = generators}
 		
 	String identifier;
-	Set<EscaType> loads = new HashSet<EscaType>();
+	Set<EscaType> loads = [];
 	protected void setLoads(Set<EscaType> loads) {this.loads = loads}
 	
-	Set<EscaType> shunts  = new HashSet<EscaType>()
-	protected void setShunts(Set<EscaType> shunts) {this.shunts = shunts}
+	List<EscaType> shunts  = []
+	protected void setShunts(List<EscaType> shunts) {this.shunts = shunts}
 	
-	Set<Terminal> terminals = new HashSet<Terminal>()
-	protected void setTerminals(Set<Terminal> terminals) {this.terminals = terminals}
+	List<Terminal> terminals = []
+	protected void setTerminals(List<Terminal> terminals) {this.terminals = terminals}
 	
-	Set<EscaType> transformers = new HashSet<EscaType>();
-	protected void setTransformers(Set<EscaType> transformers) {this.transformers = transformers}
+	List<EscaType> transformers = []
+	protected void setTransformers(List<EscaType> transformers) {this.transformers = transformers}
 	
 	EscaType voltageLevel;
 	protected void setVoltageLevel(EscaType item) {this.voltageLevel = item}
@@ -160,5 +162,5 @@ class TopologicalNodeImpl implements TopologicalNode{
 			initialize()
 		}
 		return this.identifier + " Substation: " +this.getSubstationName() + " <"+getSubstationMrid() + ">";
-	}
+	}	
 }

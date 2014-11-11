@@ -20,6 +20,7 @@ public interface EscaType {
 
 	public abstract Collection<EscaType> getRefersToMe();
 	public abstract Collection<EscaType> getRefersToMe(Resource resourceType);
+	public abstract Collection<EscaType> getRefersToMe(Resource resourceType, EscaType notThisOne);
 
 	public abstract Literal getLiteralValue(Property property);
 

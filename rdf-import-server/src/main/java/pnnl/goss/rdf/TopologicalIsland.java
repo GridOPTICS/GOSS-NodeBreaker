@@ -1,11 +1,11 @@
 package pnnl.goss.rdf;
 
-import java.util.Set;
+import java.util.List;
 
 public interface TopologicalIsland {
 
-	Set<TopologicalBranch> getTopologicalBranches();
+	List<TopologicalBranch> getTopologicalBranches();
 	
-	Set<TopologicalNode> getTopologicalNodes();
+	List<TopologicalNode> getTopologicalNodes();
 	
 }
