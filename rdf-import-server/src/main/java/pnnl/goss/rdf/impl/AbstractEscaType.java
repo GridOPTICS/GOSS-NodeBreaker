@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,12 +13,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import pnnl.goss.rdf.EscaType;
+import pnnl.goss.rdf.server.EscaVocab;
+
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
-
-import pnnl.goss.rdf.EscaType;
-import pnnl.goss.rdf.server.EscaVocab;
 
 public class AbstractEscaType implements EscaType {
 	private static Logger log = LoggerFactory.getLogger(AbstractEscaType.class);
@@ -30,18 +31,18 @@ public class AbstractEscaType implements EscaType {
 	/*
 	 * Property name-> Literal value (i.e. String, Integer, Float etc) mapping.
 	 */
-	protected Map<String, Literal> literals = new HashMap<>();
+	protected Map<String, Literal> literals = new LinkedHashMap<>();
 
 	/*
 	 * Property name->esca type (links to other Resource types)
 	 */
-	protected Map<String, EscaType> directLinks = new HashMap<>();
+	protected Map<String, EscaType> directLinks = new LinkedHashMap<>();
 	
 	/*
 	 *  Items that have called the addDirectLink function will be added
 	 *  to this set.
 	 */
-	protected Set<EscaType> refersToMe = new HashSet<>();
+	protected Map<String, EscaType> refersToMe = new LinkedHashMap<>();
 	
 	/* (non-Javadoc)
 	 * @see pnnl.goss.rdf.EscaType#addDirectLink(java.lang.String, pnnl.goss.rdf.EscaType)
@@ -94,7 +95,7 @@ public class AbstractEscaType implements EscaType {
 	 */
 	@Override
 	public Collection<EscaType> getRefersToMe() {
-		return Collections.unmodifiableCollection(refersToMe);		
+		return Collections.unmodifiableCollection(refersToMe.values());		
 	}
 	
 	/* (non-Javadoc)
@@ -102,7 +103,7 @@ public class AbstractEscaType implements EscaType {
 	 */
 	@Override
 	public void addRefersToMe(EscaType refersToMe){
-		this.refersToMe.add(refersToMe);
+		this.refersToMe.put(refersToMe.getMrid(), refersToMe);
 	}
 	
 	
@@ -153,7 +154,7 @@ public class AbstractEscaType implements EscaType {
 	 */
 	public Collection<EscaType> getRefersToMe(Resource resourceType, EscaType notThisOne){
 		List<EscaType> items = new ArrayList<>();
-		for(EscaType t: refersToMe){
+		for(EscaType t: refersToMe.values()){
 			if(t.isResourceType(resourceType)){
 				if (notThisOne == null){
 					items.add(t);
