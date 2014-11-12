@@ -25,7 +25,8 @@ public class RdfModelFixtures {
 		List<Resource> acLineSegment = addTypeToModel(model, EscaVocab.ACLINESEGMENT_OBJECT, "ACLine", 5);
 		List<Resource> loads = addTypeToModel(model, EscaVocab.LOADBREAKSWITCH_OBJECT, "L", 2);
 		List<Resource> generators = addTypeToModel(model, EscaVocab.SYNCHRONOUSMACHINE_OBJECT, "SM", 2);
-		List<Resource> connectivityNodes = addTypeToModel(model, EscaVocab.CONNECTIVITYNODE_OBJECT, "Conn", 35);
+		List<Resource> connectivityNodes = addTypeToModel(model, EscaVocab.CONNECTIVITYNODE_OBJECT, "Conn", 34);
+		List<Resource> busBars = addTypeToModel(model,  EscaVocab.BUSBARSECTION_OBJECT, "BB", 8);
 	
 		Map<Integer, Integer> terminalToConnMap = createTermToConnectivityNodeMap();
 			
@@ -38,6 +39,36 @@ public class RdfModelFixtures {
 		for(Resource res: breakers){
 			res.addLiteral(EscaVocab.SWITCH_NORMALOPEN, false);
 		}
+		
+		terminals.get(0).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(0));
+		terminals.get(10).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(0));
+		
+		terminals.get(9).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(1));
+		terminals.get(19).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(1));
+		
+		terminals.get(20).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(2));
+		terminals.get(27).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(2));
+		terminals.get(34).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(2));
+		
+		terminals.get(26).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(3));
+		terminals.get(33).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(3));
+		terminals.get(40).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(3));
+		
+		
+		terminals.get(41).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(4));
+		terminals.get(48).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(4));
+		terminals.get(55).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(4));
+		
+		terminals.get(47).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(5));
+		terminals.get(54).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(5));
+		terminals.get(61).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(5));
+		
+		terminals.get(62).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(6));
+		terminals.get(72).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(6));
+		
+		terminals.get(71).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(7));
+		terminals.get(81).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(7));
+		
 		return model;
 	}
 	
