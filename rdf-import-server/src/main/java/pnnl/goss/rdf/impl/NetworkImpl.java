@@ -3,7 +3,10 @@ package pnnl.goss.rdf.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.felix.ipojo.annotations.Provides;
@@ -56,12 +59,19 @@ public class NetworkImpl implements Network {
 		log.debug("Creating nework with: " + escaTypes.keySet().size()
 				+ " elements.");
 		log.debug("# AcLineSegments: "
-				+ escaTypes.getByResourceType(EscaVocab.ACLINESEGMENT_OBJECT));
+				+ escaTypes.getByResourceType(EscaVocab.ACLINESEGMENT_OBJECT).size());
 		log.debug("# TransformerWinding: "
 				+ escaTypes
-						.getByResourceType(EscaVocab.TRANSFORMERWINDING_OBJECT));
+						.getByResourceType(EscaVocab.TRANSFORMERWINDING_OBJECT).size());
 		log.debug("# Substations: "
-				+ escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT));
+				+ escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT).size());
+		log.debug("# ConnectivityNodes: "
+				+ escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT).size());
+		log.debug("# Terminals: "
+				+ escaTypes.getByResourceType(EscaVocab.TERMINAL_OBJECT).size());
+		log.debug("# Breakers: "
+				+ escaTypes.getByResourceType(EscaVocab.BREAKER_OBJECT).size());
+
 		this.escaTypes = escaTypes;
 		try {
 
@@ -71,15 +81,28 @@ public class NetworkImpl implements Network {
 
 			// Build TopologicalNodes up
 			this.buildTopology();
+			
+			for(TopologicalNode t: this.topologicalNodes){
+				log.debug(t.getIdentifier());
+				for(Terminal tt: t.getTerminals()){
+					log.debug("\t"+ tt);
+				}				
+				for(ConnectivityNode cn: ((TopologicalNodeImpl)t).getConnectivityNodes()){
+					log.debug("\t"+ cn);
+					for(EscaType t2: cn.getTerminals()){
+						log.debug("\t\t"+ t2);
+					}
+				}
+			}
 
 			// Initialize all of the topo nodes so that the properties are
 			// properly populated.
-			for (TopologicalNodeImpl n : topologicalNodes)
-				((TopologicalNodeImpl) n).initialize();
-
-			// Build TopologicalIslands, TopologicalBranches up.
-			topologicalNodeItems.addItemsToProcess(topologicalNodes);
-			this.buildTopoIslands();
+//			for (TopologicalNodeImpl n : topologicalNodes)
+//				((TopologicalNodeImpl) n).initialize();
+//
+//			// Build TopologicalIslands, TopologicalBranches up.
+//			topologicalNodeItems.addItemsToProcess(topologicalNodes);
+			//this.buildTopoIslands();
 
 		} catch (InvalidArgumentException e) {
 			log.error("Error building topology", e);
@@ -91,10 +114,6 @@ public class NetworkImpl implements Network {
 		debugStep("Building Islands");
 		TopologicalNodeImpl processingNode = (TopologicalNodeImpl) topologicalNodeItems
 				.nextItem();
-		
-		for(Terminal t: processingNode.getTerminals()){
-			debugStep("Terminal test: " + t.toString());
-		}
 
 		List otherNodes = new ArrayList();
 		// bag of currently unprocessed terminals.
@@ -272,6 +291,7 @@ public class NetworkImpl implements Network {
 	}
 
 	private void printIsland(TopologicalIsland island) {
+		
 		debugStep("############################################################################################");
 		debugStep("# Topo nodes in island: "
 				+ island.getTopologicalNodes().size() + " branches: "
@@ -329,82 +349,177 @@ public class NetworkImpl implements Network {
 
 		Property switchOpenProp = EscaVocab.SWITCH_NORMALOPEN;
 
+		Map<String, EscaType> connectivityItems = new LinkedHashMap<>();
+		Map<String, Boolean> connectivityItemProcessedStatus = new LinkedHashMap();
+		
+		Map<String, EscaType> terminalItems = new LinkedHashMap<>();
+		Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap();
+		
+		for (EscaType t: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)){
+			connectivityItems.put(t.getMrid(), t);
+			connectivityItemProcessedStatus.put(t.getMrid(), false);
+		}
+		
 		log.debug("Building Topology");
+		ConnectivityNode processingNode  = null;
 		// Grab the next connectivity node that hasn't been processed.
-		ConnectivityNode processingNode = (ConnectivityNode) connectivityItems
-				.nextItem();
+		for (String t: connectivityItems.keySet()){
+			if (connectivityItemProcessedStatus.get(t) == false){
+				processingNode = (ConnectivityNode)connectivityItems.get(t);
+				break;
+			}
+		}
+		
+		// Seed the starting point.
+		//processingNode = (ConnectivityNode)connectivityItems.get("Conn0");
+		
+		List<EscaType> nextNodes = new ArrayList<>();
+		// Define a new node/bus
+		TopologicalNodeImpl topologicalNode = new TopologicalNodeImpl();
+		topologicalNodes.add(topologicalNode);
+		topologicalNode.setIdentifier("T" + topologicalNodes.size());
+		debugStep("Creating new topology node "
+				+ topologicalNode.getIdentifier());
+		// Add the connectivity node to the topological node.
+		topologicalNode.getConnectivityNodes().add(processingNode);
+		
+		
 		while (processingNode != null) {
 
-			debugStep("Processing ", processingNode);
+			debugStep("\tProcessing ", processingNode);
 
-			// Define a new node/bus
-			TopologicalNodeImpl topologicalNode = new TopologicalNodeImpl();
-			topologicalNodes.add(topologicalNode);
-			topologicalNode.setIdentifier("T" + topologicalNodes.size());
-			debugStep("\tCreating new topology node "
-					+ topologicalNode.getIdentifier());
-
-			// Add the connectivity node to the topological node.
-			topologicalNode.getConnectivityNodes().add(processingNode);
-
-			// Add all of the terminals connected to the currently processing
-			// node.
-			ProcessingItems terminalItems = new ProcessingItems("getIdentifier");
-			terminalItems.addItemsToProcess(processingNode
-					.getTerminalsAsEscaType());
-
+			// Add all of the terminals connected to the currently processing node.
+			for(EscaType z: processingNode.getTerminalsAsEscaType()){
+				if (!terminalItems.containsKey(z.getMrid())){
+					terminalItems.put(z.getMrid(), z);
+					terminalProcessedStatus.put(z.getMrid(), false);
+					log.debug("\tTo be processed: "+z);
+				}
+			}
+			
+			// Mark current node as being procesed.
+			connectivityItemProcessedStatus.put(processingNode.getMrid(), true);
+			
+			Terminal processingTerminal = null;
 			// Get a terminal to process
-			Terminal processingTerminal = (Terminal) terminalItems.nextItem();
+			for (String t: terminalItems.keySet()){
+				if (terminalProcessedStatus.get(t) == false){
+					processingTerminal = (Terminal)terminalItems.get(t);
+					break;
+				}
+			}
+			
 			while (processingTerminal != null) {
 				log.debug("\tProcessing " + processingTerminal.toString());
 
 				// Equipment associated with the terminal.
-				Collection<EscaType> equipment = ((TerminalImpl) processingTerminal)
-						.getEquipment();
+				Collection<EscaType> equipment = ((TerminalImpl) processingTerminal).getEquipment();
+				if (!topologicalNode.getTerminals().contains(processingTerminal)){
+					topologicalNode.getTerminals().add(processingTerminal);
+				}
 
 				for (EscaType eq : equipment) {
 					
 					if (eq.hasLiteralProperty(EscaVocab.SWITCH_NORMALOPEN)){
-					//if (eq.isResourceType(breakerRes)) {
-						debugStep("\t\tFound Equipment With Property: <"
-								+ eq.getMrid()
-								+ "> "
-								+ eq.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME));
-
+						debugStep("\t\tFound Equipment: "+ eq);
+						
 						// Switch closed then add the terminals on the other
 						// side.
 						if (!eq.getLiteralValue(switchOpenProp).getBoolean()) {
-							for (EscaType t : eq.getRefersToMe(terminalRes)) {
-								if (t != eq) {
-									terminalItems.addItemToProcess(t);
+							debugStep("\t\tSwitch was closed.");
+							for (EscaType termToAdd: eq.getRefersToMe(EscaVocab.TERMINAL_OBJECT, processingTerminal)){
+								if (!terminalItems.containsKey(termToAdd.getMrid())){
+									debugStep("\t\tAdding terminal to be processed: "+ termToAdd.toString());
+									terminalItems.put(termToAdd.getMrid(), termToAdd);
+									terminalProcessedStatus.put(termToAdd.getMrid(), false);
 								}
+							}						
+						}
+						else{
+							debugStep("\t\tSwitch open.");
+						}
+					} else if (eq.isResourceType(EscaVocab.BUSBARSECTION_OBJECT)){
+						// Add terminals that are connected to the bus bar section to 
+						// be processed.
+						for(EscaType t: eq.getRefersToMe(EscaVocab.TERMINAL_OBJECT, processingTerminal)){
+							if (!terminalItems.containsKey(t.getMrid())){
+								terminalItems.put(t.getMrid(), t);
+								terminalProcessedStatus.put(t.getMrid(), false);
+								log.debug("BB adding: "+t);
 							}
 						}
-					} else if (eq.isResourceType(connectivityNodeRes)) {
+					}
+					else if (eq.isResourceType(connectivityNodeRes)) {
+						
 						ConnectivityNode node = (ConnectivityNode) eq;
-						connectivityItems.processItem(node);
-						terminalItems.addItemsToProcess(node
-								.getTerminalsAsEscaType());
-						topologicalNode.getConnectivityNodes().add(node);
-						debugStep("\t\tAdding: " + node.dataType + " <"
-								+ node.mrid + "> " + " to "
-								+ topologicalNode.getIdentifier()); // +topologicalNode.getIdentifier());
+						if (connectivityItemProcessedStatus.get(node.getMrid())== false){ // && !nextNodes.contains(node)){
+							debugStep("\t\tFound connectivity node: "+ eq);
+//							debugStep("\t\t\tAdding to nextNodes "+node);
+//							nextNodes.add(node);
+							
+							for (EscaType termToAdd: node.getTerminalsAsEscaType()){
+								if (!terminalItems.containsKey(termToAdd.getMrid())){
+									terminalItems.put(termToAdd.getMrid(), termToAdd);
+									terminalProcessedStatus.put(termToAdd.getMrid(), false);
+								}
+							}
+							
+							topologicalNode.getConnectivityNodes().add(node);
+							// node has been consumed now that we have put all the terminals in the
+							// to be processlist.
+							connectivityItemProcessedStatus.put(node.getMrid(), true);
+							debugStep("\t\tAdded to topological node" + node);
+						} else{
+							debugStep("\t\tAlready processed or added to nextNode already." + eq);
+						}
+						
 					} else {
 						// debugStep("Other Equipment Found: ", eq);
 					}
 				}
 
+				log.debug("\tEnd Processing: "+ processingTerminal);
 				// Mark terminal as being processed and get the next one to
 				// process.
-				terminalItems.processItem(processingTerminal);
-				processingTerminal = (Terminal) terminalItems.nextItem();
+				terminalProcessedStatus.put(processingTerminal.getMrid(), true);
+				
+				processingTerminal = null;
+				for (String t: terminalItems.keySet()){
+					if (terminalProcessedStatus.get(t) == false){
+						processingTerminal = (Terminal)terminalItems.get(t);
+						break;
+					}
+				}
+				if (processingTerminal != null){
+					terminalProcessedStatus.put(processingTerminal.getMrid(), true);	
+				}
 			}
 
 			// mark the current node as processed and get the next one to be
 			// processed.
-			connectivityItems.processItem(processingNode);
-			processingNode = (ConnectivityNode) connectivityItems.nextItem();
+			connectivityItemProcessedStatus.put(processingNode.getMrid(), true);
+			processingNode = null;
+			// Grab the next connectivity node that hasn't been processed.
+			for (String t: connectivityItems.keySet()){
+				if (connectivityItemProcessedStatus.get(t) == false){
+					processingNode = (ConnectivityNode)connectivityItems.get(t);
+					break;
+				}
+			}
+			
+			if (processingNode != null){
+				topologicalNode = new TopologicalNodeImpl();
+				topologicalNodes.add(topologicalNode);
+				topologicalNode.setIdentifier("T" + topologicalNodes.size());
+				debugStep("Creating new topology node "
+						+ topologicalNode.getIdentifier());
+				// Add the connectivity node to the topological node.
+				topologicalNode.getConnectivityNodes().add(processingNode);
+			}			
 		}
+		
+		log.debug("# topo ndoes: "+ this.topologicalNodes.size());
+		
 	}
 
 	private static void debugStep(String message) {
