@@ -10,6 +10,9 @@ class TopologicalBranchImpl implements TopologicalBranch {
 	EscaType powerTransferEquipment
 	Terminal terminalFrom
 	Terminal terminalTo
+	String getName(){
+		return powerTransferEquipment.getLink(EscaVocab.IDENTIFIEDOBJECT_NAME)
+	}
 	
 	@Override
 	String toString() {
