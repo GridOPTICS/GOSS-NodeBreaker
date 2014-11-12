@@ -33,8 +33,13 @@ public class RdfModelFixtures {
 		
 		createLinkProperty(terminalToBrekaerMap, EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, terminals, breakers);
 		
+		for(Resource res: breakers){
+			res.addLiteral(EscaVocab.SWITCH_NORMALOPEN, false);
+		}
 		return model;
 	}
+	
+	
 	
 		
 	/**

@@ -23,6 +23,15 @@ class TestEscaTreeWindow extends Specification {
 			assert escaTypes.getByResourceType(EscaVocab.TERMINAL_OBJECT).size() == 82
 			assert escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT).size() == 35
 		
+		and: "All circuit breakers are closed"
+			def breakers = escaTypes.getByResourceType(EscaVocab.BREAKER_OBJECT)
+			assert breakers.size() > 0
+			
+			breakers.each { br ->
+				EscaType t = br as EscaType
+				assert t.getLiteralValue(EscaVocab.SWITCH_NORMALOPEN).getBoolean() == false
+			}
+			
 		and: "Circuit Breakers are linked correctly"
 			// breaker to terminal map
 			// we expect a breaker to have two terminals.  the first oneis mapped below
@@ -55,7 +64,7 @@ class TestEscaTreeWindow extends Specification {
 			]
 			
 			br.each {brid, termid ->
-				EscaType breaker = escaTypes.get("CB$brid".toString())
+				EscaType breaker = escaTypes.get("CB$brid".toString())				
 				EscaType term = escaTypes.get("Term$termid".toString())
 				String otherTermid = "Term"+(termid+1)
 				println termid + " " + otherTermid
