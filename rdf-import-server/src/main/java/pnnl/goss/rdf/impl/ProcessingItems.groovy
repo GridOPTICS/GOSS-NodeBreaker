@@ -14,12 +14,12 @@ class ProcessingItems {
 	/**
 	 * Keep a record of what has/hasn't been processed.
 	 */
-	private Map recordToProcessed = [:]
+	private Map recordToProcessed = [:] as LinkedHashMap
 	
 	/**
 	 * A map from propertykey to index in the elements list. 
 	 */
-	private Map recordToIndex = [:]
+	private Map recordToIndex = [:] as LinkedHashMap
 	
 	/**
 	 * An ordered list of elements.
@@ -32,6 +32,12 @@ class ProcessingItems {
 	 */
 	private String propertyKey;
 	
+	/**
+	 * Construct a processing items object with the specified functionName to be used
+	 * as the comparison for equality.
+	 * 
+	 * @param propertyKey
+	 */
 	public ProcessingItems(String propertyKey){
 		this.propertyKey = propertyKey;
 	}
