@@ -66,13 +66,13 @@ class TestEscaTreeWindow extends Specification {
 			br.each {brid, termid ->
 				EscaType breaker = escaTypes.get("CB$brid".toString())				
 				EscaType term = escaTypes.get("Term$termid".toString())
-				String otherTermid = "Term"+(termid+1)
-				println termid + " " + otherTermid
-				EscaType otherterm = escaTypes.get("Term$otherTermid".toString())
+				String otherTermId = "Term"+(termid+1)
+				EscaType otherterm = escaTypes.get(otherTermId)
 				assert breaker != null
 				assert term != null
 				assert breaker in term.getDirectLinks()
 				assert term in breaker.getRefersToMe()
+				assert otherterm in breaker.getRefersToMe()
 			}
 			
 				

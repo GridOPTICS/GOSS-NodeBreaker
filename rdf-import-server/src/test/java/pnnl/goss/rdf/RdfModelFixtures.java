@@ -1,6 +1,8 @@
 package pnnl.goss.rdf;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +88,7 @@ public class RdfModelFixtures {
 	}
 	
 	private static Map<Integer, Integer> createTermToBreakerMap(){
-		Map<Integer, Integer> map = new LinkedHashMap<>();
+		Map<Integer, Integer> map = (Map)Collections.synchronizedMap(new LinkedHashMap<>());
 		
 		map.put(1,  0);
 		map.put(4, 1);
@@ -113,6 +115,13 @@ public class RdfModelFixtures {
 		map.put(76, 22);
 		map.put(79, 23);
 		
+		Map<Integer, Integer> itemsToAdd = new LinkedHashMap<>();
+		for(Integer k: map.keySet()){
+			itemsToAdd.put(k+1, map.get(k));
+		}
+		
+		map.putAll(itemsToAdd);
+
 		return map;
 	}
 	
