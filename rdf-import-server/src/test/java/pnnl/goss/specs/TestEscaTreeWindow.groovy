@@ -22,7 +22,51 @@ class TestEscaTreeWindow extends Specification {
 			assert escaTypes.getByResourceType(EscaVocab.BREAKER_OBJECT).size() == 24
 			assert escaTypes.getByResourceType(EscaVocab.TERMINAL_OBJECT).size() == 82
 			assert escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT).size() == 35
+		
+		and: "Circuit Breakers are linked correctly"
+			// breaker to terminal map
+			// we expect a breaker to have two terminals.  the first oneis mapped below
+			// while the second one is a number one greater than the mapped  number.
+			def br = [
+				0:   1,
+				1:   4,
+				2:   7,
+				3:  11,
+				4:  14,
+				5:  17,
+				6:  21,
+				7:  24,
+				8:  28,
+				9:  31,
+				10: 35,
+				11: 38,
+				12: 42,
+				13: 45,
+				14: 49,
+				15: 52,
+				16: 56,
+				17: 59,
+				18: 63,
+				19: 66,
+				20: 69,
+				21: 73,
+				22: 76,
+				23: 79					
+			]
 			
+			br.each {brid, termid ->
+				EscaType breaker = escaTypes.get("CB$brid".toString())
+				EscaType term = escaTypes.get("Term$termid".toString())
+				String otherTermid = "Term"+(termid+1)
+				println termid + " " + otherTermid
+				EscaType otherterm = escaTypes.get("Term$otherTermid".toString())
+				assert breaker != null
+				assert term != null
+				assert breaker in term.getDirectLinks()
+				assert term in breaker.getRefersToMe()
+			}
+			
+				
 		and: "Connectivity nodes are linked correctly."
 		
 			// Create a node to terminals that are referred to it.

@@ -1,7 +1,7 @@
 package pnnl.goss.rdf;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +11,6 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.sun.org.apache.xml.internal.security.keys.content.KeyValue;
 
 public class RdfModelFixtures {
 	
@@ -27,10 +26,12 @@ public class RdfModelFixtures {
 		List<Resource> connectivityNodes = addTypeToModel(model, EscaVocab.CONNECTIVITYNODE_OBJECT, "Conn", 35);
 	
 		Map<Integer, Integer> terminalToConnMap = createTermToConnectivityNodeMap();
-		
+			
 		createLinkProperty(terminalToConnMap, EscaVocab.TERMINAL_CONNECTIVITYNODE, terminals, connectivityNodes);
 		
-		//Map<Integer, Integer> 
+		Map<Integer, Integer> terminalToBrekaerMap = createTermToBreakerMap();
+		
+		createLinkProperty(terminalToBrekaerMap, EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, terminals, breakers);
 		
 		return model;
 	}
@@ -79,6 +80,37 @@ public class RdfModelFixtures {
 		return resources;
 	}
 	
+	private static Map<Integer, Integer> createTermToBreakerMap(){
+		Map<Integer, Integer> map = new LinkedHashMap<>();
+		
+		map.put(1,  0);
+		map.put(4, 1);
+		map.put(7,  2);
+		map.put(11, 3);
+		map.put(14, 4);
+		map.put(17, 5);
+		map.put(21, 6);
+		map.put(24,  7);
+		map.put(28, 8);
+		map.put(31, 9);
+		map.put(35, 10);
+		map.put(38, 11);
+		map.put(42,  12);
+		map.put(45, 13);
+		map.put(49, 14);
+		map.put(52, 15);
+		map.put(56, 16);
+		map.put(59, 17);
+		map.put(63, 18);
+		map.put(66, 19);
+		map.put(69, 20);
+		map.put(73, 21);
+		map.put(76, 22);
+		map.put(79, 23);
+		
+		return map;
+	}
+	
 	/**
 	 * Creates a maping from terminal to connectivity node.  For this model there
 	 * are either 2 or 3 referencens depending upon whether connected to a circuit breaker
@@ -87,7 +119,7 @@ public class RdfModelFixtures {
 	 * @return A map from terminal index to connectivity node index.
 	 */
 	private static Map<Integer, Integer> createTermToConnectivityNodeMap(){
-		Map<Integer, Integer> termToCnMap = new HashMap<>();
+		Map<Integer, Integer> termToCnMap = new LinkedHashMap<>();
 
 		// SS1 - Column 1
 		termToCnMap.put(0, 0);
