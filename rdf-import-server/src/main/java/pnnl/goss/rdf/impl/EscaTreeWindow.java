@@ -80,6 +80,11 @@ public class EscaTreeWindow {
 		this.isCimFile = isCimFile;
 		this.outputFile = outputFile;
 	}
+	
+	public EscaTreeWindow(Model rdfModel){
+		this.rdfModel = rdfModel;
+		loadTypeMap();
+	}
 
 	/**
 	 * Loads all of the subjects into an internal structure that we can use to
