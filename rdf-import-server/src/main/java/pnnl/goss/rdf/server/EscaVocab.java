@@ -29,6 +29,7 @@ public class EscaVocab {
 
 	public final static String URI_ROOT = "http://iec.ch/TC57/2007/CIM-schema-cim12#";
 
+	public final static Resource BUSBARSECTION_OBJECT = m.createProperty(URI_ROOT + "BusBarSection");
 	public final static Resource SUBSTATION_OBJECT = m.createProperty(URI_ROOT + "Substation");
 	public final static Resource SWITCH_OBJECT = m.createProperty(URI_ROOT + "Switch");
 	public final static Resource LOADBREAKSWITCH_OBJECT = m.createProperty(URI_ROOT + "LoadBreakSwitch");
