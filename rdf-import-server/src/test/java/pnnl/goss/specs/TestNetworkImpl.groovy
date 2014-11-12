@@ -8,7 +8,7 @@ import spock.lang.Specification
 
 class TestNetworkImpl extends Specification{
 	
-	def "Network should have the correct number of topological nodeds"(){
+	def "Network should have the correct number of topological nodes"(){
 		when: "Network created"
 			EscaTreeWindow window = new EscaTreeWindow(RdfModelFixtures.get4SubModel())
 			Network network = new NetworkImpl(window.getEscaTypeMap())

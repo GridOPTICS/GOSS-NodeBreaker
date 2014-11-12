@@ -6,7 +6,7 @@ import spock.lang.Specification;
 
 class TestTopologicalNodeImpl extends Specification {
 		
-	def "When two instances of topological nodes are created, they are eequivelent"() {
+	def "When two instances of topological nodes are created, they are equivelent"() {
 		
 		given: "The creation of two topological nodes with no attributes defined."
 		
