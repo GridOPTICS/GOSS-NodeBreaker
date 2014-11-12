@@ -72,7 +72,8 @@ public class RdfModelFixtures {
 			String id = EscaVocab.URI_ROOT+prefix + i;
 			Resource res = model.createResource(id, resType);
 			resources.add(res);
-			res.addProperty(EscaVocab.IDENTIFIEDOBJECT_NAME, model.createLiteral(prefix+i));				
+			res.addProperty(EscaVocab.IDENTIFIEDOBJECT_NAME, model.createLiteral(prefix+i));		
+			res.addProperty(EscaVocab.IDENTIFIEDOBJECT_PATHNAME, model.createLiteral("prefix"+i+" path"));
 		}
 		
 		return resources;
