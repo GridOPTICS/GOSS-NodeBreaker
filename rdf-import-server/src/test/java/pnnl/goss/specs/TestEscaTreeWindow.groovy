@@ -9,10 +9,10 @@ import spock.lang.Specification
 
 class TestEscaTreeWindow extends Specification {
 	
-	def "constructing object with 10 Terminal system"() {
-		when:
+	def "constructing 4 substation model from the 05730516.pdf paper"() {
+		when: "Model is constructed"
 			EscaTreeWindow window = new EscaTreeWindow(RdfModelFixtures.get4SubModel())
-		then:
+		then: "EscaType getByResourceType has the correct number of each object type."
 			assert window.getEscaTypeMap() != null
 			EscaTypes escaTypes = window.getEscaTypeMap()
 			
