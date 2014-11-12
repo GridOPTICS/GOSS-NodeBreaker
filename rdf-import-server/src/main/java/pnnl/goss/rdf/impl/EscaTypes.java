@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -20,7 +21,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
  * @author d3m614
  *
  */
-public class EscaTypes extends HashMap<String, EscaType> {
+public class EscaTypes extends LinkedHashMap<String, EscaType> {
 
 	private static final long serialVersionUID = -668345956741148741L;
 
