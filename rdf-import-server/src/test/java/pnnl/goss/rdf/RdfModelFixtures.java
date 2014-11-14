@@ -77,13 +77,13 @@ public class RdfModelFixtures {
 		terminals.get(22).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(1));
 		
 		terminals.get(16).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(2));
-		terminals.get(64).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(2));
+		terminals.get(65).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(2));
 		
-		terminals.get(29).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(3));
-		terminals.get(72).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(3));
+		terminals.get(30).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(3));
+		terminals.get(77).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(3));
 		
 		terminals.get(58).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(4));
-		terminals.get(66).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(4));
+		terminals.get(68).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(4));
 		
 		return model;
 	}
