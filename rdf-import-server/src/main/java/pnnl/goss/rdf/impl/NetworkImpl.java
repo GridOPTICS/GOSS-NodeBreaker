@@ -41,10 +41,14 @@ public class NetworkImpl implements Network {
 	 */
 	private EscaTypes escaTypes;
 	private List<EscaType> substations = new ArrayList<EscaType>();
-	private LinkedHashMap<String, TopologicalNodeImpl> topologicalNodes = new LinkedHashMap<>();
-	private List<TopologicalIsland> topologicalIslands = new ArrayList<TopologicalIsland>();
 
-	private List<TopologicalBranch> topologicalBranches = new ArrayList<TopologicalBranch>();
+	private LinkedHashMap<String, EscaType> terminals = new LinkedHashMap<>();
+	private LinkedHashMap<String, EscaType> connectivityNodes = new LinkedHashMap<>();
+
+	private LinkedHashMap<String, TopologicalNodeImpl> topologicalNodes = new LinkedHashMap<>();
+	private LinkedHashMap<String, TopologicalIsland> topologicalIslands = new LinkedHashMap<>();
+
+	private LinkedHashMap<String, TopologicalBranch> topologicalBranches = new LinkedHashMap<>();
 	private List<String> branchMridList = new ArrayList<>();
 
 	private ProcessingItems connectivityItems = new ProcessingItems(
@@ -52,8 +56,8 @@ public class NetworkImpl implements Network {
 	private ProcessingItems topologicalNodeItems = new ProcessingItems(
 			"getIdentifier");
 
-	public List<TopologicalIsland> getTopologicalIslands() {
-		return topologicalIslands;
+	public Collection<TopologicalIsland> getTopologicalIslands() {
+		return Collections.unmodifiableCollection(topologicalIslands.values());
 	}
 
 	public NetworkImpl(EscaTypes escaTypes) {
@@ -125,8 +129,9 @@ public class NetworkImpl implements Network {
 		List otherNodes = new ArrayList();
 		// bag of currently unprocessed terminals.
 		ProcessingItems terminalItems = new ProcessingItems("getIdentifier");
-		TopologicalIsland island = new TopologicalIslandImpl();
-		topologicalIslands.add(island);
+		TopologicalIslandImpl island = new TopologicalIslandImpl();
+		island.setIdentifier("Island: "+topologicalIslands.size());		
+		topologicalIslands.put(island.getIdentifier(), island);
 		
 		while (processingNode != null) {
 						
@@ -165,6 +170,7 @@ public class NetworkImpl implements Network {
 						TopologicalBranchImpl branch = new TopologicalBranchImpl();
 						branch.setTerminalFrom((Terminal) processingTerminal);
 						branch.setPowerTransferEquipment(currentCanidate);
+						branch.setIdentifier(currentCanidate.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME).getString());
 	
 						Collection<EscaType> possibleOtherTerminalList = currentCanidate
 								.getRefersToMe(EscaVocab.TERMINAL_OBJECT);
@@ -220,7 +226,6 @@ public class NetworkImpl implements Network {
 							TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerminal
 									.getTopologicalNode();
 							branch.setTerminalTo(otherTerminal);
-							branch.setPowerTransferEquipment(currentCanidate);
 							if (!otherNodes.contains(otherNode) && !topologicalNodeItems.wasProcessed(otherNode)){
 								otherNodes.add(otherNode);								
 							}
@@ -240,7 +245,7 @@ public class NetworkImpl implements Network {
 						
 						if (!containsBranch(branch)){
 							branchMridList.add(currentCanidate.getMrid());
-							topologicalBranches.add(branch);
+							topologicalBranches.put(branch.getIdentifier(), branch);
 							island.getTopologicalBranches().add(branch);
 						}
 //						if (!containsBranch(branch.getTerminalFrom(),
@@ -269,7 +274,8 @@ public class NetworkImpl implements Network {
 				}
 				
 				island = new TopologicalIslandImpl();
-				topologicalIslands.add(island);
+				island.setIdentifier("Island: "+topologicalIslands.size());		
+				topologicalIslands.put(island.getIdentifier(), island);
 				processingNode = (TopologicalNodeImpl) topologicalNodeItems.nextItem();
 			}
 						
