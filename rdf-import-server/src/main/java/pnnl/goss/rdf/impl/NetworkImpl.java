@@ -642,7 +642,7 @@ public class NetworkImpl implements Network {
 	}
 
 	private boolean containsBranch(EscaType item1, EscaType item2) {
-		for (TopologicalBranch br : topologicalBranches) {
+		for (TopologicalBranch br : topologicalBranches.values()) {
 			if (br.getTerminalFrom().getMrid().equals(item1.getMrid())) {
 				if (br.getTerminalTo().getMrid().equals(item2.getMrid())) {
 					return true;
@@ -666,7 +666,7 @@ public class NetworkImpl implements Network {
 
 	@Override
 	public Collection<TopologicalBranch> getTopologicalBranches() {
-		return Collections.unmodifiableCollection(topologicalBranches);
+		return Collections.unmodifiableCollection(topologicalBranches.values());
 	}
 
 }
