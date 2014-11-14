@@ -42,7 +42,6 @@ public class NetworkImpl implements Network {
 	private EscaTypes escaTypes;
 	private List<EscaType> substations = new ArrayList<EscaType>();
 
-	private LinkedHashMap<String, EscaType> terminals = new LinkedHashMap<>();
 	private LinkedHashMap<String, EscaType> connectivityNodes = new LinkedHashMap<>();
 
 	private LinkedHashMap<String, TopologicalNodeImpl> topologicalNodes = new LinkedHashMap<>();
@@ -50,11 +49,6 @@ public class NetworkImpl implements Network {
 
 	private LinkedHashMap<String, TopologicalBranch> topologicalBranches = new LinkedHashMap<>();
 	private List<String> branchMridList = new ArrayList<>();
-
-	private ProcessingItems connectivityItems = new ProcessingItems(
-			"getIdentifier");
-	private ProcessingItems topologicalNodeItems = new ProcessingItems(
-			"getIdentifier");
 
 	public Collection<TopologicalIsland> getTopologicalIslands() {
 		return Collections.unmodifiableCollection(topologicalIslands.values());
@@ -81,8 +75,9 @@ public class NetworkImpl implements Network {
 		try {
 
 			// Preload connectivity nodes
-			connectivityItems.addItemsToProcess(escaTypes
-					.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT));
+			for(EscaType t: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)){
+				connectivityNodes.put(t.getMrid(), t);
+			}
 
 			// Build TopologicalNodes up
 			this.buildTopology();
@@ -118,17 +113,28 @@ public class NetworkImpl implements Network {
 	private void buildTopoIslands() {
 
 		debugStep("Building Islands");
-		LinkedHashMap<String, Boolean> topologicalNodesProcessStatus = new LinkedHashMap<>();
+		Map<String, Boolean> topologicalNodesProcessStatus = new LinkedHashMap<>();
 		
-//		Map<String, EscaType> terminalItems = new LinkedHashMap<>();
-//		Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap<>();
+		for(String k: topologicalNodes.keySet()){
+			topologicalNodesProcessStatus.put(k, false);
+		}
 		
-		TopologicalNodeImpl processingNode = (TopologicalNodeImpl) topologicalNodeItems
-				.nextItem();
+		Map<String, EscaType> terminals = new LinkedHashMap<>();
+		Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap<>();
+		
 
+		TopologicalNodeImpl processingNode = null;
+		
+		for (String k: topologicalNodes.keySet()){
+			if(topologicalNodesProcessStatus.get(k) == false){
+				processingNode = topologicalNodes.get(k);
+				break;
+			}
+		}
+		
 		List otherNodes = new ArrayList();
 		// bag of currently unprocessed terminals.
-		ProcessingItems terminalItems = new ProcessingItems("getIdentifier");
+		
 		TopologicalIslandImpl island = new TopologicalIslandImpl();
 		island.setIdentifier("Island: "+topologicalIslands.size());		
 		topologicalIslands.put(island.getIdentifier(), island);
@@ -138,12 +144,24 @@ public class NetworkImpl implements Network {
 			island.getTopologicalNodes().add(processingNode);
 			((TopologicalNodeImpl) processingNode).setTopologicalIsland(island);
 
-			terminalItems.addItemsToProcess(processingNode.getTerminals());
-			topologicalNodeItems.processItem(processingNode);
-
-			// grab a terminal
-			EscaType processingTerminal = (EscaType) terminalItems.nextItem();
-
+			// Add the terminals to be processed.
+			for(Terminal t: processingNode.getTerminals()){
+				terminals.put(t.getMrid(), t);
+				terminalProcessedStatus.put(t.getMrid(), false);
+			}
+			
+			// Mark the currently procesing node as being processed.
+			topologicalNodesProcessStatus.put(processingNode.getIdentifier(), true);
+			
+			EscaType processingTerminal = null;
+			
+			for(String k: terminals.keySet()){
+				if (terminalProcessedStatus.get(k)== false){
+					processingTerminal = terminals.get(k);
+					break;
+				}
+			}
+			
 			while (processingTerminal != null) {
 				debugStep("\tProcessing Terminal: "
 						+ processingTerminal.toString());
@@ -206,7 +224,7 @@ public class NetworkImpl implements Network {
 									.getTopologicalNode();
 							debugStep("\t\tOther Node is: " + otherNode.toString());
 							
-							if (!otherNodes.contains(otherNode) && !topologicalNodeItems.wasProcessed(otherNode)){
+							if (!otherNodes.contains(otherNode) && !topologicalNodesProcessStatus.get(otherNode.getIdentifier())) {
 								otherNodes.add(otherNode);								
 							}
 	
@@ -226,7 +244,7 @@ public class NetworkImpl implements Network {
 							TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerminal
 									.getTopologicalNode();
 							branch.setTerminalTo(otherTerminal);
-							if (!otherNodes.contains(otherNode) && !topologicalNodeItems.wasProcessed(otherNode)){
+							if (!otherNodes.contains(otherNode) && !topologicalNodesProcessStatus.get(otherNode.getIdentifier())) {
 								otherNodes.add(otherNode);								
 							}
 //							if (!topologicalNodeItems.wasProcessed(otherNode)) {
@@ -258,8 +276,14 @@ public class NetworkImpl implements Network {
 	
 					debugStep("\tDone processing Terminal: " + processingTerminal);
 				}
-				terminalItems.processItem(processingTerminal);
-				processingTerminal = (EscaType) terminalItems.nextItem();
+				
+				terminalProcessedStatus.put(processingTerminal.getMrid(), true);
+				for (String k: terminals.keySet()){
+					if (terminalProcessedStatus.get(k) == false){
+						processingTerminal = terminals.get(k);
+						break;
+					}
+				}
 			}
 
 			debugStep("Done processing topology node " + processingNode);
@@ -276,7 +300,13 @@ public class NetworkImpl implements Network {
 				island = new TopologicalIslandImpl();
 				island.setIdentifier("Island: "+topologicalIslands.size());		
 				topologicalIslands.put(island.getIdentifier(), island);
-				processingNode = (TopologicalNodeImpl) topologicalNodeItems.nextItem();
+				processingNode = null;
+				for(String k: topologicalNodes.keySet()){
+					if (topologicalNodesProcessStatus.get(k)){
+						processingNode = topologicalNodes.get(k);
+						break;
+					}
+				}
 			}
 						
 			printIsland(island);
@@ -362,23 +392,21 @@ public class NetworkImpl implements Network {
 
 		Property switchOpenProp = EscaVocab.SWITCH_NORMALOPEN;
 
-		Map<String, EscaType> connectivityItems = new LinkedHashMap<>();
-		Map<String, Boolean> connectivityItemProcessedStatus = new LinkedHashMap<>();
+		Map<String, Boolean> connectivityNodeProcessedStatus = new LinkedHashMap<>();
 		
 		Map<String, EscaType> terminalItems = new LinkedHashMap<>();
 		Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap<>();
 		
-		for (EscaType t: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)){
-			connectivityItems.put(t.getMrid(), t);
-			connectivityItemProcessedStatus.put(t.getMrid(), false);
+		for (String k: connectivityNodes.keySet()) {
+			connectivityNodeProcessedStatus.put(k, false);
 		}
 		
 		log.debug("Building Topology");
 		ConnectivityNode processingNode  = null;
 		// Grab the next connectivity node that hasn't been processed.
-		for (String t: connectivityItems.keySet()){
-			if (connectivityItemProcessedStatus.get(t) == false){
-				processingNode = (ConnectivityNode)connectivityItems.get(t);
+		for (String t: connectivityNodes.keySet()){
+			if (connectivityNodeProcessedStatus.get(t) == false){
+				processingNode = (ConnectivityNode)connectivityNodes.get(t);
 				break;
 			}
 		}
@@ -410,7 +438,7 @@ public class NetworkImpl implements Network {
 			}
 			
 			// Mark current node as being procesed.
-			connectivityItemProcessedStatus.put(processingNode.getMrid(), true);
+			connectivityNodeProcessedStatus.put(processingNode.getMrid(), true);
 			
 			Terminal processingTerminal = null;
 			// Get a terminal to process
@@ -464,7 +492,7 @@ public class NetworkImpl implements Network {
 					else if (eq.isResourceType(connectivityNodeRes)) {
 						
 						ConnectivityNode node = (ConnectivityNode) eq;
-						if (connectivityItemProcessedStatus.get(node.getMrid())== false){ // && !nextNodes.contains(node)){
+						if (connectivityNodeProcessedStatus.get(node.getMrid())== false){ // && !nextNodes.contains(node)){
 							debugStep("\t\tFound connectivity node: "+ eq);
 //							debugStep("\t\t\tAdding to nextNodes "+node);
 //							nextNodes.add(node);
@@ -479,7 +507,7 @@ public class NetworkImpl implements Network {
 							topologicalNode.getConnectivityNodes().add(node);
 							// node has been consumed now that we have put all the terminals in the
 							// to be processlist.
-							connectivityItemProcessedStatus.put(node.getMrid(), true);
+							connectivityNodeProcessedStatus.put(node.getMrid(), true);
 							debugStep("\t\tAdded to topological node" + node);
 						} else{
 							debugStep("\t\tAlready processed or added to nextNode already." + eq);
@@ -509,12 +537,12 @@ public class NetworkImpl implements Network {
 
 			// mark the current node as processed and get the next one to be
 			// processed.
-			connectivityItemProcessedStatus.put(processingNode.getMrid(), true);
+			connectivityNodeProcessedStatus.put(processingNode.getMrid(), true);
 			processingNode = null;
 			// Grab the next connectivity node that hasn't been processed.
-			for (String t: connectivityItems.keySet()){
-				if (connectivityItemProcessedStatus.get(t) == false){
-					processingNode = (ConnectivityNode)connectivityItems.get(t);
+			for (String t: connectivityNodes.keySet()){
+				if (connectivityNodeProcessedStatus.get(t) == false){
+					processingNode = (ConnectivityNode)connectivityNodes.get(t);
 					break;
 				}
 			}
