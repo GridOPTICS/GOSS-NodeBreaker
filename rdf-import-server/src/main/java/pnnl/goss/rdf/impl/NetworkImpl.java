@@ -2,6 +2,7 @@ package pnnl.goss.rdf.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -40,7 +41,7 @@ public class NetworkImpl implements Network {
 	 */
 	private EscaTypes escaTypes;
 	private List<EscaType> substations = new ArrayList<EscaType>();
-	private List<TopologicalNodeImpl> topologicalNodes = new ArrayList<TopologicalNodeImpl>();
+	private LinkedHashMap<String, TopologicalNodeImpl> topologicalNodes = new LinkedHashMap<>();
 	private List<TopologicalIsland> topologicalIslands = new ArrayList<TopologicalIsland>();
 
 	private List<TopologicalBranch> topologicalBranches = new ArrayList<TopologicalBranch>();
@@ -83,7 +84,7 @@ public class NetworkImpl implements Network {
 			this.buildTopology();
 			this.buildTopoIslands();
 			
-			for(TopologicalNode t: this.topologicalNodes){
+			for(TopologicalNode t: this.topologicalNodes.values()){
 				log.debug(t.getIdentifier());
 				for(Terminal tt: t.getTerminals()){
 					log.debug("\t"+ tt);
@@ -113,6 +114,11 @@ public class NetworkImpl implements Network {
 	private void buildTopoIslands() {
 
 		debugStep("Building Islands");
+		LinkedHashMap<String, Boolean> topologicalNodesProcessStatus = new LinkedHashMap<>();
+		
+//		Map<String, EscaType> terminalItems = new LinkedHashMap<>();
+//		Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap<>();
+		
 		TopologicalNodeImpl processingNode = (TopologicalNodeImpl) topologicalNodeItems
 				.nextItem();
 
@@ -273,7 +279,7 @@ public class NetworkImpl implements Network {
 //					.nextItem();
 		}
 
-		for (TopologicalNode n : topologicalNodes) {
+		for (TopologicalNode n : topologicalNodes.values()) {
 			TopologicalNodeImpl nImpl = (TopologicalNodeImpl) n;
 
 			if (nImpl.getSubstation() == null) {
@@ -376,8 +382,8 @@ public class NetworkImpl implements Network {
 		
 		// Define a new node/bus
 		TopologicalNodeImpl topologicalNode = new TopologicalNodeImpl();
-		topologicalNodes.add(topologicalNode);
 		topologicalNode.setIdentifier("T" + topologicalNodes.size());
+		topologicalNodes.put(topologicalNode.getIdentifier(), topologicalNode);
 		debugStep("Creating new topology node "
 				+ topologicalNode.getIdentifier());
 		// Add the connectivity node to the topological node.
@@ -508,9 +514,9 @@ public class NetworkImpl implements Network {
 			}
 			
 			if (processingNode != null){
-				topologicalNode = new TopologicalNodeImpl();
-				topologicalNodes.add(topologicalNode);
+				topologicalNode = new TopologicalNodeImpl();				
 				topologicalNode.setIdentifier("T" + topologicalNodes.size());
+				topologicalNodes.put(topologicalNode.getIdentifier(), topologicalNode);
 				debugStep("Creating new topology node "
 						+ topologicalNode.getIdentifier());
 				// Add the connectivity node to the topological node.
@@ -644,17 +650,17 @@ public class NetworkImpl implements Network {
 		return false;
 	}
 
-	public List<EscaType> getSubstations() {
-		return substations;
+	public Collection<EscaType> getSubstations() {
+		return Collections.unmodifiableCollection(substations);
 	}
 
-	public List<TopologicalNodeImpl> getTopologicalNodes() {
-		return topologicalNodes;
+	public Collection<TopologicalNodeImpl> getTopologicalNodes() {
+		return Collections.unmodifiableCollection(topologicalNodes.values());
 	}
 
 	@Override
-	public List<TopologicalBranch> getTopologicalBranches() {
-		return topologicalBranches;
+	public Collection<TopologicalBranch> getTopologicalBranches() {
+		return Collections.unmodifiableCollection(topologicalBranches);
 	}
 
 }
