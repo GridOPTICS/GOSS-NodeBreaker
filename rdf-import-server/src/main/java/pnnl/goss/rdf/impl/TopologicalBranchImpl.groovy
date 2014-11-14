@@ -8,6 +8,7 @@ import pnnl.goss.rdf.server.EscaVocab;
 class TopologicalBranchImpl implements TopologicalBranch {
 	
 	EscaType powerTransferEquipment
+	String identifier
 	Terminal terminalFrom
 	Terminal terminalTo
 	String getName(){

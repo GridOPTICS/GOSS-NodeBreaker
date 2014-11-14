@@ -278,6 +278,7 @@ public class NetworkImpl implements Network {
 				}
 				
 				terminalProcessedStatus.put(processingTerminal.getMrid(), true);
+				processingTerminal = null;
 				for (String k: terminals.keySet()){
 					if (terminalProcessedStatus.get(k) == false){
 						processingTerminal = terminals.get(k);
@@ -302,7 +303,7 @@ public class NetworkImpl implements Network {
 				topologicalIslands.put(island.getIdentifier(), island);
 				processingNode = null;
 				for(String k: topologicalNodes.keySet()){
-					if (topologicalNodesProcessStatus.get(k)){
+					if (topologicalNodesProcessStatus.get(k)== false){
 						processingNode = topologicalNodes.get(k);
 						break;
 					}

@@ -22,6 +22,20 @@ class TestEscaTreeWindow extends Specification {
 			assert escaTypes.getByResourceType(EscaVocab.BREAKER_OBJECT).size() == 24
 			assert escaTypes.getByResourceType(EscaVocab.TERMINAL_OBJECT).size() == 82
 			assert escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT).size() == 34
+			
+		and: "AC Line Segments are Mapped Correctly"
+			// ac = terminal to line id map
+			def ac = [
+				 0: [ 6, 51], // from ss1 - ss3
+				 1: [13, 22], // from ss1 - ss2
+				 2: [16, 64], // from ss1 - ss4
+				 3: [29, 72], // from ss2 - ss4
+				 4: [58, 66], // from ss3 - ss4
+			]
+			
+			def aclines = escaTypes.getByResourceType(EscaVocab.ACLINESEGMENT_OBJECT)
+			assert aclines.size() == ac.size()
+			
 		
 		and: "All circuit breakers are closed"
 			def breakers = escaTypes.getByResourceType(EscaVocab.BREAKER_OBJECT)

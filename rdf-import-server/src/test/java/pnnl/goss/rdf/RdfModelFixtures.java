@@ -40,7 +40,7 @@ public class RdfModelFixtures {
 			res.addLiteral(EscaVocab.SWITCH_NORMALOPEN, false);
 		}
 		
-		terminals.get(0).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(0));
+		terminals.get( 0).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(0));
 		terminals.get(10).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(0));
 		
 		terminals.get(9).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(1));
@@ -68,6 +68,22 @@ public class RdfModelFixtures {
 		
 		terminals.get(71).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(7));
 		terminals.get(81).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, busBars.get(7));
+		
+		// Now the acline segments.
+		terminals.get( 6).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(0));
+		terminals.get(51).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(0));
+		
+		terminals.get(13).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(1));
+		terminals.get(22).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(1));
+		
+		terminals.get(16).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(2));
+		terminals.get(64).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(2));
+		
+		terminals.get(29).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(3));
+		terminals.get(72).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(3));
+		
+		terminals.get(58).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(4));
+		terminals.get(66).addProperty(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT, acLineSegment.get(4));
 		
 		return model;
 	}

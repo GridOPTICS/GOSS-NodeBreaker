@@ -6,6 +6,8 @@ import pnnl.goss.rdf.TopologicalNode
 
 class TopologicalIslandImpl implements TopologicalIsland {
 	
+	String identifier
+	
 	List<TopologicalBranch> topologicalBranches = new ArrayList<TopologicalBranch>()
 	protected setTopologicalBranches(List<TopologicalBranch> topologicalBranch) {this.topologicalBranches = topologicalBranches}
 
