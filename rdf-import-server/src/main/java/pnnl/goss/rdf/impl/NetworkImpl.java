@@ -81,6 +81,7 @@ public class NetworkImpl implements Network {
 
 			// Build TopologicalNodes up
 			this.buildTopology();
+			this.buildTopoIslands();
 			
 			for(TopologicalNode t: this.topologicalNodes){
 				log.debug(t.getIdentifier());
@@ -350,10 +351,10 @@ public class NetworkImpl implements Network {
 		Property switchOpenProp = EscaVocab.SWITCH_NORMALOPEN;
 
 		Map<String, EscaType> connectivityItems = new LinkedHashMap<>();
-		Map<String, Boolean> connectivityItemProcessedStatus = new LinkedHashMap();
+		Map<String, Boolean> connectivityItemProcessedStatus = new LinkedHashMap<>();
 		
 		Map<String, EscaType> terminalItems = new LinkedHashMap<>();
-		Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap();
+		Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap<>();
 		
 		for (EscaType t: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)){
 			connectivityItems.put(t.getMrid(), t);
@@ -373,7 +374,6 @@ public class NetworkImpl implements Network {
 		// Seed the starting point.
 		//processingNode = (ConnectivityNode)connectivityItems.get("Conn0");
 		
-		List<EscaType> nextNodes = new ArrayList<>();
 		// Define a new node/bus
 		TopologicalNodeImpl topologicalNode = new TopologicalNodeImpl();
 		topologicalNodes.add(topologicalNode);
