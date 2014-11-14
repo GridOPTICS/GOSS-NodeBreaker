@@ -1,14 +1,15 @@
 package pnnl.goss.rdf;
 
+import java.util.Collection;
 import java.util.List;
 
 import pnnl.goss.rdf.impl.TopologicalNodeImpl;
 
 public interface Network {
 	
-	List<TopologicalNodeImpl> getTopologicalNodes();
+	Collection<TopologicalNodeImpl> getTopologicalNodes();
 	
-	List<TopologicalBranch> getTopologicalBranches();
+	Collection<TopologicalBranch> getTopologicalBranches();
 	
-	List<TopologicalIsland> getTopologicalIslands();
+	Collection<TopologicalIsland> getTopologicalIslands();
 }
