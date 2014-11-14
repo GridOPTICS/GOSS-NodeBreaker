@@ -21,7 +21,7 @@ class TestEscaTreeWindow extends Specification {
 			assert escaTypes.getByResourceType(EscaVocab.LOADBREAKSWITCH_OBJECT).size() == 2
 			assert escaTypes.getByResourceType(EscaVocab.BREAKER_OBJECT).size() == 24
 			assert escaTypes.getByResourceType(EscaVocab.TERMINAL_OBJECT).size() == 82
-			assert escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT).size() == 35
+			assert escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT).size() == 34
 		
 		and: "All circuit breakers are closed"
 			def breakers = escaTypes.getByResourceType(EscaVocab.BREAKER_OBJECT)
