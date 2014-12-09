@@ -108,24 +108,21 @@ public class EscaMain {
 		String key = service.processNetwork(ESCA_TEST);
 		
 		Network network = service.getNetwork(key);
-//		
-//		EscaMain mainProg = new EscaMain(ESCA_TEST, true, "esca_tree.txt");
-//			
-//		EscaTypes types = mainProg.getEscaTypes();
-//		
-//		Network network = new Network(types);
-		
+				
 		int i=1;
 		for (TopologicalIsland island: network.getTopologicalIslands()){
 			log.debug("Island: " + i++);
 			log.debug("Branches");
 			for(TopologicalBranch br: island.getTopologicalBranches()){
-				log.debug("\tfrom: "+ br.getTerminalFrom() + " " + br.getTerminalTo());
+				log.debug("\t"+ br.getName() + " "+br.getTerminalFrom()+ " " + br.getTerminalTo());
+				
+				//log.debug("\tfrom: "+ br.getTerminalFrom() + " " + br.getTerminalTo());
 			}
 			log.debug("Nodes");
 			for(TopologicalNode tn: island.getTopologicalNodes()){
 				log.debug("\t"+tn.toString());
 			}
+			log.debug("#############################################################################");
 		}
 		
 		NetworkImpl netImpl = (NetworkImpl)network;

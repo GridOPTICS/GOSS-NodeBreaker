@@ -148,10 +148,7 @@ public class EscaTreeWindow {
 				Resource res = node.asResource();
 				
 				// Skip the type because it has already been loaded.
-				if (prop.getLocalName().equals("type")){
-					log.debug("Skipping type property: "+prop.getLocalName()+" on resource "+res.getLocalName());
-				}
-				else{
+				if (!prop.getLocalName().equals("type")) {
 					esca.addDirectLink(prop.getLocalName(), escaTypeMap.get(res.getLocalName()));
 				}
 			}

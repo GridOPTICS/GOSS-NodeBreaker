@@ -75,10 +75,15 @@ class ProcessingItems {
 		elements[recordToIndex[realKey]] = item
 	}
 	
+	Boolean contains(Object item){
+		def realKey = item."$propertyKey"()
+		return recordToProcessed.containsKey(realKey)
+	}
+	
 	Boolean wasProcessed(Object item) {
 		def realKey = item."$propertyKey"()
 		
-		if (!recordToProcessed.containsKey(realKey)) throw new Exception("Invalid key in wasProcessed")
+		if (!recordToProcessed.containsKey(realKey)) return false
 		
 		return recordToProcessed[realKey] == true
 	}

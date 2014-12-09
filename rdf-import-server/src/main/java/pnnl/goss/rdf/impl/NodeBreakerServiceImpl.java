@@ -40,6 +40,10 @@ public class NodeBreakerServiceImpl implements NodeBreakerService {
 			
 			EscaTypes escaTypes = window.getEscaTypeMap();	
 			
+			for(EscaType a: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)) {
+				log.debug("For cn: "+ a.getMrid() + " # terminals: "+ a.getRefersToMe(EscaVocab.TERMINAL_OBJECT).size());
+			}
+			
 			Network network = new NetworkImpl(escaTypes);
 			String key = UUID.randomUUID().toString();
 			processedNetworks.put(key, network);
