@@ -2,13 +2,14 @@
 // mainClassName = 'pnnl.goss.rdf.EscaMain'
 
 dependencies {
-    compile 'org.apache.jena:apache-jena-libs:2.11.1'
-    compile 'org.apache.jena:jena-tdb:1.0.1'
-    compile 'org.apache.jena:jena-maven-tools:0.6'
-	
+    compile 'org.apache.jena:apache-jena:2.11.1'
+	compile 'org.apache.jena:jena-tdb:1.0.1'
+    //compile 'org.apache.jena:jena-maven-tools:0.6'
+	compile 'org.apache.jena:jena-arq:2.11.1'
+
 	testCompile "junit:junit:4.11"
 	testCompile "org.mockito:mockito-all:1.10.8"
-	
+
 }
 
 sourceSets {
@@ -21,7 +22,7 @@ sourceSets {
 			srcDirs = [] // don't compile Java code twice
 		}
 	}
-	
+
 	test {
 		groovy {
 			// override the default locations, rather than adding additional ones
@@ -32,3 +33,4 @@ sourceSets {
 		}
 	}
 }
+
