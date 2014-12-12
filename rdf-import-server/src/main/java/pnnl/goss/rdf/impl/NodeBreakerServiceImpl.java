@@ -14,12 +14,11 @@ import pnnl.goss.rdf.InvalidArgumentException;
 import pnnl.goss.rdf.Network;
 import pnnl.goss.rdf.NodeBreakerService;
 import pnnl.goss.rdf.server.EscaVocab;
-import sun.util.logging.resources.logging;
 
 @Provides
 public class NodeBreakerServiceImpl implements NodeBreakerService {
 	private static Logger log = LoggerFactory.getLogger(NodeBreakerServiceImpl.class);
-			
+
 	Map<String, Network> processedNetworks = new HashMap<>();
 
 	@Override
@@ -37,13 +36,13 @@ public class NodeBreakerServiceImpl implements NodeBreakerService {
 			// Build an mrid->escatype mapping for referencing all of the subjects by mrid
 			// in the system.
 			window.loadTypeMap();
-			
-			EscaTypes escaTypes = window.getEscaTypeMap();	
-			
+
+			EscaTypes escaTypes = window.getEscaTypeMap();
+
 			for(EscaType a: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)) {
 				log.debug("For cn: "+ a.getMrid() + " # terminals: "+ a.getRefersToMe(EscaVocab.TERMINAL_OBJECT).size());
 			}
-			
+
 			Network network = new NetworkImpl(escaTypes);
 			String key = UUID.randomUUID().toString();
 			processedNetworks.put(key, network);
@@ -52,7 +51,7 @@ public class NodeBreakerServiceImpl implements NodeBreakerService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
 
