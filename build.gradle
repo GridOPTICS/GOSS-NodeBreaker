@@ -1,54 +1,237 @@
+buildscript {
+	repositories {
+		maven {
+			url "http://repo.jfrog.org/artifactory/gradle"
+		}
+		mavenLocal()
+		jcenter()
+		dependencies {
+			classpath(group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '3.0.1')
+		}
+	}
+
+}
+
+plugins {
+	id "com.jfrog.artifactory" version "3.0.1"
+	//id "com.jfrog.artifactory-upload" version "3.0.1"
+	id 'osgi'
+	id 'maven'
+}
+
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+
+def globalVersion = new Version(currentVersion)
 
 // All projects under this project folder will have the group and version below.
 allprojects {
-	apply plugin: "eclipse"
+	apply plugin: 'com.jfrog.artifactory-upload'
+
 	group = 'pnnl.goss.nodebreaker'
-	version = '0.1.6-SNAPSHOT'
-    
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        jcenter()
+	version = globalVersion
+	status = version.status
+
+
+	configure(subprojects.findAll { new File(it.projectDir, 'src').directory }) {
+		apply plugin: "osgi"
+		apply plugin: 'groovy'
 	}
+
+//    repositories {
+//        mavenLocal()
+//        mavenCentral()
+//        jcenter()
+//	}
+//	repositories {
+//		maven {
+//			url 'http://maven.pnnl.gov/artifactory/plugins-release'
+//			credentials {
+//				username = "${artifactory_user}"
+//				password = "${artifactory_password}"
+//			}
+//		}
+//
+//	}
 }
 
 task wrapper (type: Wrapper) {
 	gradleVersion = '2.1'
 }
 
-subprojects {    
-	apply plugin: 'groovy'
-	apply plugin: "java"	
-    apply plugin: "osgi"
-	apply plugin: "maven"
-	
+artifactoryPublish.skip = true
+
+subprojects {
+	apply plugin: 'maven'
+	apply plugin: 'maven-publish'
     sourceCompatibility = '1.7'
-	
-    jar {
-        manifest {
-            instruction 'Bundle-Vendor', 'PNNL'
-            instruction 'Bundle-DocURL', 'https://github.com/GridOPTICS/GOSS'
-        }
-    }
-    
+
+//	buildscript {
+//		repositories {
+//			maven {
+//				url 'http://maven.pnnl.gov/artifactory/plugins-release'
+//				credentials {
+//					username = "${artifactory_user}"
+//					password = "${artifactory_password}"
+//				}
+//			}
+//			jcenter()
+//
+//		}
+//	}
+
+	//apply plugin: "osgi"
+	//apply plugin: "maven"
+	//apply plugin: 'artifactory-publish'
+
+	if (project.plugins.hasPlugin('java')) {
+		println project.name
+		jar {
+			// Include source with the jar
+			from sourceSets.main.allSource
+			manifest {
+				instruction 'Bundle-Vendor', 'PNNL'
+				instruction 'Bundle-DocURL', 'https://github.com/GridOPTICS/GOSS'
+
+				[
+					compileJava,
+					compileTestJava,
+					javadoc
+				]*.options*.encoding = 'UTF-8'
+			}
+		}
+
+		configurations {
+			published
+		}
+
+		task sourceJar(type: Jar, dependsOn: classes) {
+			classifier = 'sources'
+			from sourceSets.main.allSource
+		}
+
+		task javadocJar(type: Jar, dependsOn: javadoc) {
+			classifier = 'javadoc'
+			from javadoc.destinationDir
+		}
+
+//		task generateStuffJavaDocs(type: Javadoc) {
+//			println "Generating javadocs"
+//			source = sourceSets.main.allJava
+//			classpath = configurations.compile
+//			options.memberLevel = JavadocMemberLevel.PUBLIC
+//			excludes = ['*OWLMicroReasonerFactory.java']
+//		}
+
+		artifactoryPublish {
+			dependsOn sourceJar, javadocJar
+		}
+
+		artifacts {
+			published sourceJar
+			published javadocJar
+		}
+	}
+
     dependencies {
 		compile 'org.codehaus.groovy:groovy-all:2.3.3'
 
         // Logging should be available to all projects
         compile "org.slf4j:slf4j-api:1.7.5"
         compile "org.slf4j:slf4j-log4j12:1.7.5"
-        
-        // ipojo annotations for service registry/retrieval.        
-        compile 'org.apache.felix:org.apache.felix.ipojo.annotations:1.12.0'
-        
+
+        // ipojo annotations for service registry/retrieval.
+        compile 'org.apache.felix:org.apache.felix.ipojo.annotations:1.11.2'
+
         // For testing we are going to use these ubiquitous
         testCompile "junit:junit:4.11"
         testCompile "org.mockito:mockito-core:1.+"
 		testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-        
+
         // Both client and server need access to the following dependencies
         //compile 'com.impetus.kundera.core:kundera-core:2.13.1'
         //compile "pnnl.goss:goss-core:0.1.6-SNAPSHOT"
     }
 }
-	
+
+configurations {
+	published
+}
+
+artifactory {
+
+	def myContextUrl = pnnl_artifactory_contextUrl
+	def myRepoKey = pnnl_artifactory_publish_key
+	def myContextUser = pnnl_artifactory_user
+	def myContextPassword = pnnl_artifactory_password
+
+	if (project.hasProperty('remote')){
+		myRepoKey = artifactory_publish_key
+		myContextUrl = artifactory_contextUrl
+		myContextUser = artifactory_user
+		myContextPassword = artifactory_password
+	}
+
+	contextUrl = myContextUrl //The base Artifactory URL if not overridden by the publisher/resolver
+	println "WAAAAH ${myContextUrl}\n${myRepoKey}\n${myContextUser}\n${myContextPassword}"
+
+	publish {
+		repository {
+			repoKey = myRepoKey
+			//repoKey = 'oss-local-snapshot'
+			username = "${myContextUser}"
+			password = "${myContextPassword}"
+			maven = true
+
+		}
+		defaults {
+			publishConfigs('archives', 'published')
+			properties = ['build.status': "$it.project.status".toString()]
+			//publications ('mavenJava')
+			publishBuildInfo = true
+			publishArtifacts = true
+			publishPom = true
+		}
+	}
+	resolve {
+		repository {
+			repoKey = 'libs-release'
+			username = "${myContextUser}"
+			password = "${myContextPassword}"
+			maven = true
+
+		}
+	}
+}
+
+
+
+class Version {
+	String originalVersion
+	String thisVersion
+	String status
+	Date buildTime
+
+	Version(String versionValue) {
+		buildTime = new Date()
+		originalVersion = versionValue
+		if (originalVersion.endsWith('-SNAPSHOT')) {
+			status = 'integration'
+			thisVersion = originalVersion.substring(0, originalVersion.length() - 'SNAPSHOT'.length()) + getTimestamp()
+		} else {
+			status = 'release'
+			thisVersion = versionValue
+		}
+	}
+
+	String getTimestamp() {
+		// Convert local file timestamp to UTC
+		def format = new SimpleDateFormat('yyyyMMddHHmmss')
+		format.setCalendar(Calendar.getInstance(TimeZone.getTimeZone('UTC')));
+		return format.format(buildTime)
+	}
+
+	String toString() {
+		thisVersion
+	}
+}
