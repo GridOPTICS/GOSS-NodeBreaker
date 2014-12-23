@@ -9,78 +9,80 @@ import com.hp.hpl.jena.rdf.model.Resource;
 
 public interface EscaType {
 
-	public abstract String getIdentifier();
-	
-	public abstract void addDirectLink(String propertyName, EscaType link);
+    public abstract String getIdentifier();
 
-	public abstract boolean isResourceType(Resource resourceType);
+    public abstract void addDirectLink(String propertyName, EscaType link);
 
-	public abstract Map<String, EscaType> getLinks();
-	public abstract Collection<EscaType> getDirectLinks();
+    public abstract boolean isResourceType(Resource resourceType);
 
-	public abstract Collection<EscaType> getRefersToMe();
-	public abstract Collection<EscaType> getRefersToMe(Resource resourceType);
-	public abstract Collection<EscaType> getRefersToMe(Resource resourceType, EscaType notThisOne);
+    public abstract Map<String, EscaType> getLinks();
+    public abstract Collection<EscaType> getDirectLinks();
 
-	public abstract Literal getLiteralValue(Property property);
+    public abstract Collection<EscaType> getRefersToMe();
+    public abstract Collection<EscaType> getRefersToMe(Resource resourceType);
+    public abstract Collection<EscaType> getRefersToMe(Resource resourceType, EscaType notThisOne);
 
-	public abstract Literal getLiteralValue(String property);
+    public abstract Literal getLiteralValue(Property property);
 
-	public abstract Collection<EscaType> getDirectLinkedResources(
-			Resource resource);
-	
-	/**
-	 * Add literal value to the escatype.  If the key contains the same
-	 * datatype as a prefix then that prefix is stripped off and is assumed
-	 * to be "contained" as part of the object.
-	 * 
-	 * @param key
-	 * @param value
-	 */
-	public abstract void addLiteral(String key, Literal value);
+    public abstract Literal getLiteralValue(String property);
 
-	/**
-	 * Return a map of literal values to the caller.  The map key is the "property"
-	 * on the object i.e. Esca60Vocab.TERMINAL_PROPERTY.getLocalName()
-	 * 
-	 * @return
-	 */
-	public abstract Map<String, Literal> getLiterals();
+    public abstract Collection<EscaType> getDirectLinkedResources(
+            Resource resource);
 
-	/**
-	 * Returns access to the resource object from the loaded cim file.
-	 * 
-	 * @return the resource
-	 */
-	public abstract Resource getResource();
+    /**
+     * Add literal value to the escatype.  If the key contains the same
+     * datatype as a prefix then that prefix is stripped off and is assumed
+     * to be "contained" as part of the object.
+     *
+     * @param key
+     * @param value
+     */
+    public abstract void addLiteral(String key, Literal value);
 
-	/**
-	 * @return the dataType
-	 */
-	public abstract String getDataType();
+    /**
+     * Return a map of literal values to the caller.  The map key is the "property"
+     * on the object i.e. Esca60Vocab.TERMINAL_PROPERTY.getLocalName()
+     *
+     * @return
+     */
+    public abstract Map<String, Literal> getLiterals();
 
-	/**
-	 * @return the mrid
-	 */
-	public abstract String getMrid();
+    /**
+     * Returns access to the resource object from the loaded cim file.
+     *
+     * @return the resource
+     */
+    public abstract Resource getResource();
 
-	/**
-	 * Returns the identifiedobject.name parameter from the rdf code.  If it does not exist
-	 * then returns the mrid of the element.
-	 * 
-	 * @return String
-	 */
-	public abstract String getName();
+    /**
+     * @return the dataType
+     */
+    public abstract String getDataType();
 
-	public abstract void addRefersToMe(EscaType escaType);
+    /**
+     * @return the mrid
+     */
+    public abstract String getMrid();
 
-	EscaType getLink(Property property);
+    /**
+     * Returns the identifiedobject.name parameter from the rdf code.  If it does not exist
+     * then returns the mrid of the element.
+     *
+     * @return String
+     */
+    public abstract String getName();
 
-	boolean hasLiteralProperty(String property);
-	
-	boolean hasLiteralProperty(Property property);
-	
-	boolean hasDirectLink(Property property);
+    public abstract void addRefersToMe(EscaType escaType);
 
-	boolean hasDirectLink(String property);	
+    EscaType getLink(Property property);
+
+    boolean hasLiteralProperty(String property);
+
+    boolean hasLiteralProperty(Property property);
+
+    boolean hasDirectLink(Property property);
+
+    boolean hasDirectLink(Resource resource);
+
+    boolean hasDirectLink(String property);
 }
