@@ -3,9 +3,11 @@ package pnnl.goss.rdf.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +51,9 @@ public class NetworkImpl implements Network {
 
     private LinkedHashMap<String, TopologicalBranch> topologicalBranches = new LinkedHashMap<>();
     private List<String> branchMridList = new ArrayList<>();
+
+    private LinkedHashMap<String, Terminal> terminalLookup = new LinkedHashMap<>();
+    private Set<String> unreferencedTerminals = new LinkedHashSet<String>();
 
     public Collection<TopologicalIsland> getTopologicalIslands() {
         return Collections.unmodifiableCollection(topologicalIslands.values());
@@ -129,13 +134,124 @@ public class NetworkImpl implements Network {
         }
         log.debug("# Branches: "+ branchMridList.size());
 
-        TopologicalIsland island = new TopologicalIslandImpl();
-        String islandKey = "ISLAND: "+ topologicalIslands.size()+1;
-        topologicalIslands.put(islandKey, island);
+//        TopologicalIsland island = new TopologicalIslandImpl();
+//        String islandKey = "ISLAND: "+ topologicalIslands.size()+1;
+//        topologicalIslands.put(islandKey, island);
+//
+//        Map<String, Boolean> nodesProcessed = new LinkedHashMap<>();
+//        Map<String, EscaType> terminals = new LinkedHashMap<>();
+//        Map<String, Boolean> terminalsProcessed = new LinkedHashMap<>();
+//
+//
+//        for(String id: branchMridList){
+//            EscaType branch = escaTypes.get(id);
+//
+//            Collection<EscaType> termRefs = branch.getRefersToMe(EscaVocab.TERMINAL_OBJECT);
+//
+//            if (branch.isResourceType(EscaVocab.ACLINESEGMENT_OBJECT)){
+//            	for(EscaType term: termRefs){
+//
+//            	}
+//            }
+//            else{
+//
+//            }
+//            log.debug(branch + " has "+ termRef.size() + " terminals refering.");
+//
+//
+//        }
 
+        Set<String> processedNodes = new HashSet<>();
+        Deque<String> unprocessedNodes = new LinkedList<>();
+        Set<String> allNodes = new HashSet<>();
 
+        for (TopologicalNode t: topologicalNodes.values()){
+            unprocessedNodes.add(t.getIdentifier());
+            allNodes.add(t.getIdentifier());
+        }
 
+        Set<Terminal> processedTerminals = new HashSet<>();
 
+        while(unprocessedNodes.size() > 0){
+            TopologicalIslandImpl island = new TopologicalIslandImpl();
+            String islandKey = "ISLAND: "+topologicalIslands.size()+1;
+            island.setIdentifier(islandKey);
+            topologicalIslands.put(islandKey, island);
+
+            TopologicalNodeImpl currentNode = topologicalNodes.get(
+                                                unprocessedNodes.removeFirst());
+
+            island.addTopologyNode(currentNode);
+
+            Deque<Terminal> unprocessedTerminals = new LinkedList<>(
+                                                    currentNode.getTerminals());
+            processedNodes.add(currentNode.getIdentifier());
+
+            while(unprocessedTerminals.size()> 0){
+                Terminal currentTerminal = unprocessedTerminals.removeFirst();
+                Terminal otherEnd = null;
+                boolean isBranch = false;
+
+                if (currentTerminal.hasDirectLink(EscaVocab.ACLINESEGMENT_OBJECT)){
+                    log.debug("yes it has an ac line segment!");
+                    isBranch = true;
+                    for(EscaType t: currentTerminal.getDirectLinkedResources(EscaVocab.ACLINESEGMENT_OBJECT)){
+                        if(!t.getIdentifier().equals(currentTerminal.getIdentifier())){
+                            otherEnd = terminalLookup.get(t.getIdentifier());
+                            break;
+                        }
+                    }
+
+                }
+                else if(currentTerminal.hasDirectLink(EscaVocab.TRANSFORMERWINDING_OBJECT)){
+                    log.debug("yes it has a transformer winding.");
+                    isBranch = true;
+                    // Grab the powertransformer that is related to this
+                    // sides transformer winding
+                    EscaType winding = currentTerminal.getLink(EscaVocab.TERMINAL_CONDUCTINGEQUIPMENT);
+                    EscaType ptxfm = winding.getLink(EscaVocab.TRANSFORMERWINDING_MEMBEROF_POWERTRANSFORMER);
+
+                    for(EscaType otherWinding: ptxfm.getRefersToMe(
+                            EscaVocab.TRANSFORMERWINDING_OBJECT, winding)){
+                        if (terminalLookup.get(otherWinding) != null){
+                            log.debug("Found other!");
+                        }
+
+                    }
+                    EscaType otherWinding = ptxfm.getRefersToMe(
+                            EscaVocab.TRANSFORMERWINDING_OBJECT, winding).iterator().next();
+
+                   EscaType otherEndEsca = otherWinding.getRefersToMe(
+                            EscaVocab.TERMINAL_OBJECT).iterator().next();
+                   otherEnd = terminalLookup.get(otherEndEsca.getIdentifier());
+                }
+
+                processedTerminals.add(currentTerminal);
+
+                if(isBranch){
+                    if (otherEnd != null){
+                        TopologicalNode otherNode = otherEnd.getTopologicalNode();
+                        String otherNodeId = otherNode.getIdentifier();
+
+                        if (!processedNodes.contains(otherNodeId)){
+                            island.addTopologyNode(otherEnd.getTopologicalNode());
+                            for (Terminal t: otherEnd.getTopologicalNode().getTerminals()){
+                                if (!processedTerminals.contains(t)){
+                                    unprocessedTerminals.add(t);
+                                }
+                            }
+                            unprocessedNodes.remove(otherNodeId);
+                            processedNodes.add(otherNodeId);
+                        }
+                    }
+                    else{
+                        log.debug("Other node was null from: " + currentTerminal);
+                    }
+                }
+            }
+        }
+
+        log.debug("# Topo Islands: "+topologicalIslands.size());
     }
 
     private void buildTopoIslandsOld() {
@@ -589,6 +705,12 @@ public class NetworkImpl implements Network {
 
         log.debug("# topo ndoes: "+ this.topologicalNodes.size());
 
+        for(TopologicalNode t: topologicalNodes.values()){
+            for (Terminal term: t.getTerminals()){
+                ((TerminalImpl)term).setTopologicalNode(t);
+                terminalLookup.put(t.getIdentifier(), term);
+            }
+        }
     }
 
     private static void debugStep(String message) {
