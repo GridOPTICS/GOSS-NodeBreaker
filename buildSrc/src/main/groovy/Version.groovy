@@ -1,7 +1,7 @@
 import java.util.Date;
-import java.text.SimpleDateFormat
+import java.text.SimpleDateFormat;
 
-class Version {
+public class Version {
 	String originalVersion
 	String thisVersion
 	String status
