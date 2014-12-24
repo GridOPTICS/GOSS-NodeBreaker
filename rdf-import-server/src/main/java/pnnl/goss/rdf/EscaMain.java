@@ -35,125 +35,125 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
 
 public class EscaMain {
 
-	private static final String PERSISTANCE_UNIT = "nodebreaker_cass_pu";
+    private static final String PERSISTANCE_UNIT = "nodebreaker_cass_pu";
 
-	private static final String ESCA_TEST = "esca60_cim.xml";
-	private static boolean bufferedOut = false;
-	private static BufferedOutputStream outStream = null;
+    private static final String ESCA_TEST = "esca60_cim.xml";
+    private static boolean bufferedOut = false;
+    private static BufferedOutputStream outStream = null;
 
-	private static Logger log = LoggerFactory.getLogger(EscaMain.class);
+    private static Logger log = LoggerFactory.getLogger(EscaMain.class);
 
-	/**
-	 * A loaded mapping from mrid to escatype which is loaded from the cim model
-	 * file.
-	 */
-	private EscaTypes escaTypes = null;
+    /**
+     * A loaded mapping from mrid to escatype which is loaded from the cim model
+     * file.
+     */
+    private EscaTypes escaTypes = null;
 
-	private EscaMain(String inputFile, boolean isCim, String outputFile) throws Exception{
+    private EscaMain(String inputFile, boolean isCim, String outputFile) throws Exception{
 
-		EscaTreeWindow window = new EscaTreeWindow(ESCA_TEST, true, "esca_tree.txt");
-		// Load data from the rdf into memory.
-		window.loadData();
-		// Build an mrid->escatype mapping for referencing all of the subjects by mrid
-		// in the system.
-		window.loadTypeMap();
+        EscaTreeWindow window = new EscaTreeWindow(ESCA_TEST, true, "esca_tree.txt");
+        // Load data from the rdf into memory.
+        window.loadData();
+        // Build an mrid->escatype mapping for referencing all of the subjects by mrid
+        // in the system.
+        window.loadTypeMap();
 
-		escaTypes = window.getEscaTypeMap();
-	}
+        escaTypes = window.getEscaTypeMap();
+    }
 
 
 
-	private void printObjectType(Resource subject){
-		for(EscaType t: escaTypes.values()){
-			if (t.getDataType().equals(subject.getLocalName())){
-				System.out.println(t);
-			}
-		}
-	}
+    private void printObjectType(Resource subject){
+        for(EscaType t: escaTypes.values()){
+            if (t.getDataType().equals(subject.getLocalName())){
+                System.out.println(t);
+            }
+        }
+    }
 
-	private EscaType getTypeByMrid(String mrid){
-		return escaTypes.get(mrid);
-	}
+    private EscaType getTypeByMrid(String mrid){
+        return escaTypes.get(mrid);
+    }
 
-	public EscaTypes getEscaTypes(){
-		return escaTypes;
-	}
+    public EscaTypes getEscaTypes(){
+        return escaTypes;
+    }
 
-	public static void debugCollection(Collection<EscaType> escaTypes){
-		boolean first = true;
-		for(EscaType t: escaTypes){
-			if(first){
-				log.debug("Printing collection of: "+ t.getDataType());
-				first = false;
-			}
-			log.debug(t.toString());
-		}
+    public static void debugCollection(Collection<EscaType> escaTypes){
+        boolean first = true;
+        for(EscaType t: escaTypes){
+            if(first){
+                log.debug("Printing collection of: "+ t.getDataType());
+                first = false;
+            }
+            log.debug(t.toString());
+        }
 
-	}
+    }
 
-	public static void logLinkAndReferring(EscaType type){
-		log.debug("\tDirectly Linked "+type.toString());
-		for(EscaType d: type.getDirectLinks()){
-			log.debug("\t\t"+d.toString());
-		}
-		log.debug("\tReferred To: "+type.toString());
-		for(EscaType d: type.getRefersToMe()){
-			log.debug("\t\t"+d.toString());
-		}
-	}
+    public static void logLinkAndReferring(EscaType type){
+        log.debug("\tDirectly Linked "+type.toString());
+        for(EscaType d: type.getDirectLinks()){
+            log.debug("\t\t"+d.toString());
+        }
+        log.debug("\tReferred To: "+type.toString());
+        for(EscaType d: type.getRefersToMe()){
+            log.debug("\t\t"+d.toString());
+        }
+    }
 
-	public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
-		NodeBreakerService service = new NodeBreakerServiceImpl();
+        NodeBreakerService service = new NodeBreakerServiceImpl();
 
-		String key = service.processNetwork(ESCA_TEST);
+        String key = service.processNetwork(ESCA_TEST);
 
-		Network network = service.getNetwork(key);
+        Network network = service.getNetwork(key);
 
-		int i=1;
-		for (TopologicalIsland island: network.getTopologicalIslands()){
-			log.debug("Island: " + i++);
-			log.debug("Branches");
-			for(TopologicalBranch br: island.getTopologicalBranches()){
-				log.debug("\t"+ br.getName() + " "+br.getTerminalFrom()+ " " + br.getTerminalTo());
+        int i=1;
+//		for (TopologicalIsland island: network.getTopologicalIslands()){
+//			log.debug("Island: " + i++);
+//			log.debug("Branches");
+//			for(TopologicalBranch br: island.getTopologicalBranches()){
+//				log.debug("\t"+ br.getName() + " "+br.getTerminalFrom()+ " " + br.getTerminalTo());
+//
+//				//log.debug("\tfrom: "+ br.getTerminalFrom() + " " + br.getTerminalTo());
+//			}
+//			log.debug("Nodes");
+//			for(TopologicalNode tn: island.getTopologicalNodes()){
+//				log.debug("\t"+tn.toString());
+//			}
+//			log.debug("#############################################################################");
+//		}
 
-				//log.debug("\tfrom: "+ br.getTerminalFrom() + " " + br.getTerminalTo());
-			}
-			log.debug("Nodes");
-			for(TopologicalNode tn: island.getTopologicalNodes()){
-				log.debug("\t"+tn.toString());
-			}
-			log.debug("#############################################################################");
-		}
+        NetworkImpl netImpl = (NetworkImpl)network;
+        log.debug("# Substations: "+netImpl.getSubstations().size());
+        log.debug("SUBSTATIONS");
+        for (EscaType s: netImpl.getSubstations()){
+            if (s == null){
+                log.debug("S is null!");
+            }
+            else{
+                Literal path = s.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
+                if (path != null){
+                    log.debug(s.getDataType()+" <"+s.getMrid()+"> No path!");
+                }
+                else{
+                    log.debug(s.getDataType()+" <"+s.getMrid()+"> " + path.getString());
+                }
+            }
+        }
 
-		NetworkImpl netImpl = (NetworkImpl)network;
-		log.debug("# Substations: "+netImpl.getSubstations().size());
-		log.debug("SUBSTATIONS");
-		for (EscaType s: netImpl.getSubstations()){
-			if (s == null){
-				log.debug("S is null!");
-			}
-			else{
-				Literal path = s.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
-				if (path != null){
-					log.debug(s.getDataType()+" <"+s.getMrid()+"> No path!");
-				}
-				else{
-					log.debug(s.getDataType()+" <"+s.getMrid()+"> " + path.getString());
-				}
-			}
-		}
+        log.debug("# TOPO NODES: "+ network.getTopologicalNodes().size());
 
-		log.debug("# TOPO NODES: "+ network.getTopologicalNodes().size());
-
-		for (TopologicalNode n2: network.getTopologicalNodes()){
-			TopologicalNodeImpl n = (TopologicalNodeImpl)n2;
-			log.debug(n.toString());
-			log.debug(n.getIdentifier()+ " voltage: "+n.getBaseVoltage());
-			log.debug("TERMINALS");
-			for (Terminal t: n.getTerminals()){
-				logLinkAndReferring((EscaType)t);
-			}
+        for (TopologicalNode n2: network.getTopologicalNodes()){
+            TopologicalNodeImpl n = (TopologicalNodeImpl)n2;
+            log.debug(n.toString());
+            log.debug(n.getIdentifier()+ " voltage: "+n.getBaseVoltage());
+            log.debug("TERMINALS");
+            for (Terminal t: n.getTerminals()){
+                logLinkAndReferring((EscaType)t);
+            }
 
 //			EscaType vl = n.getVoltageLevel();
 //			if (vl != null){
@@ -221,11 +221,11 @@ public class EscaMain {
 //					log.debug("\t\t\t"+esca.getDataType()+" <"+esca.getMrid()+">");
 //				}
 //			}
-		}
+        }
 
-		log.debug("Islands: " + network.getTopologicalIslands().size());
-		log.debug("Topology Nodes: "+ network.getTopologicalNodes().size());
-		log.debug("Topology Branches: "+ network.getTopologicalBranches().size());
+        log.debug("Islands: " + network.getTopologicalIslands().size());
+        log.debug("Topology Nodes: "+ network.getTopologicalNodes().size());
+        log.debug("Topology Branches: "+ network.getTopologicalBranches().size());
 
 
 //		System.out.println("Breaker count: "+ types.where(EscaVocab.BREAKER_OBJECT).size());
@@ -246,16 +246,16 @@ public class EscaMain {
 //				log.debug("VoltageLevel: " + d);
 //			}
 //		}
-		/*
+        /*
 
-		Collection<EscaType> elements = mainProg.getEscaTypes().getByResourceType(Esca60Vocab.VOLTAGELEVEL_OBJECT);
+        Collection<EscaType> elements = mainProg.getEscaTypes().getByResourceType(Esca60Vocab.VOLTAGELEVEL_OBJECT);
 
-		for(EscaType t: elements){
-			log.debug(t.getDataType() + " CONNECTIONS: "+ t.getName());
-			for(EscaType r: t.getRefersToMe()){
-				log.debug(r.getDataType()+ " "+ r.getName());
-			}
-		}*/
+        for(EscaType t: elements){
+            log.debug(t.getDataType() + " CONNECTIONS: "+ t.getName());
+            for(EscaType r: t.getRefersToMe()){
+                log.debug(r.getDataType()+ " "+ r.getName());
+            }
+        }*/
 //		if (bufferedOut){
 //			outStream.flush();
 //		}
@@ -323,12 +323,12 @@ public class EscaMain {
 //			}
 //		}
 
-		//mainProg.printObjectType(Esca60Vocab.CONNECTIVITYNODE_OBJECT);
+        //mainProg.printObjectType(Esca60Vocab.CONNECTIVITYNODE_OBJECT);
 
-		//setBufferedOut();setBufferedOut();
-		if (bufferedOut){
-			outStream.flush();
-		}
+        //setBufferedOut();setBufferedOut();
+        if (bufferedOut){
+            outStream.flush();
+        }
 //		System.out.println(populateDataType(GeographicalRegion.class, "GeographicalRegion"));
 //		System.out.println(populateDataType(SubGeographicalRegion.class, "SubGeographicalRegion"));
 //
@@ -398,7 +398,7 @@ public class EscaMain {
 //
 //		// One big write.
 //		storeData();
-		System.out.println("Import Complete!");
+        System.out.println("Import Complete!");
 
 
 
@@ -412,48 +412,48 @@ public class EscaMain {
 //			System.out.println(k);
 //		}
 
-		//if(true)return;
+        //if(true)return;
 
 //		for(String key:typeMap.keySet()){
 //			System.out.println(typeMap.get(key).getDataType());
 //		}
-		// This is puzzling the way I have configured this.
-		//window.loadSubjectTree("_7138742088364182230");
+        // This is puzzling the way I have configured this.
+        //window.loadSubjectTree("_7138742088364182230");
 
-		//window.invertFromLevel(Esca60Vocab.SUBSTATION_OBJECT);
-		// A Substation
-		//BuildPowergrid grid = new BuildPowergrid();
-		//grid.buildPowergrid(window.getEscaTypeMap(), window.getEscaTypeSubstationMap());
+        //window.invertFromLevel(Esca60Vocab.SUBSTATION_OBJECT);
+        // A Substation
+        //BuildPowergrid grid = new BuildPowergrid();
+        //grid.buildPowergrid(window.getEscaTypeMap(), window.getEscaTypeSubstationMap());
 
-		// A Substation
-		//window.printInvertedTree("_7138742088364182230");
-
-
-		// A breaker
-		//window.printInvertedTree("_6086371616589253666");
-		// A VoltageLevel
-		//window.printInvertedTree("_7385660062756494042");
+        // A Substation
+        //window.printInvertedTree("_7138742088364182230");
 
 
-		//window.printTree("_7138742088364182230");
-		// A Terminal
-		//window.printTree("_2463136265274055557");
+        // A breaker
+        //window.printInvertedTree("_6086371616589253666");
+        // A VoltageLevel
+        //window.printInvertedTree("_7385660062756494042");
 
-		//window.printSubstations();
 
-		//window.printTerminalTree("_1859399559611018070");
-		//EscaTreeWindow window = new EscaTreeWindow("C:\\scratch\\esca_tree.txt", false, "C:\\scratch\\esca_tree_out.txt");
-	}
+        //window.printTree("_7138742088364182230");
+        // A Terminal
+        //window.printTree("_2463136265274055557");
 
-	private static void setBufferedOut() throws FileNotFoundException{
-		bufferedOut = true;
-		File file = new File("stdout.txt");
-		if (file.exists()){
-			file.delete();
-		}
-		outStream = new BufferedOutputStream(new FileOutputStream(file));
-		System.setOut(new PrintStream(outStream));
-	}
+        //window.printSubstations();
+
+        //window.printTerminalTree("_1859399559611018070");
+        //EscaTreeWindow window = new EscaTreeWindow("C:\\scratch\\esca_tree.txt", false, "C:\\scratch\\esca_tree_out.txt");
+    }
+
+    private static void setBufferedOut() throws FileNotFoundException{
+        bufferedOut = true;
+        File file = new File("stdout.txt");
+        if (file.exists()){
+            file.delete();
+        }
+        outStream = new BufferedOutputStream(new FileOutputStream(file));
+        System.setOut(new PrintStream(outStream));
+    }
 
 //	private static void populateIdentityObjects(EscaType escaType, IdentifiedObject ident){
 //		Resource resource = escaType.getResource();
@@ -490,45 +490,45 @@ public class EscaMain {
 //		}
 //	}
 
-	private static String getPropertyString(Resource resource, Property property){
-		if (resource.getProperty(property) != null){
-			// Look up the connecting resources mrid.
-			if (resource.getProperty(property).getResource() != null){
-				return resource.getProperty(property).getResource().getLocalName();
-			}
+    private static String getPropertyString(Resource resource, Property property){
+        if (resource.getProperty(property) != null){
+            // Look up the connecting resources mrid.
+            if (resource.getProperty(property).getResource() != null){
+                return resource.getProperty(property).getResource().getLocalName();
+            }
 
-			// String literal
-			return resource.getProperty(property).getString();
-		}
-		return null;
-	}
+            // String literal
+            return resource.getProperty(property).getString();
+        }
+        return null;
+    }
 
-	private static String getPropertyString(Resource resource, String property){
+    private static String getPropertyString(Resource resource, String property){
 
-		StmtIterator stmts = resource.listProperties();
+        StmtIterator stmts = resource.listProperties();
 
-		while(stmts.hasNext()){
-			Statement stmt = stmts.next();
+        while(stmts.hasNext()){
+            Statement stmt = stmts.next();
 
-			Resource pred = stmt.getPredicate();
-			// If the resource matches then the caller is expecting the mrid of the
-			if (pred.isResource()){
-				if (pred.getLocalName().equals(property)){
-					RDFNode node = stmt.getObject();
-					return node.asResource().getLocalName();
-				}
-			}
-			else if(stmt.getPredicate().isProperty()){
+            Resource pred = stmt.getPredicate();
+            // If the resource matches then the caller is expecting the mrid of the
+            if (pred.isResource()){
+                if (pred.getLocalName().equals(property)){
+                    RDFNode node = stmt.getObject();
+                    return node.asResource().getLocalName();
+                }
+            }
+            else if(stmt.getPredicate().isProperty()){
 
-			}
-			else if(stmt.getPredicate().isLiteral()){
+            }
+            else if(stmt.getPredicate().isLiteral()){
 
-			}
-		}
+            }
+        }
 
 
-		return null;
-	}
+        return null;
+    }
 //
 //	private static void storeAnalog(NodeBreakerDao dao, EscaType escaType){
 //		IdentifiedObject ident = new IdentifiedObject();

@@ -1,9 +1,10 @@
 package pnnl.goss.rdf;
 
 public interface TopologicalBranch {
-	
-	String getName();
-	Terminal getTerminalFrom();
-	Terminal getTerminalTo();
-	
+
+    String getName();
+    Terminal getTerminalPrimary();
+    Terminal getTerminalSecondary();
+    Terminal getTerminalTertiary();
+
 }

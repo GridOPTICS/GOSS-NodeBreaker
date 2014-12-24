@@ -114,6 +114,27 @@ public class NetworkImpl implements Network {
     }
 
     private void buildTopoIslands(){
+        TopologicalIslandImpl island = new TopologicalIslandImpl();
+
+        for(EscaType ac :
+                this.escaTypes.getByResourceType(
+                        EscaVocab.ACLINESEGMENT_OBJECT)){
+            TopologicalBranchImpl branch = new TopologicalBranchImpl(ac, terminalLookup);
+            island.addTopologicalBranch(branch);
+
+        }
+
+        for(EscaType pwr :
+            this.escaTypes.getByResourceType(
+                    EscaVocab.POWERTRANSFORMER_OBJECT)){
+            TopologicalBranchImpl branch = new TopologicalBranchImpl(pwr, terminalLookup);
+            island.addTopologicalBranch(branch);
+
+        }
+
+    }
+
+    private void buildTopoIslandsNew(){
         log.debug("Building Islands...");
 
         for(EscaType ac :
@@ -124,7 +145,7 @@ public class NetworkImpl implements Network {
 
         for(EscaType xfmr:
                 this.escaTypes.getByResourceType(
-                        EscaVocab.TRANSFORMERWINDING_OBJECT)){
+                        EscaVocab.POWERTRANSFORMER_OBJECT)){
             this.branchMridList.add(xfmr.getIdentifier());
         }
 
@@ -329,8 +350,8 @@ public class NetworkImpl implements Network {
                 }
                 else{
                     for (EscaType currentCanidate : canidates) {
-                        TopologicalBranchImpl branch = new TopologicalBranchImpl();
-                        branch.setTerminalFrom((Terminal) processingTerminal);
+                        TopologicalBranchImpl branch = new TopologicalBranchImpl(null,terminalLookup);
+                        //branch.setTerminalFrom((Terminal) processingTerminal);
                         branch.setPowerTransferEquipment(currentCanidate);
                         branch.setIdentifier(currentCanidate.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME).getString());
 
@@ -362,7 +383,7 @@ public class NetworkImpl implements Network {
                             Terminal otherTerm = (Terminal) otherWinding
                                     .getRefersToMe(EscaVocab.TERMINAL_OBJECT)
                                     .iterator().next();
-                            branch.setTerminalTo(otherTerm);
+//                            branch.setTerminalTo(otherTerm);
 
                             TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerm
                                     .getTopologicalNode();
@@ -387,7 +408,7 @@ public class NetworkImpl implements Network {
                                             processingTerminal).iterator().next();
                             TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerminal
                                     .getTopologicalNode();
-                            branch.setTerminalTo(otherTerminal);
+//                            branch.setTerminalTo(otherTerminal);
                             if (!otherNodes.contains(otherNode) && !topologicalNodesProcessStatus.get(otherNode.getIdentifier())) {
                                 otherNodes.add(otherNode);
                             }
@@ -705,7 +726,14 @@ public class NetworkImpl implements Network {
 
         log.debug("# topo ndoes: "+ this.topologicalNodes.size());
 
-        for(TopologicalNode t: topologicalNodes.values()){
+        for(TopologicalNodeImpl t: topologicalNodes.values()){
+            for(ConnectivityNode cn: t.getConnectivityNodes()){
+                for(TerminalImpl term: cn.getTerminals()){
+                    term.setTopologicalNode(t);
+
+                }
+            }
+
             for (Terminal term: t.getTerminals()){
                 ((TerminalImpl)term).setTopologicalNode(t);
                 terminalLookup.put(t.getIdentifier(), term);
@@ -821,17 +849,17 @@ public class NetworkImpl implements Network {
     }
 
     private boolean containsBranch(EscaType item1, EscaType item2) {
-        for (TopologicalBranch br : topologicalBranches.values()) {
-            if (br.getTerminalFrom().getMrid().equals(item1.getMrid())) {
-                if (br.getTerminalTo().getMrid().equals(item2.getMrid())) {
-                    return true;
-                }
-            } else if (br.getTerminalFrom().getMrid().equals(item2.getMrid())) {
-                if (br.getTerminalTo().getMrid().equals(item1.getMrid())) {
-                    return true;
-                }
-            }
-        }
+//        for (TopologicalBranch br : topologicalBranches.values()) {
+//            if (br.getTerminalFrom().getMrid().equals(item1.getMrid())) {
+//                if (br.getTerminalTo().getMrid().equals(item2.getMrid())) {
+//                    return true;
+//                }
+//            } else if (br.getTerminalFrom().getMrid().equals(item2.getMrid())) {
+//                if (br.getTerminalTo().getMrid().equals(item1.getMrid())) {
+//                    return true;
+//                }
+//            }
+//        }
         return false;
     }
 
