@@ -1,51 +1,97 @@
-package pnnl.goss.rdf.impl
+package pnnl.goss.rdf.impl;
 
-import pnnl.goss.rdf.EscaType
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
-import pnnl.goss.rdf.Terminal
-import pnnl.goss.rdf.TopologicalBranch
-import pnnl.goss.rdf.TopologicalIsland
-import pnnl.goss.rdf.TopologicalNode
-import pnnl.goss.rdf.server.EscaVocab
+import pnnl.goss.rdf.Terminal;
+import pnnl.goss.rdf.TopologicalBranch;
+import pnnl.goss.rdf.TopologicalIsland;
+import pnnl.goss.rdf.server.EscaVocab;
 
-class TopologicalBranchImpl implements TopologicalBranch {
+public class TopologicalBranchImpl implements TopologicalBranch {
 
-    TopologicalIsland topologicalIsland
+    TopologicalIsland topologicalIsland;
 
-    EscaType powerTransferEquipment
-    String identifier
+    EscaType powerTransferEquipment;
+    String identifier;
 
-    Terminal terminalPrimary
-    Terminal terminalSecondary
-    Terminal terminalTertiary
+    Terminal terminalPrimary;
+    Terminal terminalSecondary;
+    Terminal terminalTertiary;
 
-    private foundTerminals
+    private Collection<EscaType> foundTerminals;
 
-    private populateCorrectTerminal(Terminal t){
+    public EscaType getPowerTransferEquipment() {
+		return powerTransferEquipment;
+	}
+
+	public void setPowerTransferEquipment(EscaType powerTransferEquipment) {
+		this.powerTransferEquipment = powerTransferEquipment;
+	}
+
+	public Collection<EscaType> getFoundTerminals() {
+		return foundTerminals;
+	}
+
+	public void setFoundTerminals(Collection<EscaType> foundTerminals) {
+		this.foundTerminals = foundTerminals;
+	}
+
+	public void setTerminalPrimary(Terminal terminalPrimary) {
+		this.terminalPrimary = terminalPrimary;
+	}
+
+	public void setTerminalSecondary(Terminal terminalSecondary) {
+		this.terminalSecondary = terminalSecondary;
+	}
+
+	public void setTerminalTertiary(Terminal terminalTertiary) {
+		this.terminalTertiary = terminalTertiary;
+	}
+
+	public TopologicalIsland getTopologicalIsland() {
+		return topologicalIsland;
+	}
+
+	public void setTopologicalIsland(TopologicalIsland topologicalIsland) {
+		this.topologicalIsland = topologicalIsland;
+	}
+
+	public String getIdentifier() {
+		return identifier;
+	}
+
+	public void setIdentifier(String identifier) {
+		this.identifier = identifier;
+	}
+
+	private void populateCorrectTerminal(Terminal t) throws InvalidArgumentException{
         if (terminalPrimary == null){
-            terminalPrimary = t
+            terminalPrimary = t;
         }
         else if(terminalSecondary == null){
-            terminalSecondary = t
+            terminalSecondary = t;
         }
         else if(terminalTertiary == null){
-            terminalTertiary = t
+            terminalTertiary = t;
         }
         else{
-            throw new InvalidArgumentException("Invalid # of terminals detected!")
+            throw new InvalidArgumentException("Invalid # of terminals detected!");
         }
     }
 
-    TopologicalBranchImpl(EscaType branchType, Map<String, Terminal> topoTerminals){
+    TopologicalBranchImpl(EscaType branchType, Map<String, Terminal> topoTerminals) throws InvalidArgumentException{
 
         if (branchType.isResourceType(EscaVocab.ACLINESEGMENT_OBJECT)){
-            foundTerminals = branchType.getRefersToMe(EscaVocab.TERMINAL_OBJECT)
+            foundTerminals = branchType.getRefersToMe(EscaVocab.TERMINAL_OBJECT);
         }
         else {
-
-            branchType.getRefersToMe(EscaVocab.TRANSFORMERWINDING_OBJECT).each {
-                println it
-            }
+        	for(EscaType it: branchType.getRefersToMe(EscaVocab.TRANSFORMERWINDING_OBJECT)){
+        		System.out.println(it);
+        	}
 //
 //                //println it.getLink(EscaVocab.TRANSFORMERWINDING_WINDINGTYPE)
 ////                it.properties.each { p, p1 ->
@@ -56,30 +102,55 @@ class TopologicalBranchImpl implements TopologicalBranch {
 ////                foundTerminals += it.getRefersToMe(EscaVocab.TERMINAL_OBJECT)
 //            }
         }
-
-        topoTerminals.each {k, v ->
-            println "${k} --> ${v}"
+        
+        for(String k: topoTerminals.keySet()){
+        	System.out.println(k+" --> "+ topoTerminals.get(k));
         }
 
-        foundTerminals.each{ t->
-            println t
-            println t.identifier
-            println "contains? "+topoTerminals.containsKey(t.identifier)
-            if (topoTerminals.containsKey(t.identifier)){
-                populateCorrectTerminal(t)
-            }
+        for(EscaType t: foundTerminals){
+        	Terminal t1 = (Terminal)t;
+        	System.out.println(t);
+        	System.out.println(t.getIdentifier());
+        	System.out.println("Contains: "+topoTerminals.containsKey(t1.getIdentifier()));
+        	if (topoTerminals.containsKey(t1.getIdentifier())){
+        		populateCorrectTerminal(t1);
+        	}
+        	
         }
-
-
     }
 
-    String getName(){
-        return powerTransferEquipment.getLink(EscaVocab.IDENTIFIEDOBJECT_NAME)
+    public String getName(){
+        return powerTransferEquipment.getLink(EscaVocab.IDENTIFIEDOBJECT_NAME).toString();
     }
-
+    
     @Override
-    String toString() {
-        return terminalFrom.topologicalNode.getSubstationName()+ " <" + terminalFrom.getMrid() + "> " + terminalFrom.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME) + " -> "+terminalTo.topologicalNode.getSubstationName()+ " <" + terminalTo.getMrid() + "> " + terminalTo.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
-    };
+    public String toString() {
+    	return "TODO Topo Branch!";
+    	// TODO Auto-generated method stub
+    	//return terminalPri.topologicalNode.getSubstationName()+ " <" + terminalFrom.getMrid() + "> " + terminalFrom.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
+    }
+
+	@Override
+	public Terminal getTerminalPrimary() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Terminal getTerminalSecondary() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Terminal getTerminalTertiary() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+//    @Override
+//    pubic String toString() {
+//        return terminalFrom.topologicalNode.getSubstationName()+ " <" + terminalFrom.getMrid() + "> " + terminalFrom.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME) + " -> "+terminalTo.topologicalNode.getSubstationName()+ " <" + terminalTo.getMrid() + "> " + terminalTo.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
+//    };
 
 }
