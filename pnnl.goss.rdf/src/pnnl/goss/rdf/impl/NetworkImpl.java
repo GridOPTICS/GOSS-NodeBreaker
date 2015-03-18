@@ -111,7 +111,7 @@ public class NetworkImpl implements Network {
 
     }
 
-    private void buildTopoIslands(){
+    private void buildTopoIslands() throws InvalidArgumentException{
         TopologicalIslandImpl island = new TopologicalIslandImpl();
 
         for(EscaType ac :
@@ -273,229 +273,229 @@ public class NetworkImpl implements Network {
         log.debug("# Topo Islands: "+topologicalIslands.size());
     }
 
-    private void buildTopoIslandsOld() {
-
-        debugStep("Building Islands");
-        Map<String, Boolean> topologicalNodesProcessStatus = new LinkedHashMap<>();
-
-        for(String k: topologicalNodes.keySet()){
-            topologicalNodesProcessStatus.put(k, false);
-        }
-
-        Map<String, EscaType> terminals = new LinkedHashMap<>();
-        Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap<>();
-
-
-        TopologicalNodeImpl processingNode = null;
-
-        for (String k: topologicalNodes.keySet()){
-            if(topologicalNodesProcessStatus.get(k) == false){
-                processingNode = topologicalNodes.get(k);
-                break;
-            }
-        }
-
-        List otherNodes = new ArrayList();
-        // bag of currently unprocessed terminals.
-
-        TopologicalIslandImpl island = new TopologicalIslandImpl();
-        island.setIdentifier("Island: "+topologicalIslands.size());
-        topologicalIslands.put(island.getIdentifier(), island);
-
-        while (processingNode != null) {
-
-            island.getTopologicalNodes().add(processingNode);
-            ((TopologicalNodeImpl) processingNode).setTopologicalIsland(island);
-
-            // Add the terminals to be processed.
-            for(Terminal t: processingNode.getTerminals()){
-                terminals.put(t.getMrid(), t);
-                terminalProcessedStatus.put(t.getMrid(), false);
-            }
-
-            // Mark the currently procesing node as being processed.
-            topologicalNodesProcessStatus.put(processingNode.getIdentifier(), true);
-
-            EscaType processingTerminal = null;
-
-            for(String k: terminals.keySet()){
-                if (terminalProcessedStatus.get(k)== false){
-                    processingTerminal = terminals.get(k);
-                    break;
-                }
-            }
-
-            while (processingTerminal != null) {
-                debugStep("\tProcessing Terminal: "
-                        + processingTerminal.toString());
-
-                List<EscaType> canidates = new ArrayList<>();
-
-                for (EscaType e : processingTerminal
-                        .getDirectLinkedResources(EscaVocab.TRANSFORMERWINDING_OBJECT)) {
-                    debugStep("\t\tAdding canidate " + e);
-                    canidates.add(e);
-                }
-
-                for (EscaType e : processingTerminal
-                        .getDirectLinkedResources(EscaVocab.ACLINESEGMENT_OBJECT)) {
-                    debugStep("\t\tAdding canidate " + e);
-                    canidates.add(e);
-                }
-
-                if (canidates.size() == 0) {
-                    debugStep("\tNo canidates found");
-                }
-                else{
-                    for (EscaType currentCanidate : canidates) {
-                        TopologicalBranchImpl branch = new TopologicalBranchImpl(null,terminalLookup);
-                        //branch.setTerminalFrom((Terminal) processingTerminal);
-                        branch.setPowerTransferEquipment(currentCanidate);
-                        branch.setIdentifier(currentCanidate.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME).getString());
-
-                        Collection<EscaType> possibleOtherTerminalList = currentCanidate
-                                .getRefersToMe(EscaVocab.TERMINAL_OBJECT);
-                        debugStep("\t\tCurrent canidate is: " + currentCanidate
-                                + " testing " + possibleOtherTerminalList.size()
-                                + " terminls for the other.");
-
-                        // If a transformer then we have to look up to the
-                        // powertransformer that ownes the winding.
-                        if (currentCanidate
-                                .isResourceType(EscaVocab.TRANSFORMERWINDING_OBJECT)) {
-                            // Grab the powertransformer that is related to this
-                            // sides transformer winding
-                            EscaType ptxfm = currentCanidate
-                                    .getLink(EscaVocab.TRANSFORMERWINDING_MEMBEROF_POWERTRANSFORMER);
-
-                            // Grab the winding on the other side of the
-                            // powertransformer.
-                            Collection<EscaType> otherWindings = ptxfm
-                                    .getRefersToMe(
-                                            EscaVocab.TRANSFORMERWINDING_OBJECT,
-                                            currentCanidate);
-
-                            // TODO Assumes only a single processing here so we may
-                            // need to make this generic in the future.
-                            EscaType otherWinding = otherWindings.iterator().next();
-                            Terminal otherTerm = (Terminal) otherWinding
-                                    .getRefersToMe(EscaVocab.TERMINAL_OBJECT)
-                                    .iterator().next();
-//                            branch.setTerminalTo(otherTerm);
-
-                            TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerm
-                                    .getTopologicalNode();
-                            debugStep("\t\tOther Node is: " + otherNode.toString());
-
-                            if (!otherNodes.contains(otherNode) && !topologicalNodesProcessStatus.get(otherNode.getIdentifier())) {
-                                otherNodes.add(otherNode);
-                            }
-
-                            //if (!topologicalNodeItems.wasProcessed(otherNode)) {
-                            //	island.getTopologicalNodes().add(otherNode);
-                            //	topologicalNodeItems.processItem(otherNode);
-                            //	terminalItems.addItemsToProcess(otherNode
-                            //			.getTerminals());
-                            //}
-                        }
-                        // This is an ACLINESEGMENT_OBJECT
-                        else {
-
-                            Terminal otherTerminal = (Terminal) currentCanidate
-                                    .getRefersToMe(EscaVocab.TERMINAL_OBJECT,
-                                            processingTerminal).iterator().next();
-                            TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerminal
-                                    .getTopologicalNode();
-//                            branch.setTerminalTo(otherTerminal);
-                            if (!otherNodes.contains(otherNode) && !topologicalNodesProcessStatus.get(otherNode.getIdentifier())) {
-                                otherNodes.add(otherNode);
-                            }
-//							if (!topologicalNodeItems.wasProcessed(otherNode)) {
-//								debugStep("\t\tAdding other node's terminals");
-//								island.getTopologicalNodes().add(otherNode);
-//								// topologicalNodeItems.addItemToProcess(otherNode);
-//								topologicalNodeItems.processItem(otherNode);
-//								for(Terminal t: otherNode.getTerminals()){
-//									debugStep("\tTerminal test: " + t.toString());
-//								}
-//								terminalItems.addItemsToProcess(otherNode
-//										.getTerminals());
+//    private void buildTopoIslandsOld() {
 //
-//							}
-                        }
-
-                        if (!containsBranch(branch)){
-                            branchMridList.add(currentCanidate.getMrid());
-                            topologicalBranches.put(branch.getIdentifier(), branch);
-                            island.getTopologicalBranches().add(branch);
-                        }
-//						if (!containsBranch(branch.getTerminalFrom(),
-//								branch.getTerminalTo())) {
-//							topologicalBranches.add(branch);
-//							island.getTopologicalBranches().add(branch);
-//						}
-                    }
-
-
-                    debugStep("\tDone processing Terminal: " + processingTerminal);
-                }
-
-                terminalProcessedStatus.put(processingTerminal.getMrid(), true);
-                processingTerminal = null;
-                for (String k: terminals.keySet()){
-                    if (terminalProcessedStatus.get(k) == false){
-                        processingTerminal = terminals.get(k);
-                        break;
-                    }
-                }
-            }
-
-            debugStep("Done processing topology node " + processingNode);
-
-            if (otherNodes.size()> 0){
-                processingNode = (TopologicalNodeImpl) otherNodes.get(0);
-                otherNodes.remove(processingNode);
-            }
-            else{
-                for(TopologicalNode n: island.getTopologicalNodes()){
-                    debugStep(n.getSubstationName()+ " "+((TopologicalNodeImpl)n).getBaseVoltage());
-                }
-
-                island = new TopologicalIslandImpl();
-                island.setIdentifier("Island: "+topologicalIslands.size());
-                topologicalIslands.put(island.getIdentifier(), island);
-                processingNode = null;
-                for(String k: topologicalNodes.keySet()){
-                    if (topologicalNodesProcessStatus.get(k)== false){
-                        processingNode = topologicalNodes.get(k);
-                        break;
-                    }
-                }
-            }
-
-            printIsland(island);
-
-//			processingNode = (TopologicalNodeImpl) topologicalNodeItems
-//					.nextItem();
-        }
-
-        for (TopologicalNode n : topologicalNodes.values()) {
-            TopologicalNodeImpl nImpl = (TopologicalNodeImpl) n;
-
-            if (nImpl.getSubstation() == null) {
-                String nodeString = "";
-                for (ConnectivityNode cn : nImpl.getConnectivityNodes()) {
-                    nodeString += "\n\t" + cn.toString();
-                }
-                log.debug(n.toString()
-                        + " Doesn't have a substation Connectivity Nodes are "
-                        + nodeString);
-            } else {
-                substations.add(((TopologicalNodeImpl) n).getSubstation());
-            }
-        }
-
-    }
+//        debugStep("Building Islands");
+//        Map<String, Boolean> topologicalNodesProcessStatus = new LinkedHashMap<>();
+//
+//        for(String k: topologicalNodes.keySet()){
+//            topologicalNodesProcessStatus.put(k, false);
+//        }
+//
+//        Map<String, EscaType> terminals = new LinkedHashMap<>();
+//        Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap<>();
+//
+//
+//        TopologicalNodeImpl processingNode = null;
+//
+//        for (String k: topologicalNodes.keySet()){
+//            if(topologicalNodesProcessStatus.get(k) == false){
+//                processingNode = topologicalNodes.get(k);
+//                break;
+//            }
+//        }
+//
+//        List otherNodes = new ArrayList();
+//        // bag of currently unprocessed terminals.
+//
+//        TopologicalIslandImpl island = new TopologicalIslandImpl();
+//        island.setIdentifier("Island: "+topologicalIslands.size());
+//        topologicalIslands.put(island.getIdentifier(), island);
+//
+//        while (processingNode != null) {
+//
+//            island.getTopologicalNodes().add(processingNode);
+//            ((TopologicalNodeImpl) processingNode).setTopologicalIsland(island);
+//
+//            // Add the terminals to be processed.
+//            for(Terminal t: processingNode.getTerminals()){
+//                terminals.put(t.getMrid(), t);
+//                terminalProcessedStatus.put(t.getMrid(), false);
+//            }
+//
+//            // Mark the currently procesing node as being processed.
+//            topologicalNodesProcessStatus.put(processingNode.getIdentifier(), true);
+//
+//            EscaType processingTerminal = null;
+//
+//            for(String k: terminals.keySet()){
+//                if (terminalProcessedStatus.get(k)== false){
+//                    processingTerminal = terminals.get(k);
+//                    break;
+//                }
+//            }
+//
+//            while (processingTerminal != null) {
+//                debugStep("\tProcessing Terminal: "
+//                        + processingTerminal.toString());
+//
+//                List<EscaType> canidates = new ArrayList<>();
+//
+//                for (EscaType e : processingTerminal
+//                        .getDirectLinkedResources(EscaVocab.TRANSFORMERWINDING_OBJECT)) {
+//                    debugStep("\t\tAdding canidate " + e);
+//                    canidates.add(e);
+//                }
+//
+//                for (EscaType e : processingTerminal
+//                        .getDirectLinkedResources(EscaVocab.ACLINESEGMENT_OBJECT)) {
+//                    debugStep("\t\tAdding canidate " + e);
+//                    canidates.add(e);
+//                }
+//
+//                if (canidates.size() == 0) {
+//                    debugStep("\tNo canidates found");
+//                }
+//                else{
+//                    for (EscaType currentCanidate : canidates) {
+//                        TopologicalBranchImpl branch = new TopologicalBranchImpl(null,terminalLookup);
+//                        //branch.setTerminalFrom((Terminal) processingTerminal);
+//                        branch.setPowerTransferEquipment(currentCanidate);
+//                        branch.setIdentifier(currentCanidate.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME).getString());
+//
+//                        Collection<EscaType> possibleOtherTerminalList = currentCanidate
+//                                .getRefersToMe(EscaVocab.TERMINAL_OBJECT);
+//                        debugStep("\t\tCurrent canidate is: " + currentCanidate
+//                                + " testing " + possibleOtherTerminalList.size()
+//                                + " terminls for the other.");
+//
+//                        // If a transformer then we have to look up to the
+//                        // powertransformer that ownes the winding.
+//                        if (currentCanidate
+//                                .isResourceType(EscaVocab.TRANSFORMERWINDING_OBJECT)) {
+//                            // Grab the powertransformer that is related to this
+//                            // sides transformer winding
+//                            EscaType ptxfm = currentCanidate
+//                                    .getLink(EscaVocab.TRANSFORMERWINDING_MEMBEROF_POWERTRANSFORMER);
+//
+//                            // Grab the winding on the other side of the
+//                            // powertransformer.
+//                            Collection<EscaType> otherWindings = ptxfm
+//                                    .getRefersToMe(
+//                                            EscaVocab.TRANSFORMERWINDING_OBJECT,
+//                                            currentCanidate);
+//
+//                            // TODO Assumes only a single processing here so we may
+//                            // need to make this generic in the future.
+//                            EscaType otherWinding = otherWindings.iterator().next();
+//                            Terminal otherTerm = (Terminal) otherWinding
+//                                    .getRefersToMe(EscaVocab.TERMINAL_OBJECT)
+//                                    .iterator().next();
+////                            branch.setTerminalTo(otherTerm);
+//
+//                            TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerm
+//                                    .getTopologicalNode();
+//                            debugStep("\t\tOther Node is: " + otherNode.toString());
+//
+//                            if (!otherNodes.contains(otherNode) && !topologicalNodesProcessStatus.get(otherNode.getIdentifier())) {
+//                                otherNodes.add(otherNode);
+//                            }
+//
+//                            //if (!topologicalNodeItems.wasProcessed(otherNode)) {
+//                            //	island.getTopologicalNodes().add(otherNode);
+//                            //	topologicalNodeItems.processItem(otherNode);
+//                            //	terminalItems.addItemsToProcess(otherNode
+//                            //			.getTerminals());
+//                            //}
+//                        }
+//                        // This is an ACLINESEGMENT_OBJECT
+//                        else {
+//
+//                            Terminal otherTerminal = (Terminal) currentCanidate
+//                                    .getRefersToMe(EscaVocab.TERMINAL_OBJECT,
+//                                            processingTerminal).iterator().next();
+//                            TopologicalNodeImpl otherNode = (TopologicalNodeImpl) otherTerminal
+//                                    .getTopologicalNode();
+////                            branch.setTerminalTo(otherTerminal);
+//                            if (!otherNodes.contains(otherNode) && !topologicalNodesProcessStatus.get(otherNode.getIdentifier())) {
+//                                otherNodes.add(otherNode);
+//                            }
+////							if (!topologicalNodeItems.wasProcessed(otherNode)) {
+////								debugStep("\t\tAdding other node's terminals");
+////								island.getTopologicalNodes().add(otherNode);
+////								// topologicalNodeItems.addItemToProcess(otherNode);
+////								topologicalNodeItems.processItem(otherNode);
+////								for(Terminal t: otherNode.getTerminals()){
+////									debugStep("\tTerminal test: " + t.toString());
+////								}
+////								terminalItems.addItemsToProcess(otherNode
+////										.getTerminals());
+////
+////							}
+//                        }
+//
+//                        if (!containsBranch(branch)){
+//                            branchMridList.add(currentCanidate.getMrid());
+//                            topologicalBranches.put(branch.getIdentifier(), branch);
+//                            island.getTopologicalBranches().add(branch);
+//                        }
+////						if (!containsBranch(branch.getTerminalFrom(),
+////								branch.getTerminalTo())) {
+////							topologicalBranches.add(branch);
+////							island.getTopologicalBranches().add(branch);
+////						}
+//                    }
+//
+//
+//                    debugStep("\tDone processing Terminal: " + processingTerminal);
+//                }
+//
+//                terminalProcessedStatus.put(processingTerminal.getMrid(), true);
+//                processingTerminal = null;
+//                for (String k: terminals.keySet()){
+//                    if (terminalProcessedStatus.get(k) == false){
+//                        processingTerminal = terminals.get(k);
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            debugStep("Done processing topology node " + processingNode);
+//
+//            if (otherNodes.size()> 0){
+//                processingNode = (TopologicalNodeImpl) otherNodes.get(0);
+//                otherNodes.remove(processingNode);
+//            }
+//            else{
+//                for(TopologicalNode n: island.getTopologicalNodes()){
+//                    debugStep(n.getSubstationName()+ " "+((TopologicalNodeImpl)n).getBaseVoltage());
+//                }
+//
+//                island = new TopologicalIslandImpl();
+//                island.setIdentifier("Island: "+topologicalIslands.size());
+//                topologicalIslands.put(island.getIdentifier(), island);
+//                processingNode = null;
+//                for(String k: topologicalNodes.keySet()){
+//                    if (topologicalNodesProcessStatus.get(k)== false){
+//                        processingNode = topologicalNodes.get(k);
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            printIsland(island);
+//
+////			processingNode = (TopologicalNodeImpl) topologicalNodeItems
+////					.nextItem();
+//        }
+//
+//        for (TopologicalNode n : topologicalNodes.values()) {
+//            TopologicalNodeImpl nImpl = (TopologicalNodeImpl) n;
+//
+//            if (nImpl.getSubstation() == null) {
+//                String nodeString = "";
+//                for (ConnectivityNode cn : nImpl.getConnectivityNodes()) {
+//                    nodeString += "\n\t" + cn.toString();
+//                }
+//                log.debug(n.toString()
+//                        + " Doesn't have a substation Connectivity Nodes are "
+//                        + nodeString);
+//            } else {
+//                substations.add(((TopologicalNodeImpl) n).getSubstation());
+//            }
+//        }
+//
+//    }
 
     private void printIsland(TopologicalIsland island) {
 
