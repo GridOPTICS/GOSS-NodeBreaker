@@ -37,7 +37,7 @@ public class EscaMain {
 
     private static final String PERSISTANCE_UNIT = "nodebreaker_cass_pu";
 
-    private static final String ESCA_TEST = "esca60_cim.xml";
+    private static final String ESCA_TEST = "../resources/esca60_cim.xml";
     private static boolean bufferedOut = false;
     private static BufferedOutputStream outStream = null;
 
