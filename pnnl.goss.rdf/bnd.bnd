@@ -1,0 +1,7 @@
+Bundle-Version: 0.0.0.${tstamp}
+-buildpath:  \
+	groovy-all,\
+	slf4j.simple,\
+	slf4j.api,\
+	org.apache.jena.osgi,\
+	com.github.jsonld-java
