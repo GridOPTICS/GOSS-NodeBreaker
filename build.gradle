@@ -1,192 +1,20 @@
+/*
+ * Master Gradle build script
+ *
+ * Depends on bndWorkspace and bndURI properties set by settings.gradle.
+ */
+
+/* Add bnd as a script dependency */
 buildscript {
-	repositories {
-//		maven {
-//			url "http://repo.jfrog.org/artifactory/gradle"
-//		}
-		mavenLocal()
-		jcenter()
-		dependencies {
-			classpath(group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '3.0.1')
-		}
-	}
-
+  dependencies {
+    classpath files(bndURI)
+  }
 }
 
-plugins {
-	id "com.jfrog.artifactory" version "3.0.1"
-	id 'osgi'
-	id 'maven'
-}
-
-task setVersion(dependsOn: 'build') <<{
-	ext.globalVersion = new Version(currentVersion)
-	println globalVersion.toString()
-}
-//import java.text.DateFormat
-//import java.text.SimpleDateFormat
-//import Version
-
-
-// All projects under this project folder will have the group and version below.
-allprojects {
-	apply plugin: 'com.jfrog.artifactory-upload'
-	apply plugin: 'groovy'
-
-	//group = 'pnnl.goss'
-	//version = globalVersion
-	//status = version.status
-
-
-	configure(subprojects.findAll { new File(it.projectDir, 'src').directory }) {
-		apply plugin: "osgi"
-		apply plugin: 'groovy'
-	}
-}
-
-task wrapper (type: Wrapper) {
-	gradleVersion = '2.1'
-}
-
-artifactoryPublish.skip = true
-
+/* Configure the subprojects */
 subprojects {
-	apply plugin: 'maven'
-	apply plugin: 'maven-publish'
-    sourceCompatibility = '1.7'
-
-//	buildscript {
-//		repositories {
-//			maven {
-//				url 'http://maven.pnnl.gov/artifactory/plugins-release'
-//				credentials {
-//					username = "${artifactory_user}"
-//					password = "${artifactory_password}"
-//				}
-//			}
-//			jcenter()
-//
-//		}
-//	}
-
-	//apply plugin: "osgi"
-	//apply plugin: "maven"
-	//apply plugin: 'artifactory-publish'
-
-	if (project.plugins.hasPlugin('java')) {
-		println project.name
-		jar {
-			// Include source with the jar
-			from sourceSets.main.allSource
-			manifest {
-				instruction 'Bundle-Vendor', 'PNNL'
-				instruction 'Bundle-DocURL', 'https://github.com/GridOPTICS/GOSS'
-
-				[
-					compileJava,
-					compileTestJava,
-					javadoc
-				]*.options*.encoding = 'UTF-8'
-			}
-		}
-
-		configurations {
-			published
-		}
-
-		task sourceJar(type: Jar, dependsOn: classes) {
-			classifier = 'sources'
-			from sourceSets.main.allSource
-		}
-
-		task javadocJar(type: Jar, dependsOn: javadoc) {
-			classifier = 'javadoc'
-			from javadoc.destinationDir
-		}
-
-//		task generateStuffJavaDocs(type: Javadoc) {
-//			println "Generating javadocs"
-//			source = sourceSets.main.allJava
-//			classpath = configurations.compile
-//			options.memberLevel = JavadocMemberLevel.PUBLIC
-//			excludes = ['*OWLMicroReasonerFactory.java']
-//		}
-
-		artifactoryPublish {
-			dependsOn sourceJar, javadocJar
-		}
-
-		artifacts {
-			published sourceJar
-			published javadocJar
-		}
-	}
-
-    dependencies {
-		compile 'org.codehaus.groovy:groovy-all:2.3.3'
-
-        // Logging should be available to all projects
-        compile "org.slf4j:slf4j-api:1.7.5"
-        compile "org.slf4j:slf4j-log4j12:1.7.5"
-
-        // ipojo annotations for service registry/retrieval.
-        compile 'org.apache.felix:org.apache.felix.ipojo.annotations:1.11.2'
-
-        // For testing we are going to use these ubiquitous
-        testCompile "junit:junit:4.11"
-        testCompile "org.mockito:mockito-core:1.+"
-		testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-
-        // Both client and server need access to the following dependencies
-        //compile 'com.impetus.kundera.core:kundera-core:2.13.1'
-        //compile "pnnl.goss:goss-core:0.1.6-SNAPSHOT"
-    }
-}
-
-configurations {
-	published
-}
-
-artifactory {
-
-	def myContextUrl = pnnl_artifactory_contextUrl
-	def myRepoKey = pnnl_artifactory_publish_key
-	def myContextUser = pnnl_artifactory_user
-	def myContextPassword = pnnl_artifactory_password
-
-	if (project.hasProperty('remote')){
-		myRepoKey = artifactory_publish_key
-		myContextUrl = artifactory_contextUrl
-		myContextUser = artifactory_user
-		myContextPassword = artifactory_password
-	}
-
-	contextUrl = myContextUrl //The base Artifactory URL if not overridden by the publisher/resolver
-
-	publish {
-		repository {
-			repoKey = myRepoKey
-			//repoKey = 'oss-local-snapshot'
-			username = "${myContextUser}"
-			password = "${myContextPassword}"
-			maven = true
-
-		}
-		defaults {
-			publishConfigs('archives', 'published')
-			properties = ['build.status': "$it.project.status".toString()]
-			//publications ('mavenJava')
-			publishBuildInfo = true
-			publishArtifacts = true
-			publishPom = true
-		}
-	}
-	resolve {
-		repository {
-			repoKey = 'libs-release'
-			username = "${myContextUser}"
-			password = "${myContextPassword}"
-			maven = true
-
-		}
-	}
+  def bndProject = bndWorkspace.getProject(name)
+  if (bndProject != null) {
+    plugins.apply 'biz.aQute.bnd'
+  }
 }

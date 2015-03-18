@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.felix.ipojo.annotations.Provides;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +14,7 @@ import pnnl.goss.rdf.Network;
 import pnnl.goss.rdf.NodeBreakerService;
 import pnnl.goss.rdf.server.EscaVocab;
 
-@Provides
+
 public class NodeBreakerServiceImpl implements NodeBreakerService {
 	private static Logger log = LoggerFactory.getLogger(NodeBreakerServiceImpl.class);
 
