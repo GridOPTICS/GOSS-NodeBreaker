@@ -561,39 +561,36 @@ public class NetworkImpl implements Network {
         Map<String, EscaType> terminalItems = new LinkedHashMap<>();
         Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap<>();
 
+        ConnectivityNode processingConnectivityNode  = null;
+        
+        // Initialize status of all connectivity nodes.
         for (String k: connectivityNodes.keySet()) {
             connectivityNodeProcessedStatus.put(k, false);
-        }
-
-        log.debug("Building Topology");
-        ConnectivityNode processingNode  = null;
-        // Grab the next connectivity node that hasn't been processed.
-        for (String t: connectivityNodes.keySet()){
-            if (connectivityNodeProcessedStatus.get(t) == false){
-                processingNode = (ConnectivityNode)connectivityNodes.get(t);
-                break;
+            // Start processing with the first node in the keyset.
+            if (processingConnectivityNode == null){
+            	processingConnectivityNode = (ConnectivityNode)connectivityNodes.get(k);
             }
         }
 
-        // Seed the starting point.
-        //processingNode = (ConnectivityNode)connectivityItems.get("Conn0");
-
+        log.debug("Building Topology");
+        
         // Define a new node/bus
         TopologicalNodeImpl topologicalNode = new TopologicalNodeImpl();
         topologicalNode.setIdentifier("T" + topologicalNodes.size());
         topologicalNodes.put(topologicalNode.getIdentifier(), topologicalNode);
         debugStep("Creating new topology node "
                 + topologicalNode.getIdentifier());
+        
         // Add the connectivity node to the topological node.
-        topologicalNode.getConnectivityNodes().add(processingNode);
+        topologicalNode.getConnectivityNodes().add(processingConnectivityNode);
 
 
-        while (processingNode != null) {
+        while (processingConnectivityNode != null) {
 
-            debugStep("\tProcessing ", processingNode);
+            debugStep("\tProcessing ", processingConnectivityNode);
 
             // Add all of the terminals connected to the currently processing node.
-            for(EscaType z: processingNode.getTerminalsAsEscaType()){
+            for(EscaType z: processingConnectivityNode.getTerminalsAsEscaType()){
                 if (!terminalItems.containsKey(z.getMrid())){
                     terminalItems.put(z.getMrid(), z);
                     terminalProcessedStatus.put(z.getMrid(), false);
@@ -602,7 +599,7 @@ public class NetworkImpl implements Network {
             }
 
             // Mark current node as being procesed.
-            connectivityNodeProcessedStatus.put(processingNode.getMrid(), true);
+            connectivityNodeProcessedStatus.put(processingConnectivityNode.getMrid(), true);
 
             Terminal processingTerminal = null;
             // Get a terminal to process
@@ -701,24 +698,24 @@ public class NetworkImpl implements Network {
 
             // mark the current node as processed and get the next one to be
             // processed.
-            connectivityNodeProcessedStatus.put(processingNode.getMrid(), true);
-            processingNode = null;
+            connectivityNodeProcessedStatus.put(processingConnectivityNode.getMrid(), true);
+            processingConnectivityNode = null;
             // Grab the next connectivity node that hasn't been processed.
             for (String t: connectivityNodes.keySet()){
                 if (connectivityNodeProcessedStatus.get(t) == false){
-                    processingNode = (ConnectivityNode)connectivityNodes.get(t);
+                    processingConnectivityNode = (ConnectivityNode)connectivityNodes.get(t);
                     break;
                 }
             }
 
-            if (processingNode != null){
+            if (processingConnectivityNode != null){
                 topologicalNode = new TopologicalNodeImpl();
                 topologicalNode.setIdentifier("T" + topologicalNodes.size());
                 topologicalNodes.put(topologicalNode.getIdentifier(), topologicalNode);
                 debugStep("Creating new topology node "
                         + topologicalNode.getIdentifier());
                 // Add the connectivity node to the topological node.
-                topologicalNode.getConnectivityNodes().add(processingNode);
+                topologicalNode.getConnectivityNodes().add(processingConnectivityNode);
             }
         }
 
