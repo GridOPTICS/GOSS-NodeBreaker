@@ -3,12 +3,15 @@ package pnnl.goss.rdf;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.logging.LogManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +40,7 @@ public class EscaMain {
 
     private static final String PERSISTANCE_UNIT = "nodebreaker_cass_pu";
 
-    private static final String ESCA_TEST = "../resources/esca60_cim.xml";
+    private static final String ESCA_TEST = "./resources/esca60_cim.xml";
     private static boolean bufferedOut = false;
     private static BufferedOutputStream outStream = null;
 
@@ -103,7 +106,23 @@ public class EscaMain {
     }
 
     public static void main(String[] args) throws Exception {
+    	
+    	//System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
+    	
+    	// Specify the log location because we aren't using a standard java
+    	// resource path instead we are using our osgi paths.
+    	File logPropertiesFile = new File("./resources/log4j.properties"); //resources/log4j.properties");
+    	if (logPropertiesFile.exists()){
+    		try{
+    			LogManager manager = LogManager.getLogManager();
+    			manager.readConfiguration(new FileInputStream(logPropertiesFile));
+    		}
+    		catch (IOException e){
+    			System.err.println("Log properties not found!");
+    		}
+    	}
 
+    	log.debug("Setup successful!");
         NodeBreakerService service = new NodeBreakerServiceImpl();
 
         String key = service.processNetwork(ESCA_TEST);
