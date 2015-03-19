@@ -1,7 +1,8 @@
 Bundle-Version: 0.0.0.${tstamp}
 -buildpath:  \
 	groovy-all,\
-	slf4j.simple,\
 	slf4j.api,\
 	org.apache.jena.osgi,\
-	com.github.jsonld-java
+	com.github.jsonld-java,\
+	org.ops4j.pax.logging.pax-logging-api,\
+	org.ops4j.pax.logging.pax-logging-service
