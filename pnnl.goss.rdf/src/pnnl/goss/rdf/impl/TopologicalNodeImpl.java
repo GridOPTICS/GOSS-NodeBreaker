@@ -5,6 +5,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.Terminal;
 import pnnl.goss.rdf.TopologicalIsland;
@@ -13,15 +18,26 @@ import pnnl.goss.rdf.server.EscaVocab;
 
 public class TopologicalNodeImpl implements TopologicalNode {
 
+	private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
+	
 	EscaType substation;
 	TopologicalIsland topologicalIsland;
+	final List<Terminal> terminals = new ArrayList<>();
+	final List<EscaType> transformers = new ArrayList<>();
 
 	public String getSubstationName() {
+		if (this.substation == null){
+			return "NO SUBSTATION FOR TN: "+identifier;
+		}
+		
 		return this.substation.getLiteralValue(
 				EscaVocab.IDENTIFIEDOBJECT_PATHNAME).toString();
 	}
 
 	public String getSubstationMrid() {
+		if (this.substation == null){
+			return "NO SUBSTATION FOR TN: "+identifier;
+		}
 		return this.substation.getMrid();
 	}
 
