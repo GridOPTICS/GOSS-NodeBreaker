@@ -95,13 +95,13 @@ public class EscaMain {
     }
 
     public static void logLinkAndReferring(EscaType type){
-        log.debug("\tDirectly Linked "+type.toString());
+        log.debug("\t\tDirectly Linked "+type.toString());
         for(EscaType d: type.getDirectLinks()){
-            log.debug("\t\t"+d.toString());
+            log.debug("\t\t\t"+d.toString());
         }
-        log.debug("\tReferred To: "+type.toString());
+        log.debug("\t\tReferred To: "+type.toString());
         for(EscaType d: type.getRefersToMe()){
-            log.debug("\t\t"+d.toString());
+            log.debug("\t\t\t"+d.toString());
         }
     }
 
@@ -169,7 +169,7 @@ public class EscaMain {
             TopologicalNodeImpl n = (TopologicalNodeImpl)n2;
             log.debug(n.toString());
             log.debug(n.getIdentifier()+ " voltage: "+n.getBaseVoltage());
-            log.debug("TERMINALS");
+            log.debug("\tTERMINALS");
             for (Terminal t: n.getTerminals()){
                 logLinkAndReferring((EscaType)t);
             }
