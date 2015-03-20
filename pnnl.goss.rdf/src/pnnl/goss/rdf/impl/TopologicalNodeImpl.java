@@ -220,14 +220,12 @@ public class TopologicalNodeImpl implements TopologicalNode {
 
 	@Override
 	public List<Terminal> getTerminals() {
-		// TODO Auto-generated method stub
-		return null;
+		return terminals;
 	}
 
 	@Override
 	public String getIdentifier() {
-		// TODO Auto-generated method stub
-		return null;
+		return identifier;
 	}
 
 	public void setTopologicalIsland(TopologicalIslandImpl island) {
