@@ -46,8 +46,7 @@ public class TerminalImpl extends AbstractEscaType implements Terminal {
 
 	@Override
 	public TopologicalNode getTopologicalNode() {
-		// TODO Auto-generated method stub
-		return null;
+		return topologicalNode;
 	}
 
 	@Override
