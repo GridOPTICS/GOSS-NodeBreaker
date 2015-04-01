@@ -1,6 +1,12 @@
 package pnnl.goss.rdf.server;
 
+import static pnnl.goss.rdf.server.PsseDictionary.*;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.hp.hpl.jena.rdf.model.Property;
@@ -17,6 +23,22 @@ public class PsseCimTranslations {
 	private final Map<String, Property> psseToCim =  new ConcurrentHashMap<>();
 	@SuppressWarnings("rawtypes")
 	private final Map<String, Class> psseToDataType = new ConcurrentHashMap<>();
+	private final Set<String> unMappedPsseProperties = new LinkedHashSet<>();
+	private final Set<Property> unMappedCimProperties = new LinkedHashSet<>();
+	
+	public PsseCimTranslations() {
+		addUnMappedPsseProperty(CASE_ID);
+		
+		//addUnMappedCimProperty(cimProperty);
+	}
+	
+	public Collection<String> getMappedPsse(){
+		return Collections.unmodifiableCollection(psseToCim.keySet());
+	}
+	
+	public Collection<Property> getMappedCim(){
+		return Collections.unmodifiableCollection(cimToPsse.keySet());
+	}
 	
 	@SuppressWarnings("rawtypes")
 	public void addMapping(Property cimProp, String pssePropString, Class dataType){
@@ -50,5 +72,20 @@ public class PsseCimTranslations {
 	public Class getDataType(Property cimProperty) {
 		return getDataType(getPsseProperty(cimProperty));
 	}
+	
+	public void addUnMappedCimProperty(Property cimProperty){
+		unMappedCimProperties.add(cimProperty);
+	}
+	
+	public void addUnMappedPsseProperty(String psseProperty){
+		unMappedPsseProperties.add(psseProperty);
+	}
 
+	public Collection<Property> getUnMappedCimProperties(){
+		return unMappedCimProperties;
+	}
+	
+	public Collection<String> getUnMappedPsseProperties(){
+		return unMappedPsseProperties;
+	}
 }
