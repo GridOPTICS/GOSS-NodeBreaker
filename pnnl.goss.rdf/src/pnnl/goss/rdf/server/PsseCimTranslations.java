@@ -19,15 +19,22 @@ import com.hp.hpl.jena.rdf.model.Property;
  */
 public class PsseCimTranslations {
 	
-	private final Map<Property, String> cimToPsse = new ConcurrentHashMap<>();
-	private final Map<String, Property> psseToCim =  new ConcurrentHashMap<>();
+	private final Map<ResourceProperty, String> cimToPsse = new ConcurrentHashMap<>();
+	private final Map<String, ResourceProperty> psseToCim =  new ConcurrentHashMap<>();
 	@SuppressWarnings("rawtypes")
 	private final Map<String, Class> psseToDataType = new ConcurrentHashMap<>();
 	private final Set<String> unMappedPsseProperties = new LinkedHashSet<>();
-	private final Set<Property> unMappedCimProperties = new LinkedHashSet<>();
+	private final Set<ResourceProperty> unMappedCimProperties = new LinkedHashSet<>();
 	
 	public PsseCimTranslations() {
+		// Unmapped psse properties
 		addUnMappedPsseProperty(CASE_ID);
+		addUnMappedPsseProperty(CASE_SBASE);
+		addUnMappedPsseProperty(BUS_NUMBER);  // Psse uses Bus_numaber cim uses unique identifiers.
+		
+		
+		
+		// 
 		
 		//addUnMappedCimProperty(cimProperty);
 	}
@@ -36,14 +43,15 @@ public class PsseCimTranslations {
 		return Collections.unmodifiableCollection(psseToCim.keySet());
 	}
 	
-	public Collection<Property> getMappedCim(){
+	public Collection<ResourceProperty> getMappedCim(){
 		return Collections.unmodifiableCollection(cimToPsse.keySet());
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public void addMapping(Property cimProp, String pssePropString, Class dataType){
+	public void addMapping(ResourceProperty cimProp, String pssePropString, Class dataType){
 		if (cimToPsse.containsKey(cimProp)){
-			throw new IllegalArgumentException("Cim Key "+ cimProp.getLocalName() + " already exists.");
+			throw new IllegalArgumentException("Cim Key "+ 
+					cimProp.getResource().getLocalName() + "."+ cimProp.getProperty().getLocalName() + " already exists.");
 		}
 		if (psseToCim.containsKey(pssePropString)) {
 			throw new IllegalArgumentException("Psse Key "+ pssePropString + " already exists.");
@@ -55,7 +63,7 @@ public class PsseCimTranslations {
 	}
 	
 	
-	public Property getCimProperty(String psseProperty){
+	public ResourceProperty getCimProperty(String psseProperty){
 		return psseToCim.get(psseProperty);
 	}
 	
@@ -73,7 +81,7 @@ public class PsseCimTranslations {
 		return getDataType(getPsseProperty(cimProperty));
 	}
 	
-	public void addUnMappedCimProperty(Property cimProperty){
+	public void addUnMappedCimProperty(ResourceProperty cimProperty){
 		unMappedCimProperties.add(cimProperty);
 	}
 	
@@ -81,7 +89,7 @@ public class PsseCimTranslations {
 		unMappedPsseProperties.add(psseProperty);
 	}
 
-	public Collection<Property> getUnMappedCimProperties(){
+	public Collection<ResourceProperty> getUnMappedCimProperties(){
 		return unMappedCimProperties;
 	}
 	
