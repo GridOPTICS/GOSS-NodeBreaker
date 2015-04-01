@@ -1,10 +1,11 @@
 package pnnl.goss.rdf;
 
+import java.util.Collection;
+
 public interface TopologicalBranch {
 
     String getName();
-    Terminal getTerminalPrimary();
-    Terminal getTerminalSecondary();
-    Terminal getTerminalTertiary();
+    Collection<TopologicalNode> getNodes();
+    String getType();
 
 }

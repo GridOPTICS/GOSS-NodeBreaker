@@ -1,16 +1,12 @@
 package pnnl.goss.rdf.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.jena.atlas.logging.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
-import pnnl.goss.rdf.InvalidArgumentException;
 import pnnl.goss.rdf.Terminal;
 import pnnl.goss.rdf.TopologicalBranch;
 import pnnl.goss.rdf.TopologicalIsland;
@@ -30,6 +26,21 @@ public class TopologicalBranchImpl implements TopologicalBranch {
     private List<TopologicalNode> topologicalNodes;
     private List<Terminal> terminals;
 
+    @Override
+	public Collection<TopologicalNode> getNodes() {
+		return topologicalNodes;
+	}
+    
+    @Override
+    public String getType(){
+    	if (powerTransferEquipment.isResourceType(EscaVocab.ACLINESEGMENT_OBJECT)){
+    		return EscaVocab.ACLINESEGMENT_OBJECT.getLocalName();
+    	}
+    	else{
+    		return EscaVocab.TRANSFORMERWINDING_OBJECT.getLocalName();
+    	}
+    }
+    
     public EscaType getPowerTransferEquipment() {
 		return powerTransferEquipment;
 	}
@@ -59,7 +70,7 @@ public class TopologicalBranchImpl implements TopologicalBranch {
 		identifier = (String)  branchDef.get("Identifier").getValue();
 		topologicalNodes = (List<TopologicalNode>) branchDef.get("TopologicalNodes").getValue();
 		terminals = (List<Terminal>) branchDef.get("Terminals").getValue();
-
+		powerTransferEquipment = (EscaType)branchDef.get("PowerTransferEquipment").getValue();
 	}
 
 //    TopologicalBranchImpl(EscaType branchType, Map<String, Terminal> topoTerminals) throws InvalidArgumentException{
@@ -121,7 +132,7 @@ public class TopologicalBranchImpl implements TopologicalBranch {
 //    }
 
     public String getName(){
-        return powerTransferEquipment.getLink(EscaVocab.IDENTIFIEDOBJECT_NAME).toString();
+        return powerTransferEquipment.toString(); //.getLink(EscaVocab.IDENTIFIEDOBJECT_NAME).toString();
     }
     
     @Override
@@ -131,23 +142,7 @@ public class TopologicalBranchImpl implements TopologicalBranch {
     	//return terminalPri.topologicalNode.getSubstationName()+ " <" + terminalFrom.getMrid() + "> " + terminalFrom.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
     }
 
-	@Override
-	public Terminal getTerminalPrimary() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Terminal getTerminalSecondary() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Terminal getTerminalTertiary() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 
 //    @Override
 //    pubic String toString() {

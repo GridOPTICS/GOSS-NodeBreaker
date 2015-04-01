@@ -153,10 +153,15 @@ public class NetworkImpl implements Network {
     				b.set("Identifier", prop);
     				
     				prop = new RdfProperty();
+    				prop.setDataType(EscaType.class.getName());
+    				prop.setName("PowerTransferEquipment");
+    				prop.setValue(ac);
+    				b.set("PowerTransferEquipment", prop);
+    				
+    				prop = new RdfProperty();
     				prop.setDataType(List.class.getName());
     				prop.setName("TopologicalNodes");
-    				prop.setValue(nodes);
-    				    				
+    				prop.setValue(nodes);    				    				
     				b.set("TopologicalNodes", prop);
     				branches.add(b);
     				
@@ -196,6 +201,13 @@ public class NetworkImpl implements Network {
     				prop.setName("Identifier");
     				prop.setValue(t.getIdentifier());
     				b.set("Identifier", prop);
+    				
+    				prop = new RdfProperty();
+    				prop.setDataType(EscaType.class.getName());
+    				prop.setName("PowerTransferEquipment");
+    				prop.setValue(t.getDirectLinkedResources(EscaVocab.TRANSFORMERWINDING_OBJECT).iterator().next());
+    				b.set("PowerTransferEquipment", prop);
+    				
     				
     				prop = new RdfProperty();
     				prop.setDataType(List.class.getName());

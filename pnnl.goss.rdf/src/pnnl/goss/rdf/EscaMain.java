@@ -2,10 +2,12 @@ package pnnl.goss.rdf;
 
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
@@ -144,7 +146,52 @@ public class EscaMain {
 //			}
 //			log.debug("#############################################################################");
 //		}
-
+        
+        File f=new File("branches-and-buses.txt");
+        
+        BufferedWriter writer = new BufferedWriter(new FileWriter(f));    
+        
+        writer.write("TOPONODES\n");
+        for(TopologicalNode br: network.getTopologicalNodes()){
+        	
+        	writer.write("Bus: " + br+"\n");
+        	
+        }
+        writer.write("End TOPONODES\n");
+        writer.write("ACLINES\n");
+        for(TopologicalBranch br: network.getTopologicalBranches()){
+        	if(br.getType().equals(EscaVocab.ACLINESEGMENT_OBJECT.getLocalName())){
+	        	writer.write("Branch: " + br.getName()+"\n");
+	        	writer.write("Buses\n");
+	        	log.debug("Branch: " + br.getName());
+	        	log.debug("Buses");
+	        	for(TopologicalNode tn: br.getNodes()){
+	        		writer.write("\t"+tn+"\n");
+	        		log.debug("\t"+tn);
+	        	}
+	        	log.debug("End Branch: " + br.getName());
+        	}
+        }
+        
+        writer.write("WINDINGS\n");
+        for(TopologicalBranch br: network.getTopologicalBranches()){
+        	if(br.getType().equals(EscaVocab.TRANSFORMERWINDING_OBJECT.getLocalName())){
+	        	writer.write("Branch: " + br.getName()+"\n");
+	        	writer.write("Buses\n");
+	        	log.debug("Branch: " + br.getName());
+	        	log.debug("Buses");
+	        	for(TopologicalNode tn: br.getNodes()){
+	        		writer.write("\t"+tn+"\n");
+	        		log.debug("\t"+tn);
+	        	}
+	        	log.debug("End Branch: " + br.getName());
+        	}
+        }
+        
+        writer.close();
+        
+        if(true) return;
+        
         NetworkImpl netImpl = (NetworkImpl)network;
         log.debug("# Substations: "+netImpl.getSubstations().size());
         log.debug("SUBSTATIONS");
