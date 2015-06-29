@@ -2,6 +2,7 @@ package pnnl.goss.rdf;
 
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,18 +10,29 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.LogManager;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.impl.ConnectivityNode;
 import pnnl.goss.rdf.impl.EscaTreeWindow;
 import pnnl.goss.rdf.impl.EscaTypes;
+import pnnl.goss.rdf.impl.MatchMrids;
 import pnnl.goss.rdf.impl.NetworkImpl;
 import pnnl.goss.rdf.impl.NodeBreakerServiceImpl;
 import pnnl.goss.rdf.impl.TopologicalNodeImpl;
@@ -30,6 +42,7 @@ import pnnl.goss.rdf.impl.TopologicalBranchImpl;
 import pnnl.goss.rdf.TopologicalIsland;
 import pnnl.goss.rdf.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
+import pnnl.goss.rdf.server.Psse23Writer;
 
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -66,7 +79,7 @@ public class EscaMain {
         escaTypes = window.getEscaTypeMap();
     }
 
-
+    
 
     private void printObjectType(Resource subject){
         for(EscaType t: escaTypes.values()){
@@ -109,6 +122,11 @@ public class EscaMain {
 
     public static void main(String[] args) throws Exception {
     	
+//    	MatchMrids mrids = new MatchMrids();
+//    	
+//    	mrids.loadData();
+//    	if(true) return;
+    	
     	//System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
     	
     	// Specify the log location because we aren't using a standard java
@@ -130,65 +148,75 @@ public class EscaMain {
         String key = service.processNetwork(ESCA_TEST);
 
         Network network = service.getNetwork(key);
-
+                
         int i=1;
-//		for (TopologicalIsland island: network.getTopologicalIslands()){
-//			log.debug("Island: " + i++);
-//			log.debug("Branches");
-//			for(TopologicalBranch br: island.getTopologicalBranches()){
-//				log.debug("\t"+ br.getName() + " "+br.getTerminalFrom()+ " " + br.getTerminalTo());
-//
-//				//log.debug("\tfrom: "+ br.getTerminalFrom() + " " + br.getTerminalTo());
-//			}
-//			log.debug("Nodes");
-//			for(TopologicalNode tn: island.getTopologicalNodes()){
-//				log.debug("\t"+tn.toString());
-//			}
-//			log.debug("#############################################################################");
-//		}
         
         File f=new File("branches-and-buses.txt");
         
         BufferedWriter writer = new BufferedWriter(new FileWriter(f));    
         
-        writer.write("TOPONODES\n");
-        for(TopologicalNode br: network.getTopologicalNodes()){
-        	
-        	writer.write("Bus: " + br+"\n");
-        	
-        }
-        writer.write("End TOPONODES\n");
-        writer.write("ACLINES\n");
-        for(TopologicalBranch br: network.getTopologicalBranches()){
-        	if(br.getType().equals(EscaVocab.ACLINESEGMENT_OBJECT.getLocalName())){
-	        	writer.write("Branch: " + br.getName()+"\n");
-	        	writer.write("Buses\n");
-	        	log.debug("Branch: " + br.getName());
-	        	log.debug("Buses");
-	        	for(TopologicalNode tn: br.getNodes()){
-	        		writer.write("\t"+tn+"\n");
-	        		log.debug("\t"+tn);
-	        	}
-	        	log.debug("End Branch: " + br.getName());
+        Map<String, List<TopologicalNode>> substationTopo = new LinkedHashMap<>();
+        
+        for(TopologicalNode b: network.getTopologicalNodes()){
+        	if (b.getSubstationName() == null || b.getSubstationName().isEmpty()){
+        		writer.write(b + " has no substation listed.");
+        		continue;
         	}
+        	if (!substationTopo.containsKey(b.getSubstationName())){
+        		substationTopo.put(b.getSubstationName(), new ArrayList<>());
+        	}
+        	substationTopo.get(b.getSubstationName()).add(b);
         }
         
-        writer.write("WINDINGS\n");
-        for(TopologicalBranch br: network.getTopologicalBranches()){
-        	if(br.getType().equals(EscaVocab.TRANSFORMERWINDING_OBJECT.getLocalName())){
-	        	writer.write("Branch: " + br.getName()+"\n");
-	        	writer.write("Buses\n");
-	        	log.debug("Branch: " + br.getName());
-	        	log.debug("Buses");
-	        	for(TopologicalNode tn: br.getNodes()){
-	        		writer.write("\t"+tn+"\n");
-	        		log.debug("\t"+tn);
-	        	}
-	        	log.debug("End Branch: " + br.getName());
-        	}
+        for(Entry<String, List<TopologicalNode>> entry: substationTopo.entrySet()){
+        	writer.write("Substation: "+ entry.getKey()+"\n");
+        	for(TopologicalNode n:entry.getValue()){
+        		writer.write("\t"+n+"\n");
+        	}        	
         }
+        
+//        writer.write("TOPONODES\n");
+//        for(TopologicalNode br: network.getTopologicalNodes()){
+//        	
+//        	writer.write("Bus: " + br+"\n");
+//        	
+//        }
+//        writer.write("End TOPONODES\n");
+//        writer.write("ACLINES\n");
+//        for(TopologicalBranch br: network.getTopologicalBranches()){
+//        	if(br.getType().equals(EscaVocab.ACLINESEGMENT_OBJECT.getLocalName())){
+//	        	writer.write("Branch: " + br.getName()+"\n");
+//	        	writer.write("Buses\n");
+//	        	log.debug("Branch: " + br.getName());
+//	        	log.debug("Buses");
+//	        	for(TopologicalNode tn: br.getNodes()){
+//	        		writer.write("\t"+tn+"\n");
+//	        		log.debug("\t"+tn);
+//	        	}
+//	        	log.debug("End Branch: " + br.getName());
+//        	}
+//        }
+//        
+//        writer.write("WINDINGS\n");
+//        for(TopologicalBranch br: network.getTopologicalBranches()){
+//        	if(br.getType().equals(EscaVocab.TRANSFORMERWINDING_OBJECT.getLocalName())){
+//	        	writer.write("Branch: " + br.getName()+"\n");
+//	        	writer.write("Buses\n");
+//	        	log.debug("Branch: " + br.getName());
+//	        	log.debug("Buses");
+//	        	for(TopologicalNode tn: br.getNodes()){
+//	        		writer.write("\t"+tn+"\n");
+//	        		log.debug("\t"+tn);
+//	        	}
+//	        	log.debug("End Branch: " + br.getName());
+//        	}
+//        }
         
         writer.close();
+        
+        if(true) return;
+        Psse23Writer w = new Psse23Writer();
+        w.write(network);
         
         if(true) return;
         
@@ -221,294 +249,23 @@ public class EscaMain {
                 logLinkAndReferring((EscaType)t);
             }
 
-//			EscaType vl = n.getVoltageLevel();
-//			if (vl != null){
-//				for (EscaType eq: vl.getDirectLinks()){
-//					log.debug(eq.toString());
-//				}
-//			}
-//			else{
-//				log.debug("Dead Bus!");
-//			}
-//			if (n.getSubstation() != null){
-//				for (EscaType s: n.getSubstation().getDirectLinks()){
-//					log.debug("\tlinkto: "+ s);
-//				}
-//				for (EscaType s: n.getSubstation().getRefersToMe()){
-//					log.debug("\treffrom: "+ s);
-//				}
-//			}
-//			if (n.getBreakers() != null) {
-//				for (EscaType b: n.getBreakers()){
-//					for(EscaType dir: b.getDirectLinks()){
-//						log.debug("\t"+dir.toString());
-//					}
-//
-//					for(EscaType dir: b.getRefersToMe()){
-//						log.debug("\tREF: "+dir.toString());
-//					}
-//				}
-//			}
-
-
-//			if (vl != null){
-//				log.debug("\tVL <"+vl.getMrid()+"> Direct Links");
-//				for(EscaType esca: vl.getDirectLinks()){
-//					log.debug("\t\t"+esca.getDataType()+" <"+esca.getMrid()+">");
-//				}
-//				log.debug("\tVL <"+vl.getMrid()+"> Refers to me");
-//				for(EscaType esca: vl.getRefersToMe()){
-//					log.debug("\t\t"+esca.getDataType()+" <"+esca.getMrid()+">");
-//				}
-//			}
-//			else{
-//				log.debug("Dead Bus");
-//			}
-
-
-//			for (ConnectivityNode cn: n.getConnectivityNodes()){
-//				log.debug("\tCN Voltage: "+ cn.getBaseVoltage()+ " <"+cn.getMrid()+"> "+cn.getLiteralValue(Esca60Vocab.IDENTIFIEDOBJECT_PATHNAME));
-//
-//				EscaType vl = cn.getVoltageLevelRes();
-//				if (vl == null){
-//					log.debug("\t\tVoltage level is null!");
-//					continue;
-//				}
-//
-//				EscaType substation = cn.getSubstationRes();
-//				log.debug("\tCN Substation: " + substation.getMrid() + " "+substation.getLiteralValue(Esca60Vocab.IDENTIFIEDOBJECT_PATHNAME));
-//
-//				log.debug("\t\tVL <"+vl.getMrid()+"> Direct Links");
-//				for(EscaType esca: vl.getDirectLinks()){
-//					log.debug("\t\t\t"+esca.getDataType()+" <"+esca.getMrid()+">");
-//				}
-//				log.debug("\t\tVL <"+vl.getMrid()+"> Refers to me");
-//				for(EscaType esca: vl.getRefersToMe()){
-//					log.debug("\t\t\t"+esca.getDataType()+" <"+esca.getMrid()+">");
-//				}
-//			}
         }
 
         log.debug("Islands: " + network.getTopologicalIslands().size());
         log.debug("Topology Nodes: "+ network.getTopologicalNodes().size());
         log.debug("Topology Branches: "+ network.getTopologicalBranches().size());
 
-
-//		System.out.println("Breaker count: "+ types.where(EscaVocab.BREAKER_OBJECT).size());
-//		System.out.println("Terminal count: "+types.where(EscaVocab.TERMINAL_OBJECT).size());
-//		System.out.println("Connectivity Node count: "+types.where(EscaVocab.CONNECTIVITYNODE_OBJECT).size());
-//		System.out.println("Substation count: "+types.where(EscaVocab.SUBSTATION_OBJECT).size());
-//		System.out.println("Voltage Level count: "+types.where(EscaVocab.VOLTAGELEVEL_OBJECT).size());
-//		System.out.println("BaseVoltage: "+types.where(EscaVocab.BASEVOLTAGE_OBJECT).size());
-//
-
-//		Collection<EscaType> substations = mainProg.getObjectType(Esca60Vocab.SUBSTATION_OBJECT);
-//
-//		for(EscaType s: substations){
-//			VoltageLevelGrouper vlg = new VoltageLevelGrouper(s);
-//			log.debug("For substation: "+ s.getLiteralValue(Esca60Vocab.IDENTIFIEDOBJECT_NAME.getLocalName()));
-//
-//			for (Double d: vlg.getVoltageLevels()){
-//				log.debug("VoltageLevel: " + d);
-//			}
-//		}
-        /*
-
-        Collection<EscaType> elements = mainProg.getEscaTypes().getByResourceType(Esca60Vocab.VOLTAGELEVEL_OBJECT);
-
-        for(EscaType t: elements){
-            log.debug(t.getDataType() + " CONNECTIONS: "+ t.getName());
-            for(EscaType r: t.getRefersToMe()){
-                log.debug(r.getDataType()+ " "+ r.getName());
-            }
-        }*/
-//		if (bufferedOut){
-//			outStream.flush();
-//		}
-//		if(true){
-//			return;
-//		}
-//		Collection<EscaType> voltageLevels = mainProg.getEscaTypes().getByResourceType(Esca60Vocab.VOLTAGELEVEL_OBJECT);
-//		Map<String, VoltageLevelGrouper> substations = new HashMap<>();
-//
-//		List<TopologicalNode> nodes = new ArrayList<>();
-//
-//		for(EscaType vl: voltageLevels){
-//			VoltageLevelGrouper vlGrouper = null;
-//			for (EscaType sub: vl.getDirectLinkedResources(Esca60Vocab.SUBSTATION_OBJECT)){
-//				if (!substations.containsKey(sub.getMrid())){
-//					log.debug("Adding substation: " + sub.getMrid());
-//					vlGrouper = new VoltageLevelGrouper(sub);
-//					substations.put(sub.getMrid(), vlGrouper);
-//				}
-//				else{
-//					vlGrouper = substations.get(sub.getMrid());
-//				}
-//
-//				vlGrouper.addVoltageLevel(vl);
-//
-//			}
-//		}
-//
-//		for(String mrid: substations.keySet()){
-//			VoltageLevelGrouper vlGrouper = substations.get(mrid);
-//			log.debug("substation: " + vlGrouper.getSubstation().getLiteralValue(Esca60Vocab.IDENTIFIEDOBJECT_NAME.getLocalName()));
-//			for(EscaType e: vlGrouper.getVoltageLevelObjects()){
-//				nodes.add(new TopologicalNode(vlGrouper.getSubstation(), e));
-//			}
-////			for(Double dbl: vlGrouper.getVoltageLevels()){
-////				log.debug("vl: " + dbl);
-////			}
-//		}
-//
-//
-//		for(TopologicalNode tn: nodes){
-//			log.debug(tn.toString());
-//		}
-
-//		String breakerMrid = "_5273505719686324070";
-//		EscaType breaker = mainProg.getTypeByMrid(breakerMrid);
-//
-//		System.out.println("Breaker "+breakerMrid+" is connected to: ");
-//		System.out.println(breaker);
-
-//		for(EscaType t: mainProg.getObjectType(Esca60Vocab.BREAKER_OBJECT)){
-//			System.out.println(t);
-//		}
-
-
-
-//		String terminalMrid = "_23797624181204055";
-//		EscaType terminal = mainProg.getTypeByMrid(terminalMrid);
-//		//System.out.println("Terminal "+terminalMrid+" is connected to:");
-//		System.out.println(terminal);
-//		for(EscaType t:breaker.getLinks().values()){
-//			System.out.println(t);
-//			for(String property: t.getLiterals().keySet()){
-//				System.out.println("p: "+property+" v: "+ t.getLiterals().get(property));
-//			}
-//		}
-
-        //mainProg.printObjectType(Esca60Vocab.CONNECTIVITYNODE_OBJECT);
+        
 
         //setBufferedOut();setBufferedOut();
         if (bufferedOut){
             outStream.flush();
         }
-//		System.out.println(populateDataType(GeographicalRegion.class, "GeographicalRegion"));
-//		System.out.println(populateDataType(SubGeographicalRegion.class, "SubGeographicalRegion"));
-//
-//
-//		System.out.println(populateDataType(Accumulator.class, "Accumulator"));
-//		System.out.println(populateDataType(ACLineSegment.class, "ACLineSegment"));
-//		System.out.println(populateDataType(Analog.class, "Analog"));
-//		System.out.println(populateDataType(AnalogLimit.class, "AnalogLimit"));
-//		System.out.println(populateDataType(AnalogLimitSet.class, "AnalogLimitSet"));
-//
-//		System.out.println(populateDataType(BaseVoltage.class, "BaseVoltage"));
-//		System.out.println(populateDataType(Breaker.class, "Breaker"));
-//		System.out.println(populateDataType(BusBarSection.class, "BusbarSection"));
-//
-//		System.out.println(populateDataType(ConformLoad.class, "ConformLoad"));
-//		System.out.println(populateDataType(ConformLoadGroup.class, "ConformLoadGroup"));
-//		System.out.println(populateDataType(ConformLoadSchedule.class, "ConformLoadSchedule"));
-//		System.out.println(populateDataType(ConnectivityNode.class, "ConnectivityNode"));
-//		System.out.println(populateDataType(CurveData.class, "CurveData"));
-//
-//		System.out.println(populateDataType(Discrete.class, "Discrete"));
-//
-//		System.out.println(populateDataType(Line.class, "Line"));
-//
-//		// TODO
-//		System.out.println(populateDataType(LoadBreakSwitch.class, "LoadBreakSwitch"));
-//
-//		System.out.println(populateDataType(MeasurementType.class, "MeasurementType"));
-//
-//		// TODO
-//		System.out.println(populateDataType(PowerTransformer.class, "PowerTransformer"));
-//
-//		// TODO
-//		System.out.println(populateDataType(RegularTimePoint.class, "RegularTimePoint"));
-//
-//		// TODO
-//		System.out.println(populateDataType(RegulationSchedule.class, "RegulationSchedule"));
-//
-//		// TODO
-//		System.out.println(populateDataType(SeriesCompensator.class, "SeriesCompensator"));
-//
-//		// TODO
-//		System.out.println(populateDataType(ShuntCompensator.class, "ShuntCompensator"));
-//
-//		System.out.println(populateDataType(Substation.class, "Substation"));
-//
-//		// TODO
-//		System.out.println(populateDataType(SynchronousMachine.class, "SynchronousMachine"));
-//
-//		// TODO
-//		System.out.println(populateDataType(TapChanger.class, "TapChanger"));
-//
-//		System.out.println(populateDataType(Terminal.class, "Terminal"));
-//		System.out.println(populateDataType(VoltageLevel.class, "VoltageLevel"));
-//
-//		// Add parent child relationships.
-//		addRelation(SubGeographicalRegion.class, GeographicalRegion.class, "SubGeographicalRegion", "SubGeographicalRegion.Region");
-//		addRelation(Line.class, SubGeographicalRegion.class, "Line", "Line.Region");
-//		addRelation(VoltageLevel.class, BaseVoltage.class, "VoltageLevel", "VoltageLevel.BaseVoltage");
-//
-//		addSingularRelation(ACLineSegment.class, EquipmentContainer.class, "ACLineSegment", "Equipment.MemberOf_EquipmentContainer",
-//				"setMemberOfEquipmentContainer");
-//
-//		addSingularRelation(Discrete.class, MeasurementType.class, "Discrete", "Measurement.MeasurementType",
-//				"setMeasurementType");
-//
-//
-//		// One big write.
-//		storeData();
+
         System.out.println("Import Complete!");
 
+        
 
-
-//
-//		for(String k: typeMap.keySet()){
-//			EscaType type = typeMap.get(k);
-//			availableTypes.add(type.getDataType());
-//		}
-//
-//		for(String k: availableTypes){
-//			System.out.println(k);
-//		}
-
-        //if(true)return;
-
-//		for(String key:typeMap.keySet()){
-//			System.out.println(typeMap.get(key).getDataType());
-//		}
-        // This is puzzling the way I have configured this.
-        //window.loadSubjectTree("_7138742088364182230");
-
-        //window.invertFromLevel(Esca60Vocab.SUBSTATION_OBJECT);
-        // A Substation
-        //BuildPowergrid grid = new BuildPowergrid();
-        //grid.buildPowergrid(window.getEscaTypeMap(), window.getEscaTypeSubstationMap());
-
-        // A Substation
-        //window.printInvertedTree("_7138742088364182230");
-
-
-        // A breaker
-        //window.printInvertedTree("_6086371616589253666");
-        // A VoltageLevel
-        //window.printInvertedTree("_7385660062756494042");
-
-
-        //window.printTree("_7138742088364182230");
-        // A Terminal
-        //window.printTree("_2463136265274055557");
-
-        //window.printSubstations();
-
-        //window.printTerminalTree("_1859399559611018070");
-        //EscaTreeWindow window = new EscaTreeWindow("C:\\scratch\\esca_tree.txt", false, "C:\\scratch\\esca_tree_out.txt");
     }
 
     private static void setBufferedOut() throws FileNotFoundException{
