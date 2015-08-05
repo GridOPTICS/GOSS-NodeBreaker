@@ -55,7 +55,8 @@ public class EscaMain {
 
     private static final String PERSISTANCE_UNIT = "nodebreaker_cass_pu";
 
-    private static final String ESCA_TEST = "./resources/esca60_cim.xml";
+    //private static final String ESCA_TEST = "./resources/esca60_cim.xml";
+    private static final String ESCA_TEST = "C:\\temp\\cim_state_variable_test\\export_cim.xml";
     private static boolean bufferedOut = false;
     private static BufferedOutputStream outStream = null;
 
@@ -200,6 +201,43 @@ public class EscaMain {
         }
         writer.close();
         
+        f=new File("summary.txt");
+        writer = new BufferedWriter(new FileWriter(f));
+        int ntfmr = 0;
+        int nlines = 0;
+        int nother = 0;
+        
+        for(TopologicalBranch tb: network.getTopologicalBranches()){
+        	if (tb.getType().equals(EscaVocab.ACLINESEGMENT_OBJECT.getLocalName())){
+        		nlines+=1;
+        	}
+        	else if(tb.getType().equals(EscaVocab.TRANSFORMERWINDING_OBJECT.getLocalName())){
+        		ntfmr+=1;
+        	}
+        	else{
+        		nother+=1;
+        	}
+        }
+        
+        writer.write("# Substations: " + substationTopo.size()+"\n");
+        writer.write("# Buses: " + network.getTopologicalNodes().size()+"\n");
+        writer.write("# Branches: " + network.getTopologicalBranches().size()+"\n");
+        writer.write("# Transformers: " + ntfmr+"\n");
+        writer.write("# Lines: " + nlines+"\n");
+        
+        if (nother > 0){
+        	writer.write("# Other: "+nother+"\n");
+        }
+        
+        writer.write("\n--- SUBSTATION LIST---\n");
+        
+        for(Entry<String, List<TopologicalNode>> entry: substationTopo.entrySet()){
+        	writer.write("Substation: "+ entry.getKey()+ "("+entry.getValue().get(0).getSubstationMrid() + " #Buses: ");
+        	writer.write(entry.getValue().size()+"\n");
+        }
+        
+        writer.close();
+        
         
         f=new File("bus-branch-map.txt");
         writer = new BufferedWriter(new FileWriter(f));
@@ -210,6 +248,10 @@ public class EscaMain {
         		writer.write("\t"+ tn+"\n");
         	}
         }
+        
+        writer.close();
+        
+        
         
         
         
