@@ -151,15 +151,15 @@ public class EscaMain {
                 
         int i=1;
         
-        File f=new File("branches-and-buses.txt");
+            
         
-        BufferedWriter writer = new BufferedWriter(new FileWriter(f));    
-        
+        File f=new File("substation-bus-mapping.txt");
+        BufferedWriter writer = new BufferedWriter(new FileWriter(f));
         Map<String, List<TopologicalNode>> substationTopo = new LinkedHashMap<>();
         
         for(TopologicalNode b: network.getTopologicalNodes()){
         	if (b.getSubstationName() == null || b.getSubstationName().isEmpty()){
-        		writer.write(b + " has no substation listed.");
+        		writer.write(b + " HAS NO SUBSTATIONS.\n");
         		continue;
         	}
         	if (!substationTopo.containsKey(b.getSubstationName())){
@@ -168,12 +168,25 @@ public class EscaMain {
         	substationTopo.get(b.getSubstationName()).add(b);
         }
         
+        
         for(Entry<String, List<TopologicalNode>> entry: substationTopo.entrySet()){
         	writer.write("Substation: "+ entry.getKey()+"\n");
         	for(TopologicalNode n:entry.getValue()){
         		writer.write("\t"+n+"\n");
         	}        	
         }
+        
+        f=new File("bus-branch-map.txt");
+        writer = new BufferedWriter(new FileWriter(f));
+        
+        for(TopologicalBranch tb: network.getTopologicalBranches()){
+        	writer.write("Branch: "+tb.getName()+ " type: "+ tb.getType() + "Connected to\n");
+        	for (TopologicalNode tn: tb.getNodes()){
+        		writer.write("\t"+ tn);
+        	}
+        }
+        
+        
         
 //        writer.write("TOPONODES\n");
 //        for(TopologicalNode br: network.getTopologicalNodes()){
