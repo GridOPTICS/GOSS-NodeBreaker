@@ -153,7 +153,7 @@ public class EscaMain {
         
             
         
-        File f=new File("substation-bus-mapping.txt");
+        File f=new File("topo-node-contents.txt");
         BufferedWriter writer = new BufferedWriter(new FileWriter(f));
         Map<String, List<TopologicalNode>> substationTopo = new LinkedHashMap<>();
         
@@ -170,11 +170,36 @@ public class EscaMain {
         
         
         for(Entry<String, List<TopologicalNode>> entry: substationTopo.entrySet()){
-        	writer.write("Substation: "+ entry.getKey()+"\n");
+        	writer.write("Substation: "+ entry.getKey()+ "("+entry.getValue().get(0).getSubstationMrid()+ "\n");
         	for(TopologicalNode n:entry.getValue()){
-        		writer.write("\t"+n+"\n");
+        		if (n.getTerminals().size() > 0){
+	        		writer.write("\t"+n.getIdentifier()+" is referred to by\n");
+	        		for(Terminal t: n.getTerminals()){
+	        			for(EscaType e: t.getRefersToMe()){
+	        				writer.write("\t\t"+e+"\n");
+	        			}
+	        		}
+        		}
+        		else{
+        			writer.write("\t"+n.getIdentifier()+" contains no terminals\n");
+        		}
+        		
+        		
+        		if (n.getTerminals().size() > 0){
+	        		writer.write("\t"+n.getIdentifier()+" links to\n");
+	        		for(Terminal t: n.getTerminals()){
+	        			for(EscaType e: t.getDirectLinks()){
+	        				writer.write("\t\t"+e+"\n");
+	        			}
+	        		}
+        		}
+        		else{
+        			writer.write("\t"+n.getIdentifier()+" contains no terminals\n");
+        		}
         	}        	
         }
+        writer.close();
+        
         
         f=new File("bus-branch-map.txt");
         writer = new BufferedWriter(new FileWriter(f));
@@ -182,7 +207,7 @@ public class EscaMain {
         for(TopologicalBranch tb: network.getTopologicalBranches()){
         	writer.write("Branch: "+tb.getName()+ " type: "+ tb.getType() + "Connected to\n");
         	for (TopologicalNode tn: tb.getNodes()){
-        		writer.write("\t"+ tn);
+        		writer.write("\t"+ tn+"\n");
         	}
         }
         

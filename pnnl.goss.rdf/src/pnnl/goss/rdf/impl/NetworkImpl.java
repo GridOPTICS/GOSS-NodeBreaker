@@ -24,6 +24,7 @@ import pnnl.goss.rdf.TopologicalIsland;
 import pnnl.goss.rdf.TopologicalNode;
 import pnnl.goss.rdf.core.RdfBranch;
 import pnnl.goss.rdf.core.RdfBranches;
+import pnnl.goss.rdf.core.RdfBuses;
 import pnnl.goss.rdf.core.RdfProperty;
 import pnnl.goss.rdf.server.EscaVocab;
 
@@ -58,6 +59,23 @@ public class NetworkImpl implements Network {
     public Collection<TopologicalIsland> getTopologicalIslands() {
         return Collections.unmodifiableCollection(topologicalIslands.values());
     }
+    
+    private void printSelf(Set<String> done, EscaType esca, int tabs){
+    	log.debug(getTabs(tabs)+ esca.toString());
+    	
+    	for(EscaType child: esca.getRefersToMe()){
+    		printSelf(done, child, tabs+1);
+    	}
+    	done.add(esca.getIdentifier());
+    }
+    
+    private String getTabs(int tabs){
+    	String data = "";
+    	for(int x=0; x<tabs;x++){
+    		data += "\t";
+    	}
+    	return data;
+    }
 
     /**
      * Transforms an <code>EscaTypes</code> structure into a network of
@@ -72,19 +90,55 @@ public class NetworkImpl implements Network {
     public NetworkImpl(EscaTypes escaTypes) throws InvalidArgumentException {
         log.debug("Creating nework with: " + escaTypes.keySet().size()
                 + " elements.");
-        log.debug("# AcLineSegments: "
-                + escaTypes.getByResourceType(EscaVocab.ACLINESEGMENT_OBJECT).size());
-        log.debug("# TransformerWinding: "
-                + escaTypes
-                        .getByResourceType(EscaVocab.TRANSFORMERWINDING_OBJECT).size());
-        log.debug("# Substations: "
-                + escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT).size());
-        log.debug("# ConnectivityNodes: "
-                + escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT).size());
-        log.debug("# Terminals: "
-                + escaTypes.getByResourceType(EscaVocab.TERMINAL_OBJECT).size());
-        log.debug("# Breakers: "
-                + escaTypes.getByResourceType(EscaVocab.BREAKER_OBJECT).size());
+        log.debug("# subgeo: " + escaTypes.getByResourceType(EscaVocab.SUBGEOGRAPHICALREGION_OBJECT).size());
+        
+        EscaType substation = escaTypes.get("_8300407115104535728");
+        
+        Set<String> done = new HashSet<>();
+        int tabs = 0;
+        printSelf(done, substation, tabs);
+    
+        System.out.println("CONFORM LOADS");
+        done = new HashSet<>();
+        tabs = 0;
+        for (EscaType et: escaTypes.getByResourceType(EscaVocab.SHUNTCOMPENSATOR_OBJECT)){
+        	printSelf(done, et, tabs);
+        }
+        
+        done = new HashSet<>();
+        tabs = 0;
+        for (EscaType et: escaTypes.getByResourceType(EscaVocab.SYNCHRONOUSMACHINE_OBJECT)){
+        	printSelf(done, et, tabs);
+        }
+        
+        log.debug("# Substations: " + escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT).size());
+        done = new HashSet<>();
+        tabs = 0;
+        for (EscaType et: escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT)){
+        	printSelf(done, et, tabs);
+        }
+        
+        log.debug("# AREAS: "+escaTypes.getByResourceType(EscaVocab.HOSTCONTROLAREA_OBJECT));
+        done = new HashSet<>();
+        tabs = 0;
+        for (EscaType et: escaTypes.getByResourceType(EscaVocab.HOSTCONTROLAREA_OBJECT)){
+        	printSelf(done, et, tabs);
+        }
+        
+//        
+//        log.debug("# AcLineSegments: "
+//                + escaTypes.getByResourceType(EscaVocab.ACLINESEGMENT_OBJECT).size());
+//        log.debug("# TransformerWinding: "
+//                + escaTypes
+//                        .getByResourceType(EscaVocab.TRANSFORMERWINDING_OBJECT).size());
+//        log.debug("# Substations: "
+//                + escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT).size());
+//        log.debug("# ConnectivityNodes: "
+//                + escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT).size());
+//        log.debug("# Terminals: "
+//                + escaTypes.getByResourceType(EscaVocab.TERMINAL_OBJECT).size());
+//        log.debug("# Breakers: "
+//                + escaTypes.getByResourceType(EscaVocab.BREAKER_OBJECT).size());
 
         this.escaTypes = escaTypes;
 
@@ -99,18 +153,18 @@ public class NetworkImpl implements Network {
         //this.buildTopoIslandsNew();
         this.buildBranches();
 
-        for(TopologicalNode t: this.topologicalNodes.values()){
-            log.debug(t.getIdentifier());
-            for(Terminal tt: t.getTerminals()){
-                log.debug("\t"+ tt);
-            }
-            for(ConnectivityNode cn: ((TopologicalNodeImpl)t).getConnectivityNodes()){
-                log.debug("\t"+ cn);
-                for(EscaType t2: cn.getTerminals()){
-                    log.debug("\t\t"+ t2);
-                }
-            }
-        }
+//        for(TopologicalNode t: this.topologicalNodes.values()){
+//            log.debug(t.getIdentifier());
+//            for(Terminal tt: t.getTerminals()){
+//                log.debug("\t"+ tt);
+//            }
+//            for(ConnectivityNode cn: ((TopologicalNodeImpl)t).getConnectivityNodes()){
+//                log.debug("\t"+ cn);
+//                for(EscaType t2: cn.getTerminals()){
+//                    log.debug("\t\t"+ t2);
+//                }
+//            }
+//        }
     }
     
     @SuppressWarnings("unchecked")
@@ -118,7 +172,7 @@ public class NetworkImpl implements Network {
     	RdfBranches branches = new RdfBranches();
     	
     	
-    	for(TopologicalNode tn: topologicalNodes.values()){
+    	for(TopologicalNodeImpl tn: topologicalNodes.values()){
     		for(Terminal t: tn.getTerminals()){
     			log.debug("tn has: " + t);
     			if (t.hasDirectLink(EscaVocab.ACLINESEGMENT_OBJECT)) {
@@ -190,7 +244,9 @@ public class NetworkImpl implements Network {
     				for(EscaType a: otherSideTrxm){
     					for(EscaType term: a.getRefersToMe(EscaVocab.TERMINAL_OBJECT)){
     						terminals.add((Terminal) term);
-    						nodes.add(((Terminal)term).getTopologicalNode());
+    						if (!nodes.contains(((Terminal)term).getTopologicalNode())){
+    							nodes.add(((Terminal)term).getTopologicalNode());
+    						}
     					}    					
     				}
     				
@@ -233,23 +289,12 @@ public class NetworkImpl implements Network {
     	log.debug("RDF BRANCHES");
     	for(RdfBranch b: branches){
     		RdfProperty prop = b.get("TopologicalNodes");
-    		
-    		topologicalBranches.put((String)b.get("Identifier").getValue(), new TopologicalBranchImpl(b));
-    		
-    		log.debug("\tTopo Nodes");
-    		for(TopologicalNode t: (List<TopologicalNode>)prop.getValue()){
-    			if (t != null){
-    				log.debug("\t\t"+ t);
-    			}
+    		TopologicalBranch br = new TopologicalBranchImpl(b);
+    		for(TopologicalNode tn: br.getNodes()){
+    			((TopologicalNodeImpl)tn).addBranch(br);
     		}
+    		topologicalBranches.put((String)b.get("Identifier").getValue(), br);
     		
-    		prop = b.get("Terminals");
-    		log.debug("\tTerminals");
-    		for(Terminal t: (List<Terminal>)prop.getValue()){
-    			if (t != null){
-    				log.debug("\t\t"+ t);
-    			}
-    		}
     	}
     	
     	log.debug("// Build branches complete!");
@@ -1048,13 +1093,25 @@ public class NetworkImpl implements Network {
         return Collections.unmodifiableCollection(substations);
     }
 
-    public Collection<TopologicalNodeImpl> getTopologicalNodes() {
+    public Collection<TopologicalNode> getTopologicalNodes() {
         return Collections.unmodifiableCollection(topologicalNodes.values());
     }
 
-    @Override
+    
     public Collection<TopologicalBranch> getTopologicalBranches() {
         return Collections.unmodifiableCollection(topologicalBranches.values());
     }
+
+	@Override
+	public RdfBuses getRdfBuses() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public RdfBranches getRdfBranches() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

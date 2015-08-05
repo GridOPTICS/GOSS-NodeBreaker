@@ -69,6 +69,14 @@ public class EscaVocab {
 	public final static Resource ANALOGLIMIT_OBJECT = m.createProperty(URI_ROOT + "AnalogLimit");
 	public final static Resource LINE_OBJECT = m.createProperty(URI_ROOT + "Line");
 	public final static Resource ACLINESEGMENT_OBJECT = m.createProperty(URI_ROOT + "ACLineSegment");
+	public final static Resource HOSTCONTROLAREA_OBJECT = m.createProperty(URI_ROOT + "HostControlArea");
+	public final static Resource SV_POWERFLOW_OBJECT = m.createProperty(URI_ROOT + "SvPowerFlow");
+	
+	public final static Property TERMINAL_CONNECTED = m.createProperty(URI_ROOT + "Terminal.connected");
+	public final static Property TERMINAL_TOPOLOGICAL_NODE = m.createProperty(URI_ROOT + "Terminal.TopologicalNode");
+	public final static Property SV_POWERFLOW_TERMINAL = m.createProperty(URI_ROOT + "SvPowerFlow.Terminal");
+	public final static Property SV_POWERFLOW_P = m.createProperty(URI_ROOT + "SvPowerFlow.p");
+	public final static Property SV_POWERFLOW_Q = m.createProperty(URI_ROOT + "SvPowerFlow.q");
 	public final static Property MEASUREMENT_MEMBEROF_PSR = m.createProperty(URI_ROOT + "Measurement.MemberOf_PSR");
 	public final static Property IEC61970CIMVERSION_DATE = m.createProperty(URI_ROOT + "IEC61970CIMVersion.date");
 	public final static Property STATICVARCOMPENSATOR_SVCCONTROLMODE = m.createProperty(URI_ROOT + "StaticVarCompensator.sVCControlMode");
@@ -173,4 +181,7 @@ public class EscaVocab {
 	public final static Property ANALOGLIMIT_VALUE = m.createProperty(URI_ROOT + "AnalogLimit.value");
 	public final static Property BASICINTERVALSCHEDULE_STARTTIME = m.createProperty(URI_ROOT + "BasicIntervalSchedule.startTime");
 	public final static Property BREAKER_RATEDCURRENT = m.createProperty(URI_ROOT + "Breaker.ratedCurrent");
+	
+	
+	//public final static ResourceProperty BUS_NAME = TOPOLOG
 }

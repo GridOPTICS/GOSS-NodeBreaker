@@ -7,11 +7,14 @@ import java.util.Set;
 
 
 
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.Terminal;
+import pnnl.goss.rdf.TopologicalBranch;
 import pnnl.goss.rdf.TopologicalIsland;
 import pnnl.goss.rdf.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
@@ -24,8 +27,19 @@ public class TopologicalNodeImpl implements TopologicalNode {
 	TopologicalIsland topologicalIsland;
 	final List<Terminal> terminals = new ArrayList<>();
 	final List<EscaType> transformers = new ArrayList<>();
+	final List<TopologicalBranch> branches = new ArrayList<>();
+	
+	public TopologicalNodeImpl addBranch(TopologicalBranch branch){
+		branches.add(branch);
+		return this;
+	}
+	
+	public List<TopologicalBranch> getBranches(){
+		return branches;
+	}
 
 	public String getSubstationName() {
+		initialize();
 		if (this.substation == null){
 			return "NO SUBSTATION FOR TN: "+identifier;
 		}
@@ -223,5 +237,75 @@ public class TopologicalNodeImpl implements TopologicalNode {
 	public void setTopologicalIsland(TopologicalIslandImpl island) {
 		// TODO Auto-generated method stub
 		this.island= island;
+	}
+
+	@Override
+	public String getTopoNodeType() {
+		String nodeType = "";
+		// TODO Determine if node is isolated
+		// TODO Determine if node is swing
+		if (generators.size() > 0){
+			nodeType = TOPO_NODE_HAS_GENERATION;
+		}
+		else { // generators.size() == 0
+			nodeType = TOPO_NODE_NO_GENERATION;
+		}
+		
+		return nodeType;
+		
+	}
+
+	@Override
+	public double getNetPInjection() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getNetQInjection() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getVoltage() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getAngle() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getB0ch() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getBch() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getG0ch() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getGch() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getNominalVoltage() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

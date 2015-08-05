@@ -5,4 +5,6 @@ Bundle-Version: 0.0.0.${tstamp}
 	org.apache.jena.osgi,\
 	com.github.jsonld-java,\
 	org.ops4j.pax.logging.pax-logging-api,\
-	org.ops4j.pax.logging.pax-logging-service
+	org.ops4j.pax.logging.pax-logging-service,\
+	org.apache.commons.csv,\
+	org.apache.commons.io

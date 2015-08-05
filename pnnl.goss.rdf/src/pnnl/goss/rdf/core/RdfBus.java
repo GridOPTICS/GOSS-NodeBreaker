@@ -6,8 +6,11 @@ import java.util.Set;
 
 public class RdfBus {
 
-private final Map<String, RdfProperty> properties = new HashMap<String, RdfProperty>();
+	private final Map<String, RdfProperty> properties = new HashMap<String, RdfProperty>();
 	
+	
+	
+
 	public RdfBus set(String name, RdfProperty property){
 		properties.put(name, property);
 		return this;

@@ -19,11 +19,11 @@ public interface TopologicalNode {
 	/**
 	 * Based upon context one of the four static strings should
 	 * be returned:
-	 * 
-	 * 	TOPO_NODE_NO_GENERATION,
-	 * 	TOPO_NODE_HAS_GENERATION,
-	 *  TOPO_NODE_IS_SWING,
-	 *  TOPO_NODE_IS_ISOLATED
+	 *  
+	 *  TOPO_NODE_NO_GENERATION,
+	 *	TOPO_NODE_HAS_GENERATION,
+	 *	TOPO_NODE_IS_SWING,
+	 *	TOPO_NODE_IS_ISOLATED
 	 *  
 	 * These correspond to the state in psse IDE bus.
 	 * 
@@ -87,6 +87,12 @@ public interface TopologicalNode {
 	 * @return
 	 */
 	double getNominalVoltage();
+
+	/**
+	 * Returns the container's mrid (identifier)
+	 * @return
+	 */
+	String getSubstationMrid();
 	
 	
 }

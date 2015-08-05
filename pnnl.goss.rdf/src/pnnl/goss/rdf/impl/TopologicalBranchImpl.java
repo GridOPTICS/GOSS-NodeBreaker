@@ -136,10 +136,8 @@ public class TopologicalBranchImpl implements TopologicalBranch {
     }
     
     @Override
-    public String toString() {
-    	return "TODO Topo Branch!";
-    	// TODO Auto-generated method stub
-    	//return terminalPri.topologicalNode.getSubstationName()+ " <" + terminalFrom.getMrid() + "> " + terminalFrom.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME);
+    public String toString() {    	
+    	return powerTransferEquipment.toString();
     }
 
 	
