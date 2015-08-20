@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.logging.impl.NoOpLog;
 
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
@@ -38,6 +39,32 @@ import com.hp.hpl.jena.vocabulary.RDF;
 
 public class MatchMrids {
 	
+	private enum FileType{
+		CapFile, KvFile, AuxFile, NodeFile,	NetmonFile,	StationFile
+	}
+	
+	private enum CapFields{
+		Type, CapFileIndx, CapName, P_Kv_Cp 
+	}
+	
+	private enum StationFields{
+		Type, StFileIndx, StName 
+	}
+	
+	private enum NodeFields{
+		Type, NodeFileIndx, NodeName, I_Bus_ND, P_Kv_ND 
+	}
+	
+	private enum KvFields{
+		Type, KvFileIndx, KvName, I_Bus_Kv, VL_Kv, P_ST_Kv 
+	}
+	
+	private enum AuxFields{
+		Type, AuxFileIndx, AuxName, P_KV_Aux
+	}
+	
+	
+	
 	/**
 	 * The list of mrids from the export_cim.xml file.
 	 */
@@ -50,7 +77,199 @@ public class MatchMrids {
 	
 	private Map<String, List<Element>> busElements = new HashMap<>(); 
 	
+	private Map<FileType, List<CSVRecord>> csvDataMap;
 	
+	private Map<String, List<Map<Integer, Map<FileType, List<CSVRecord>>>>> stationContents;
+	private Map<Integer, Map<FileType, List<CSVRecord>>> busContents;
+	
+	
+	Tree csvFileRoot = new Tree();
+	
+	class TreeElement extends Tree {
+		String type;
+		CSVRecord record;
+		
+		public TreeElement(String type){
+			this(type, null);
+		}
+		
+		public TreeElement(String type, CSVRecord record){
+			this.type = type;
+			this.record = record;
+		}
+		
+		public String getType(){
+			return type;
+		}
+		
+		public CSVRecord getRecord(){
+			return record;
+		}
+		
+		@Override
+		public String toString() {
+			if (record == null){
+				return type;
+			}
+			
+			StringBuilder builder = new StringBuilder();
+			boolean first = true;
+			for(String item: record){
+				if (first) {
+					first = false;
+					builder.append(item);
+				}
+				else{
+					builder.append(","+item);
+				}
+				
+			}
+			
+			return type + " " + builder.toString();
+		}
+	}
+	
+	class Tree{
+		private List<Tree> children = new ArrayList<>();
+		private Tree parent;
+		private TreeElement element;
+		
+		public void setTreeElement(TreeElement element){
+			this.element = element;
+		}
+		
+		public TreeElement getTreeElement(){
+			return element;
+		}
+		
+		public void addChild(Tree obj){
+			if (!children.contains(obj)){
+				System.out.println("Adding tree element: "+ obj + " to "+this);
+				children.add(obj);
+			}
+		}
+		
+		public Tree getParent() {
+			return parent;
+		}
+		
+		public boolean isLeaf(){
+			return (children.size() == 0);
+		}
+		
+		public List<Tree> getLeaves(){
+			List<Tree> leaves = new ArrayList<>();
+			
+			for(Tree ch: this.children){
+				if (ch.isLeaf()){
+					leaves.add(ch);
+				} else{
+					leaves.addAll(ch.getLeaves());
+				}
+			}
+			
+			return leaves;
+		}
+		
+		public void setParent(Tree parent) {
+			this.parent = parent;
+			
+			if (parent != null){
+				this.parent.addChild(this);
+			}
+			
+		}
+		public List<Tree> getChildren() {
+			return children;
+		}
+		
+		public List<Tree> getChildren(String type) {
+			List<Tree> ch = new ArrayList();
+			for (Tree child: this.children){
+				if(child.getTreeElement().getType().equals(type)){
+					ch.add(child);
+				}
+			}
+			return ch;
+		}
+		
+		public List<String> getChildTypes(){
+			List<String> types = new ArrayList();
+			for (Tree child: this.children){
+				if (!types.contains(child.getTreeElement().getType())){
+					types.add(child.getTreeElement().getType());
+				}
+			}
+			return types;
+		}
+		
+		@Override
+		public String toString() {
+			if (element != null){
+				return element.toString();
+			}
+			return super.toString();
+		}
+		
+	}
+	
+	
+	public TreeElement getCapFromLeaf(Tree leaf){
+				
+		while(!leaf.getTreeElement().getType().equals(FileType.CapFile.name())){
+			leaf = leaf.getParent();
+		}
+		
+		leaf = leaf.getParent();
+		
+		return leaf.getTreeElement();
+	}
+	
+	public TreeElement getStationFromLeaf(Tree leaf){
+		
+		while(!leaf.getParent().getTreeElement().getType().equals("Stations")){
+			leaf = leaf.getParent();
+		}
+		
+		return leaf.getTreeElement();
+	}
+	
+	public String trimQt(String data){
+		return data.replace("'", "");
+	}
+	
+	public String buildStationId(){
+		// Station tree
+		List<Tree> leaves = csvFileRoot.getLeaves();
+		
+		for(Tree tr: leaves){
+			TreeElement st = getStationFromLeaf(tr);
+			String stationName = st.getRecord().get(StationFields.StName.ordinal());
+			String elementId = "ST."+trimQt(stationName);
+			
+			TreeElement te = tr.getTreeElement();
+			if (te.getType().equals(FileType.NodeFile.name())){
+				String nodeName = te.getRecord().get(NodeFields.NodeName.ordinal());
+				elementId += ".ND."+trimQt(nodeName);
+			} 
+			else if(te.getType().equals(FileType.CapFile.name())){
+				String capName = te.getRecord().get(CapFields.CapName.ordinal());
+				elementId += ".CP."+trimQt(capName);
+			}
+									
+			System.out.println(elementId);
+		}
+//		for(Tree child: csvFileRoot.getChildren(FileType.StationFile.name())){
+//			for (Tree bus)
+//			StringBuilder sb = new StringBuilder();
+//			System.out.println("Building kv with "+child);
+//			for (String ch: child.getChildTypes()){
+//				System.out.println("\t"+ch);
+//			}
+//		}
+		return "woot";
+	}
+		
 	public class Element{
 		public String type;
 		public String value;
@@ -102,6 +321,76 @@ public class MatchMrids {
 	private String getBusString(int num){
 		return String.format("bus-%d", num);
 	}
+	
+	/**
+	 * Add the field names to the properties list using rec as the datasource.
+	 * @param properties
+	 * @param rec
+	 * @param field_names
+	 */
+	private void addProperties(List<Element> properties, CSVRecord rec, String[] field_names){
+		for(int i=0; i< field_names.length; i++){
+			if (field_names[i] == null || field_names[i].isEmpty()){
+				continue;
+			}
+			
+			properties.add(new Element(field_names[i], rec.get(i)));
+		}
+	}
+	
+	private List<CSVRecord> getRecords(FileType fileType){
+		return csvDataMap.get(fileType);
+	}
+	
+	private List<CSVRecord> getStationKvLevelIndexes(int stationIndx){
+		// Look up station index from the kv file and return the records that match
+		// the kv file.
+		List<CSVRecord> kvLevels = new ArrayList<>();
+		for(CSVRecord rec: getRecords(FileType.KvFile)){
+			int pstationIdx = Integer.parseInt(rec.get(KvFields.P_ST_Kv.ordinal()));
+			if (pstationIdx == stationIndx ){
+				kvLevels.add(rec);
+			}
+		}
+		return kvLevels;
+	}
+	
+	private List<CSVRecord> getNodeFromKvLevelIndexes(int kvLevelndx){
+		List<CSVRecord> nodes = new ArrayList<>();
+		for(CSVRecord rec: getRecords(FileType.NodeFile)){
+			int pkvIndx = Integer.parseInt(rec.get(NodeFields.P_Kv_ND.ordinal()));
+			if (pkvIndx == kvLevelndx ){
+				nodes.add(rec);
+			}
+		}
+		return nodes;
+	}
+	
+	private List<CSVRecord> getAuxFromKvLevelIndexes(int kvLevelndx){
+		List<CSVRecord> recs = new ArrayList<>();
+		for(CSVRecord rec: getRecords(FileType.AuxFile)){
+			int pkvIndx = Integer.parseInt(rec.get(AuxFields.P_KV_Aux.ordinal()));
+			if (pkvIndx == kvLevelndx ){
+				recs.add(rec);
+			}
+		}
+		return recs;
+	}
+	
+	private List<CSVRecord> getCapFromKvLevelIndexes(int kvLevelndx){
+		List<CSVRecord> recs = new ArrayList<>();
+		for(CSVRecord rec: getRecords(FileType.CapFile)){
+			int pkvIndx = Integer.parseInt(rec.get(CapFields.P_Kv_Cp.ordinal()));
+			if (pkvIndx == kvLevelndx ){
+				recs.add(rec);
+			}
+		}
+		return recs;
+	}
+	
+//	public List<String> getDeviceLabels(){
+//		
+//	}
 
 	private void loadBusesFromCsv(){
 		List<CSVRecord> idmaprecords = getRecords("C:/temp/cim_state_variable_test/Viper_ws_e-terrasource_netmom.netmom.idmap", 4);
@@ -111,16 +400,85 @@ public class MatchMrids {
 		List<CSVRecord> noderecords = getRecords("C:/temp/cim_state_variable_test/hdbexport/node_mark.csv", 5);
 		List<CSVRecord> stationrecords = getRecords("C:/temp/cim_state_variable_test/hdbexport/station_mark.csv", 3);
 		
+		csvDataMap = new HashMap<>();
+		busContents = new HashMap<>();
+		stationContents = new HashMap<>();
+		
+		csvDataMap.put(FileType.AuxFile,  auxrecords);
+		csvDataMap.put(FileType.CapFile, capacitorrecords);
+		csvDataMap.put(FileType.KvFile, kvrecords);
+		csvDataMap.put(FileType.NetmonFile,  idmaprecords);
+		csvDataMap.put(FileType.NodeFile, noderecords);
+		csvDataMap.put(FileType.StationFile, stationrecords);
+		
+		String[] kv_fields = {"", "indx", "id_kv", "i_bs_kv", "vl_kv", "p_st_kv"};
+		
+		
+		csvFileRoot.setTreeElement(new TreeElement("Stations"));
+		
+		for (CSVRecord rec: stationrecords){
+			String stationName = rec.get(StationFields.StName.ordinal());
+			Tree stTree = new Tree();
+			stTree.setTreeElement(new TreeElement(FileType.StationFile.name(), rec));
+			stTree.setParent(csvFileRoot);
+			
+			
+			System.out.println("Station: "+stationName);
+			int stationIndx = Integer.parseInt(rec.get(StationFields.StFileIndx.ordinal()));
+			List<Map<Integer, Map<FileType, List<CSVRecord>>>> stationBuses = new ArrayList<>();
+			stationContents.put(stationName, stationBuses);
+			for(CSVRecord kvRec: getStationKvLevelIndexes(stationIndx)){
+				
+				int busNum = Integer.parseInt(kvRec.get(KvFields.I_Bus_Kv.ordinal()));
+				
+				Tree busTree = new Tree();
+				busTree.setTreeElement(new TreeElement("bus-"+busNum));
+				busTree.setParent(stTree);
+				
+				Tree kvTree = new Tree();
+				kvTree.setTreeElement(new TreeElement(FileType.KvFile.name(), kvRec));
+				kvTree.setParent(busTree);
+				
+				int kvIndx = Integer.parseInt(kvRec.get(KvFields.KvFileIndx.ordinal()));
+								
+				for (CSVRecord capRec: getCapFromKvLevelIndexes(kvIndx)){
+					Tree item = new Tree();
+					item.setTreeElement(new TreeElement(FileType.CapFile.name(), capRec));
+					item.setParent(kvTree);
+				}
+				
+				for (CSVRecord ndRec: getNodeFromKvLevelIndexes(kvIndx)){
+					Tree item = new Tree();
+					item.setTreeElement(new TreeElement(FileType.NodeFile.name(), ndRec));
+					item.setParent(kvTree);
+				}
+				
+								
+				for (CSVRecord auxRec: getAuxFromKvLevelIndexes(kvIndx)){
+					Tree item = new Tree();
+					item.setTreeElement(new TreeElement(FileType.AuxFile.name(), auxRec));
+					item.setParent(kvTree);
+				}				
+			}			
+		}
+		
+		
+		
+		
+		
 		for (CSVRecord rec: kvrecords){
+			
+			// Bus number associated with this record and how we get 
+			// the properties associated with the bus.
 			String bus = getBusString(Integer.parseInt(rec.get(3)));
 			
 			if (!busElements.containsKey(bus)){
 				busElements.put(bus, new ArrayList<Element>());
 			}
 			
-			busElements.get(bus).add(new Element("name", bus));
-			String value = rec.get(3);
-			System.out.println(value);
+			List<Element> elements = busElements.get(bus);
+			
+			addProperties(elements, rec, kv_fields);
 		}
 		
 		Map<String, CSVRecord> mridmap = createMap(3, idmaprecords);
@@ -130,6 +488,8 @@ public class MatchMrids {
 		Map<String, CSVRecord> kvmap = createMap(2, kvrecords);
 		Map<String, CSVRecord> nodemap = createMap(2, noderecords);
 		Map<String, CSVRecord> stationmap = createMap(2, stationrecords);
+		
+		
 		
 		
 		

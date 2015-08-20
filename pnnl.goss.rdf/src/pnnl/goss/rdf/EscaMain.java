@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -152,17 +153,23 @@ public class EscaMain {
                 
         int i=1;
         
-            
-        
         File f=new File("topo-node-contents.txt");
         BufferedWriter writer = new BufferedWriter(new FileWriter(f));
         Map<String, List<TopologicalNode>> substationTopo = new LinkedHashMap<>();
+        Set<String> substationLastPartOfName = new LinkedHashSet<>();
         
         for(TopologicalNode b: network.getTopologicalNodes()){
-        	if (b.getSubstationName() == null || b.getSubstationName().isEmpty()){
+        	if (b.getSubstationName() == null || b.getSubstationName().isEmpty() ||
+        			b.getSubstationName().startsWith("NO SUBSTATION")){
         		writer.write(b + " HAS NO SUBSTATIONS.\n");
         		continue;
         	}
+        	
+        	if (!b.getSubstationName().startsWith("NO SUBSTATION")){
+        		String[] s = b.getSubstationName().split(" ");
+            	substationLastPartOfName.add(s[s.length-1]);
+        	}
+        	
         	if (!substationTopo.containsKey(b.getSubstationName())){
         		substationTopo.put(b.getSubstationName(), new ArrayList<>());
         	}
@@ -220,6 +227,7 @@ public class EscaMain {
         }
         
         writer.write("# Substations: " + substationTopo.size()+"\n");
+        writer.write("# Substations Last Name: " + substationLastPartOfName.size()+"\n");
         writer.write("# Buses: " + network.getTopologicalNodes().size()+"\n");
         writer.write("# Branches: " + network.getTopologicalBranches().size()+"\n");
         writer.write("# Transformers: " + ntfmr+"\n");
@@ -227,6 +235,11 @@ public class EscaMain {
         
         if (nother > 0){
         	writer.write("# Other: "+nother+"\n");
+        }
+        
+        writer.write("\n--- SUBSTATION NAMES---\n");
+        for(String s: substationLastPartOfName){
+        	writer.write(s+"\n");
         }
         
         writer.write("\n--- SUBSTATION LIST---\n");
