@@ -506,6 +506,32 @@ public class MatchMrids {
 		return model.get("bus-"+id).getAsJsonObject();
 	}
 	
+	private List<String> getNetMonAuxStrings(JsonObject busObj){
+		List<String> capStrings = new ArrayList<>();
+		if (busObj.has("aux")){
+			
+			for (JsonElement auxEle: busObj.get("aux").getAsJsonArray()){
+				JsonObject auxObj = auxEle.getAsJsonObject();
+				String toPrint = "ST."+busObj.get("st_name").getAsString()+".AUX."+auxObj.get("name").getAsString();
+				capStrings.add(toPrint);
+			}
+		}
+		return capStrings;
+	}
+	
+	private List<String> getNetMonCapStrings(JsonObject busObj){
+		List<String> capStrings = new ArrayList<>();
+		if (busObj.has("capacitors")){
+			
+			for (JsonElement capEle: busObj.get("capacitors").getAsJsonArray()){
+				JsonObject capObj = capEle.getAsJsonObject();
+				String toPrint = "ST."+busObj.get("st_name").getAsString()+".CP."+capObj.get("name").getAsString();
+				capStrings.add(toPrint);
+			}
+		}
+		return capStrings;
+	}
+	
 	private void buildModel(){
 		
 		JsonObject model = modelRoot.get("model").getAsJsonObject();
@@ -558,6 +584,8 @@ public class MatchMrids {
 						if (kvObj.get("p__st_id").getAsInt() == stationObj.get("id").getAsInt()){
 							busObj.addProperty("vl", kvObj.get("vl_kv").getAsNumber());
 							busObj.add("kv", kvObj);
+							busObj.addProperty("st_id", stationObj.get("id").getAsInt());
+							busObj.addProperty("st_name", stationObj.get("name").getAsString());
 							stationObj.add("bus-"+busObj.get("id").getAsInt(), busObj);
 							
 							JsonArray capacitors = new JsonArray();
@@ -682,23 +710,20 @@ public class MatchMrids {
 		// Now that the data is loaded into the rootModel populate the model property.
 		buildModel();
 		
-		
-		System.out.println(modelRoot.toString());
-		
-		
-		
-		for (CSVRecord rec: kvrecords){
+		for(JsonElement busEle: modelRoot.get("buses").getAsJsonArray()){
+			JsonObject busObj = busEle.getAsJsonObject();
 			
-			// Bus number associated with this record and how we get 
-			// the properties associated with the bus.
-			String bus = getBusString(Integer.parseInt(rec.get(3)));
-			
-			if (!busElements.containsKey(bus)){
-				busElements.put(bus, new ArrayList<Element>());
+			if (busObj.has("capacitors")){
+				for(String s: getNetMonCapStrings(busObj)){
+					System.out.println(s);
+				}
 			}
 			
-			List<Element> elements = busElements.get(bus);
-			
+			if (busObj.has("aux")){
+				for(String s: getNetMonAuxStrings(busObj)){
+					System.out.println(s);
+				}
+			}
 		}
 		
 		Map<String, CSVRecord> mridmap = createMap(3, idmaprecords);
