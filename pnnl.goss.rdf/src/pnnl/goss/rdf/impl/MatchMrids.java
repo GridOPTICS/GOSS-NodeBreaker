@@ -763,7 +763,7 @@ public class MatchMrids {
 	 * Loads data from export_cim and 
 	 * @throws InvalidArgumentException
 	 */
-	public void loadData() throws InvalidArgumentException {
+	public void loadRdfData() throws InvalidArgumentException {
 
 			// Load the exported cim file into memory and then loop over the subjects and 
 			// add there mrids to the originalMrids variable.
@@ -838,7 +838,7 @@ public class MatchMrids {
 			}
 			
 			
-			loadStationsFromCsv();
+			
 			if(true)return;
 			attemptToFindMrids(todoSubjects);
 			
@@ -912,7 +912,9 @@ public class MatchMrids {
 	public static void main(String[] args) throws Exception {
 		MatchMrids matcher = new MatchMrids();
 		
-		matcher.loadData();
+		matcher.loadStationsFromCsv();
+		matcher.loadRdfData();
+		
 		matcher.writeData();
 	}
 }
