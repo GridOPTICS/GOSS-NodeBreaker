@@ -504,6 +504,16 @@ public class MatchMrids {
 		return obj;
 	}
 	
+	private JsonObject buildIdMap(CSVRecord rec){
+		JsonObject obj = new JsonObject();
+		
+		obj.addProperty("type", "IDMAP");
+		obj.addProperty("id", rec.get(3).toString());
+		obj.addProperty("name", rec.get(5).toString());
+				
+		return obj;
+	}
+	
 	private JsonObject getBusById(int id){
 		JsonObject model = modelRoot.get("model").getAsJsonObject();
 		return model.get(PRE_BUS+id).getAsJsonObject();
@@ -660,6 +670,7 @@ public class MatchMrids {
 		JsonArray capArray = new JsonArray();
 		JsonArray auxArray = new JsonArray();
 		JsonArray nodeArray = new JsonArray();
+		JsonArray idmapArray = new JsonArray();
 		
 		JsonObject model = new JsonObject();
 		modelRoot.add("model", model);
@@ -689,6 +700,11 @@ public class MatchMrids {
 			nodeArray.add(buildNode(rec));
 		}
 		modelRoot.add("node", nodeArray);
+		
+		for (CSVRecord rec: idmaprecords){			
+			idmapArray.add(buildIdMap(rec));
+		}
+		modelRoot.add("idmap", idmapArray);
 		
 		// Now that the data is loaded into the rootModel populate the model property.
 		buildModel();
@@ -725,8 +741,6 @@ public class MatchMrids {
 				if (st.getObject().isResource() && !st.getPredicate().getLocalName().equalsIgnoreCase("type")){
 					System.out.println("Object is resource: "+ st.getObject().asResource().getLocalName());
 				}
-				
-				
 			}
 		}
 		
