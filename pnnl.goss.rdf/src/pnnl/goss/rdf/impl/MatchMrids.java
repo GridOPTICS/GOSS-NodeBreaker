@@ -64,6 +64,9 @@ public class MatchMrids {
 		Type, AuxFileIndx, AuxName, P_KV_Aux
 	}
 	
+	// This prefix is used in the dts top export so we use it in the json model object as well.
+	private static String PRE_BUS = "bs-";
+	
 	/*
 	 * This object reprensents the model that is loaded from the csv inputs.
 	 * The structure of this is as follows
@@ -332,7 +335,7 @@ public class MatchMrids {
 	}
 	
 	private String getBusString(int num){
-		return String.format("bus-%d", num);
+		return String.format(PRE_BUS+"%d", num);
 	}
 	
 	/**
@@ -503,7 +506,7 @@ public class MatchMrids {
 	
 	private JsonObject getBusById(int id){
 		JsonObject model = modelRoot.get("model").getAsJsonObject();
-		return model.get("bus-"+id).getAsJsonObject();
+		return model.get(PRE_BUS+id).getAsJsonObject();
 	}
 	
 	private List<String> getNetMonAuxStrings(JsonObject busObj){
@@ -553,7 +556,7 @@ public class MatchMrids {
 			obj.add("nodes", nodes);
 			
 			buses.add(obj);			
-			model.add("bus-"+it.toString(), obj);
+			model.add(PRE_BUS+it.toString(), obj);
 			
 			// Add nodes to the bus object.
 			for (JsonElement ele: modelRoot.get("node").getAsJsonArray()){
@@ -586,7 +589,7 @@ public class MatchMrids {
 							busObj.add("kv", kvObj);
 							busObj.addProperty("st_id", stationObj.get("id").getAsInt());
 							busObj.addProperty("st_name", stationObj.get("name").getAsString());
-							stationObj.add("bus-"+busObj.get("id").getAsInt(), busObj);
+							stationObj.add(PRE_BUS+busObj.get("id").getAsInt(), busObj);
 							
 							JsonArray capacitors = new JsonArray();
 							for (JsonElement ele4: modelRoot.get("cap").getAsJsonArray()){
