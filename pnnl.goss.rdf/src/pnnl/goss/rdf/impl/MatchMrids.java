@@ -612,27 +612,7 @@ public class MatchMrids {
 								busObj.add("aux", auxArray);
 							}
 						}
-					
-
-						
-						
-//						for (JsonElement ele4: modelRoot.get("cap").getAsJsonArray()){
-//							JsonObject capObj = ele4.getAsJsonObject();
-//							
-//							if (kvObj.get("id").getAsInt() == capObj.get("p__kv_id").getAsInt()){
-//								kvObj.add("cap-"+capObj.get("id"), capObj);
-//							}
-//						}
-//						
-//						for (JsonElement ele4: modelRoot.get("cap").getAsJsonArray()){
-//							JsonObject auxObj = ele4.getAsJsonObject();
-//							
-//							if (kvObj.get("id").getAsInt() == auxObj.get("p__kv_id").getAsInt()){
-//								kvObj.add("cap-"+auxObj.get("id"), auxObj);
-//							}
-//						}
-					}
-						
+					}						
 				}
 			}
 		}
@@ -726,41 +706,59 @@ public class MatchMrids {
 			}
 		}
 		
-		Map<String, CSVRecord> mridmap = createMap(3, idmaprecords);
-		Map<String, CSVRecord> idmap = createMap(5, idmaprecords);
-		Map<String, CSVRecord> auxmap = createMap(2, auxrecords);
-		Map<String, CSVRecord> capacitormap = createMap(2, capacitorrecords);
-		Map<String, CSVRecord> kvmap = createMap(2, kvrecords);
-		Map<String, CSVRecord> nodemap = createMap(2, noderecords);
-		Map<String, CSVRecord> stationmap = createMap(2, stationrecords);
+		System.out.println(modelRoot.toString());
 		
 		
 		
-		
-		
-		// Nodemap contains the number number and type of elements  (line/transformers) 
-		// within the topological node. 
-		Map<String, Set> nodeMap = new ConcurrentHashMap<String, Set>();
-		boolean containsAll = true;
-		for(Entry<String, CSVRecord> rec: mridmap.entrySet()){
-			
-			String lookupMrid = "_"+rec.getKey();
-			//System.out.println("Looking up mrid: "+ lookupMrid);
-			if (!originalMrids.contains(lookupMrid)){
-				containsAll = false;
-			}
-			//EscaType term = escaTypes.get(lookupMrid);
-			
-			//System.out.println(term);
-			
-		}
-		
-		if (containsAll){
-			System.out.println("All idmap mrids were found.");
-		}
-		else{
-			System.out.println("Some idmap mrids were not found.");
-		}
+//		for (CSVRecord rec: kvrecords){
+//			
+//			// Bus number associated with this record and how we get 
+//			// the properties associated with the bus.
+//			String bus = getBusString(Integer.parseInt(rec.get(3)));
+//			
+//			if (!busElements.containsKey(bus)){
+//				busElements.put(bus, new ArrayList<Element>());
+//			}
+//			
+//			List<Element> elements = busElements.get(bus);
+//			
+//		}
+//		
+//		Map<String, CSVRecord> mridmap = createMap(3, idmaprecords);
+//		Map<String, CSVRecord> idmap = createMap(5, idmaprecords);
+//		Map<String, CSVRecord> auxmap = createMap(2, auxrecords);
+//		Map<String, CSVRecord> capacitormap = createMap(2, capacitorrecords);
+//		Map<String, CSVRecord> kvmap = createMap(2, kvrecords);
+//		Map<String, CSVRecord> nodemap = createMap(2, noderecords);
+//		Map<String, CSVRecord> stationmap = createMap(2, stationrecords);
+//		
+//		
+//		
+//		
+//		
+//		// Nodemap contains the number number and type of elements  (line/transformers) 
+//		// within the topological node. 
+//		Map<String, Set> nodeMap = new ConcurrentHashMap<String, Set>();
+//		boolean containsAll = true;
+//		for(Entry<String, CSVRecord> rec: mridmap.entrySet()){
+//			
+//			String lookupMrid = "_"+rec.getKey();
+//			//System.out.println("Looking up mrid: "+ lookupMrid);
+//			if (!originalMrids.contains(lookupMrid)){
+//				containsAll = false;
+//			}
+//			//EscaType term = escaTypes.get(lookupMrid);
+//			
+//			//System.out.println(term);
+//			
+//		}
+//		
+//		if (containsAll){
+//			System.out.println("All idmap mrids were found.");
+//		}
+//		else{
+//			System.out.println("Some idmap mrids were not found.");
+//		}
 		
 		
 		
