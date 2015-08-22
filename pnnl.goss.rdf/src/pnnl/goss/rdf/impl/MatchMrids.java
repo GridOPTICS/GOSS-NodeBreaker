@@ -63,6 +63,13 @@ public class MatchMrids {
 	
 	/*
 	 * This object reprensents the model that is loaded from the csv inputs.
+	 * The structure of this is as follows
+	 * /
+	 * /staions = [{station1 ..}
+	 * /aux
+	 * /model: {station1 /kv
+	 * 					   /buses
+	 *                   /
 	 */
 	private JsonObject modelRoot;
 	
@@ -391,13 +398,24 @@ public class MatchMrids {
 		return recs;
 	}
 	
-	
+	/**
+	 * Removes "'" and spaces from the passed string.
+	 * 
+	 * @param str
+	 * @return
+	 */
 	private String trimString(String str){
 		String s = str.replace("'", "");
 		s = s.trim();
 		return s;
 	}
 	
+	/**
+	 * Creates a json object representation of the passed station record.
+	 * 
+	 * @param rec
+	 * @return
+	 */
 	private JsonObject buildStation(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
@@ -409,6 +427,12 @@ public class MatchMrids {
 		return obj;
 	}
 	
+	/**
+	 * Creates a json object representation of the passed capacitor record.
+	 * 
+	 * @param rec
+	 * @return
+	 */
 	private JsonObject buildCap(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
@@ -420,6 +444,12 @@ public class MatchMrids {
 		return obj;
 	}
 	
+	/**
+	 * Creates a json object representation of the passed kv record.
+	 * 
+	 * @param rec
+	 * @return
+	 */
 	private JsonObject buildKv(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
@@ -433,6 +463,12 @@ public class MatchMrids {
 		return obj;
 	}
 	
+	/**
+	 * Creates a json object representation of the passed aux record.
+	 * 
+	 * @param rec
+	 * @return
+	 */
 	private JsonObject buildAux(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
@@ -444,7 +480,12 @@ public class MatchMrids {
 		return obj;
 	}
 	
-	
+	/**
+	 * Creates a json object representation of the passed node record.
+	 * 
+	 * @param rec
+	 * @return
+	 */
 	private JsonObject buildNode(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
@@ -456,13 +497,10 @@ public class MatchMrids {
 				
 		return obj;
 	}
-	
-	
-	
-//	public List<String> getDeviceLabels(){
-//		
-//	}
 
+	/**
+	 * Loads the csv files into the rootModel.
+	 */
 	private void loadStationsFromCsv(){
 		List<CSVRecord> idmaprecords = getRecords("C:/temp/cim_state_variable_test/Viper_ws_e-terrasource_netmom.netmom.idmap", 4);
 		List<CSVRecord> auxrecords = getRecords("C:/temp/cim_state_variable_test/hdbexport/aux_mark.csv", 4);
@@ -471,25 +509,11 @@ public class MatchMrids {
 		List<CSVRecord> noderecords = getRecords("C:/temp/cim_state_variable_test/hdbexport/node_mark.csv", 5);
 		List<CSVRecord> stationrecords = getRecords("C:/temp/cim_state_variable_test/hdbexport/station_mark.csv", 3);
 		
-		csvDataMap = new HashMap<>();
-		busContents = new HashMap<>();
-		stationContents = new HashMap<>();
-		
-		csvDataMap.put(FileType.AuxFile,  auxrecords);
-		csvDataMap.put(FileType.CapFile, capacitorrecords);
-		csvDataMap.put(FileType.KvFile, kvrecords);
-		csvDataMap.put(FileType.NetmonFile,  idmaprecords);
-		csvDataMap.put(FileType.NodeFile, noderecords);
-		csvDataMap.put(FileType.StationFile, stationrecords);
-		
-		String[] kv_fields = {"", "indx", "id_kv", "i_bs_kv", "vl_kv", "p_st_kv"};
-		
-		
-		csvFileRoot.setTreeElement(new TreeElement("Stations"));
-		
+		// Only used to create a pretty version of json.
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		
-		JsonObject modelRoot = new JsonObject();
+		// Create the root object that will be available in the class.
+		modelRoot = new JsonObject();
 		
 		JsonArray stationArray = new JsonArray();
 		JsonArray kvArray = new JsonArray();
