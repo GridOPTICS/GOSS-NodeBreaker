@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FileUtils;
 
 import pnnl.goss.rdf.InvalidArgumentException;
 import pnnl.goss.rdf.server.EscaVocab;
@@ -25,6 +26,7 @@ import pnnl.goss.rdf.server.EscaVocab;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -419,7 +421,7 @@ public class MatchMrids {
 	private JsonObject buildStation(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
-		obj.addProperty("obj_type", rec.get(StationFields.Type.ordinal()));
+		obj.addProperty("type", rec.get(StationFields.Type.ordinal()));
 		obj.addProperty("id", Integer.parseInt(rec.get(StationFields.StFileIndx.ordinal())));
 		obj.addProperty("name", trimString(rec.get(StationFields.StName.ordinal())));
 		System.out.println(obj.toString());
@@ -436,7 +438,7 @@ public class MatchMrids {
 	private JsonObject buildCap(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
-		obj.addProperty("obj_type", rec.get(CapFields.Type.ordinal()));
+		obj.addProperty("type", rec.get(CapFields.Type.ordinal()));
 		obj.addProperty("id", Integer.parseInt(rec.get(CapFields.CapFileIndx.ordinal())));
 		obj.addProperty("name", trimString(rec.get(CapFields.CapName.ordinal())));
 		obj.addProperty("p__kv_id", Integer.parseInt(rec.get(CapFields.P_Kv_Cp.ordinal())));
@@ -453,7 +455,7 @@ public class MatchMrids {
 	private JsonObject buildKv(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
-		obj.addProperty("obj_type", rec.get(KvFields.Type.ordinal()));
+		obj.addProperty("type", rec.get(KvFields.Type.ordinal()));
 		obj.addProperty("id", Integer.parseInt(rec.get(KvFields.KvFileIndx.ordinal())));
 		obj.addProperty("name", trimString(rec.get(KvFields.KvName.ordinal())));
 		obj.addProperty("i__bs_kv", Integer.parseInt(rec.get(KvFields.I_Bus_Kv.ordinal())));
@@ -472,7 +474,7 @@ public class MatchMrids {
 	private JsonObject buildAux(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
-		obj.addProperty("obj_type", rec.get(AuxFields.Type.ordinal()));
+		obj.addProperty("type", rec.get(AuxFields.Type.ordinal()));
 		obj.addProperty("id", Integer.parseInt(rec.get(AuxFields.AuxFileIndx.ordinal())));
 		obj.addProperty("name", trimString(rec.get(AuxFields.AuxName.ordinal())));
 		obj.addProperty("p__kv_id", Integer.parseInt(rec.get(AuxFields.P_KV_Aux.ordinal())));
@@ -489,13 +491,82 @@ public class MatchMrids {
 	private JsonObject buildNode(CSVRecord rec){
 		JsonObject obj = new JsonObject();
 		
-		obj.addProperty("obj_type", rec.get(NodeFields.Type.ordinal()));
+		obj.addProperty("type", rec.get(NodeFields.Type.ordinal()));
 		obj.addProperty("id", Integer.parseInt(rec.get(NodeFields.NodeFileIndx.ordinal())));
 		obj.addProperty("name", trimString(rec.get(NodeFields.NodeName.ordinal())));
 		obj.addProperty("i__bs_nd", Integer.parseInt(trimString(rec.get(NodeFields.I_Bus_ND.ordinal()))));
 		obj.addProperty("p__kv_id", Integer.parseInt(rec.get(NodeFields.P_Kv_ND.ordinal())));
 				
 		return obj;
+	}
+	
+	private void buildModel(){
+		
+		JsonObject model = modelRoot.get("model").getAsJsonObject();
+		
+		Set<Integer> uniqueIds = new HashSet<>(); // = new Mapped<>();
+		// Loop over the nodes and create unique buses from the i__bs_nd property.
+		for (JsonElement ele: modelRoot.get("node").getAsJsonArray()){
+			JsonObject nd = ele.getAsJsonObject();
+			uniqueIds.add(nd.get("i__bs_nd").getAsInt());
+		}
+		
+		JsonArray buses = modelRoot.get("buses").getAsJsonArray();
+		
+		for (Integer it: uniqueIds){
+			JsonObject obj = new JsonObject();
+			obj.addProperty("type", "bus");
+			obj.addProperty("id", it);
+			
+			buses.add(obj);			
+			model.add("bus-"+it.toString(), obj);
+		}
+		
+		// First loop over stations
+		for (JsonElement ele: modelRoot.get("stations").getAsJsonArray()){
+			JsonObject obj = ele.getAsJsonObject();
+			
+			model.add("station"+obj.get("id"), obj);
+			
+			
+			// Now lets loop over kv
+			for (JsonElement ele1: modelRoot.get("kv").getAsJsonArray()){
+				JsonObject kvObj = ele1.getAsJsonObject();
+				
+				// Match the kv to the station.
+				if (obj.get("id").getAsInt() == kvObj.get("p__st_id").getAsInt()){
+					obj.add("kv-"+kvObj.get("id"), kvObj);
+				}
+				
+				for (JsonElement ele2: modelRoot.get("cap").getAsJsonArray()){
+					JsonObject capObj = ele2.getAsJsonObject();
+					
+					if (kvObj.get("id").getAsInt() == capObj.get("p__kv_id").getAsInt()){
+						kvObj.add("cap-"+capObj.get("id"), capObj);
+					}
+				}
+				
+				for (JsonElement ele2: modelRoot.get("cap").getAsJsonArray()){
+					JsonObject auxObj = ele2.getAsJsonObject();
+					
+					if (kvObj.get("id").getAsInt() == auxObj.get("p__kv_id").getAsInt()){
+						kvObj.add("cap-"+auxObj.get("id"), auxObj);
+					}
+				}
+			}
+		}
+		
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		try {
+			FileUtils.write(new File("model.json"), gson.toJson(modelRoot));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		System.out.println(gson.toJson(modelRoot));
+		
 	}
 
 	/**
@@ -515,6 +586,11 @@ public class MatchMrids {
 		// Create the root object that will be available in the class.
 		modelRoot = new JsonObject();
 		
+		// This array is going to be created from the node array in the buildModel function
+		JsonArray busArray = new JsonArray();
+		modelRoot.add("buses", busArray);
+		
+		// All the different csv files will be loaded into the arrays below.
 		JsonArray stationArray = new JsonArray();
 		JsonArray kvArray = new JsonArray();
 		JsonArray capArray = new JsonArray();
@@ -550,7 +626,9 @@ public class MatchMrids {
 		}
 		modelRoot.add("node", nodeArray);
 		
-				
+		// Now that the data is loaded into the rootModel populate the model property.
+		buildModel();
+		
 		
 		System.out.println(modelRoot.toString());
 		
@@ -568,7 +646,6 @@ public class MatchMrids {
 			
 			List<Element> elements = busElements.get(bus);
 			
-			addProperties(elements, rec, kv_fields);
 		}
 		
 		Map<String, CSVRecord> mridmap = createMap(3, idmaprecords);
