@@ -514,9 +514,14 @@ public class MatchMrids {
 		return obj;
 	}
 	
-	private JsonObject getBusById(int id){
-		JsonObject model = modelRoot.get("model").getAsJsonObject();
-		return model.get(PRE_BUS+id).getAsJsonObject();
+	private String findMridFromEquipString(String equipString){
+		for(JsonElement ele: modelRoot.get("idmap").getAsJsonArray()){
+			JsonObject obj = ele.getAsJsonObject();
+			if (obj.get("name").getAsString().startsWith(equipString)){
+				return obj.get("id").getAsString();
+			}
+		}
+		return null;
 	}
 	
 	private List<String> getNetMonAuxStrings(JsonObject busObj){
@@ -714,13 +719,15 @@ public class MatchMrids {
 			
 			if (busObj.has("capacitors")){
 				for(String s: getNetMonCapStrings(busObj)){
-					System.out.println(s);
+					String mrid = findMridFromEquipString(s);
+					System.out.println(s + " -> "+mrid);
 				}
 			}
 			
 			if (busObj.has("aux")){
 				for(String s: getNetMonAuxStrings(busObj)){
-					System.out.println(s);
+					String mrid = findMridFromEquipString(s);
+					System.out.println(s + " -> "+mrid);
 				}
 			}
 		}
