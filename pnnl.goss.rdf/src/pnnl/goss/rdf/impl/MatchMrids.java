@@ -6,30 +6,28 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.logging.impl.NoOpLog;
 
-import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
-import pnnl.goss.rdf.TopologicalBranch;
-import pnnl.goss.rdf.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.ResIterator;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
@@ -62,6 +60,11 @@ public class MatchMrids {
 	private enum AuxFields{
 		Type, AuxFileIndx, AuxName, P_KV_Aux
 	}
+	
+	/*
+	 * This object reprensents the model that is loaded from the csv inputs.
+	 */
+	private JsonObject modelRoot;
 	
 	
 	
@@ -388,11 +391,79 @@ public class MatchMrids {
 		return recs;
 	}
 	
+	
+	private String trimString(String str){
+		String s = str.replace("'", "");
+		s = s.trim();
+		return s;
+	}
+	
+	private JsonObject buildStation(CSVRecord rec){
+		JsonObject obj = new JsonObject();
+		
+		obj.addProperty("obj_type", rec.get(StationFields.Type.ordinal()));
+		obj.addProperty("id", Integer.parseInt(rec.get(StationFields.StFileIndx.ordinal())));
+		obj.addProperty("name", trimString(rec.get(StationFields.StName.ordinal())));
+		System.out.println(obj.toString());
+				
+		return obj;
+	}
+	
+	private JsonObject buildCap(CSVRecord rec){
+		JsonObject obj = new JsonObject();
+		
+		obj.addProperty("obj_type", rec.get(CapFields.Type.ordinal()));
+		obj.addProperty("id", Integer.parseInt(rec.get(CapFields.CapFileIndx.ordinal())));
+		obj.addProperty("name", trimString(rec.get(CapFields.CapName.ordinal())));
+		obj.addProperty("p__kv_id", Integer.parseInt(rec.get(CapFields.P_Kv_Cp.ordinal())));
+				
+		return obj;
+	}
+	
+	private JsonObject buildKv(CSVRecord rec){
+		JsonObject obj = new JsonObject();
+		
+		obj.addProperty("obj_type", rec.get(KvFields.Type.ordinal()));
+		obj.addProperty("id", Integer.parseInt(rec.get(KvFields.KvFileIndx.ordinal())));
+		obj.addProperty("name", trimString(rec.get(KvFields.KvName.ordinal())));
+		obj.addProperty("i__bs_kv", Integer.parseInt(rec.get(KvFields.I_Bus_Kv.ordinal())));
+		obj.addProperty("vl_kv", Float.parseFloat(trimString(rec.get(KvFields.VL_Kv.ordinal()))));
+		obj.addProperty("p__st_id", Integer.parseInt(rec.get(KvFields.P_ST_Kv.ordinal())));
+				
+		return obj;
+	}
+	
+	private JsonObject buildAux(CSVRecord rec){
+		JsonObject obj = new JsonObject();
+		
+		obj.addProperty("obj_type", rec.get(AuxFields.Type.ordinal()));
+		obj.addProperty("id", Integer.parseInt(rec.get(AuxFields.AuxFileIndx.ordinal())));
+		obj.addProperty("name", trimString(rec.get(AuxFields.AuxName.ordinal())));
+		obj.addProperty("p__kv_id", Integer.parseInt(rec.get(AuxFields.P_KV_Aux.ordinal())));
+				
+		return obj;
+	}
+	
+	
+	private JsonObject buildNode(CSVRecord rec){
+		JsonObject obj = new JsonObject();
+		
+		obj.addProperty("obj_type", rec.get(NodeFields.Type.ordinal()));
+		obj.addProperty("id", Integer.parseInt(rec.get(NodeFields.NodeFileIndx.ordinal())));
+		obj.addProperty("name", trimString(rec.get(NodeFields.NodeName.ordinal())));
+		obj.addProperty("i__bs_nd", Integer.parseInt(trimString(rec.get(NodeFields.I_Bus_ND.ordinal()))));
+		obj.addProperty("p__kv_id", Integer.parseInt(rec.get(NodeFields.P_Kv_ND.ordinal())));
+				
+		return obj;
+	}
+	
+	
+	
 //	public List<String> getDeviceLabels(){
 //		
 //	}
 
-	private void loadBusesFromCsv(){
+	private void loadStationsFromCsv(){
 		List<CSVRecord> idmaprecords = getRecords("C:/temp/cim_state_variable_test/Viper_ws_e-terrasource_netmom.netmom.idmap", 4);
 		List<CSVRecord> auxrecords = getRecords("C:/temp/cim_state_variable_test/hdbexport/aux_mark.csv", 4);
 		List<CSVRecord> capacitorrecords = getRecords("C:/temp/cim_state_variable_test/hdbexport/capacitor_mark.csv", 4);
@@ -416,53 +487,48 @@ public class MatchMrids {
 		
 		csvFileRoot.setTreeElement(new TreeElement("Stations"));
 		
-		for (CSVRecord rec: stationrecords){
-			String stationName = rec.get(StationFields.StName.ordinal());
-			Tree stTree = new Tree();
-			stTree.setTreeElement(new TreeElement(FileType.StationFile.name(), rec));
-			stTree.setParent(csvFileRoot);
-			
-			
-			System.out.println("Station: "+stationName);
-			int stationIndx = Integer.parseInt(rec.get(StationFields.StFileIndx.ordinal()));
-			List<Map<Integer, Map<FileType, List<CSVRecord>>>> stationBuses = new ArrayList<>();
-			stationContents.put(stationName, stationBuses);
-			for(CSVRecord kvRec: getStationKvLevelIndexes(stationIndx)){
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		
+		JsonObject modelRoot = new JsonObject();
+		
+		JsonArray stationArray = new JsonArray();
+		JsonArray kvArray = new JsonArray();
+		JsonArray capArray = new JsonArray();
+		JsonArray auxArray = new JsonArray();
+		JsonArray nodeArray = new JsonArray();
+		
+		JsonObject model = new JsonObject();
+		modelRoot.add("model", model);
+		
 				
-				int busNum = Integer.parseInt(kvRec.get(KvFields.I_Bus_Kv.ordinal()));
-				
-				Tree busTree = new Tree();
-				busTree.setTreeElement(new TreeElement("bus-"+busNum));
-				busTree.setParent(stTree);
-				
-				Tree kvTree = new Tree();
-				kvTree.setTreeElement(new TreeElement(FileType.KvFile.name(), kvRec));
-				kvTree.setParent(busTree);
-				
-				int kvIndx = Integer.parseInt(kvRec.get(KvFields.KvFileIndx.ordinal()));
-								
-				for (CSVRecord capRec: getCapFromKvLevelIndexes(kvIndx)){
-					Tree item = new Tree();
-					item.setTreeElement(new TreeElement(FileType.CapFile.name(), capRec));
-					item.setParent(kvTree);
-				}
-				
-				for (CSVRecord ndRec: getNodeFromKvLevelIndexes(kvIndx)){
-					Tree item = new Tree();
-					item.setTreeElement(new TreeElement(FileType.NodeFile.name(), ndRec));
-					item.setParent(kvTree);
-				}
-				
-								
-				for (CSVRecord auxRec: getAuxFromKvLevelIndexes(kvIndx)){
-					Tree item = new Tree();
-					item.setTreeElement(new TreeElement(FileType.AuxFile.name(), auxRec));
-					item.setParent(kvTree);
-				}				
-			}			
+		for (CSVRecord rec: stationrecords){			
+			stationArray.add(buildStation(rec));
 		}
+		modelRoot.add("stations", stationArray);
 		
+		for (CSVRecord rec: auxrecords){			
+			auxArray.add(buildAux(rec));
+		}		
+		modelRoot.add("aux", auxArray);
 		
+		for (CSVRecord rec: kvrecords){			
+			kvArray.add(buildKv(rec));
+		}		
+		modelRoot.add("kv", kvArray);
+				
+		for (CSVRecord rec: capacitorrecords){			
+			capArray.add(buildCap(rec));
+		}
+		modelRoot.add("cap", capArray);
+		
+		for (CSVRecord rec: noderecords){			
+			nodeArray.add(buildNode(rec));
+		}
+		modelRoot.add("node", nodeArray);
+		
+				
+		
+		System.out.println(modelRoot.toString());
 		
 		
 		
@@ -656,7 +722,7 @@ public class MatchMrids {
 			}
 			
 			
-			loadBusesFromCsv();
+			loadStationsFromCsv();
 			attemptToFindMrids(todoSubjects);
 			
 			

@@ -7,4 +7,5 @@ Bundle-Version: 0.0.0.${tstamp}
 	org.ops4j.pax.logging.pax-logging-api,\
 	org.ops4j.pax.logging.pax-logging-service,\
 	org.apache.commons.csv,\
-	org.apache.commons.io
+	org.apache.commons.io,\
+	com.google.gson
