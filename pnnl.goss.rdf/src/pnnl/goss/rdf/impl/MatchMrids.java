@@ -797,157 +797,106 @@ public class MatchMrids {
 	 * Loads data from export_cim and 
 	 * @throws InvalidArgumentException
 	 */
-	public void loadRdfData() throws InvalidArgumentException {
+	public void loadCimRdfData() throws InvalidArgumentException {
 
-			// Load the exported cim file into memory and then loop over the subjects and 
-			// add there mrids to the originalMrids variable.
-			Model rdfModel = EscaVocab.readModel(new File("C:/temp/cim_state_variable_test/export_cim.xml"));
-			
-			StmtIterator stmtIter = rdfModel.listStatements();
-			while (stmtIter.hasNext()) {
-				Statement st = stmtIter.next();
-				
-//				System.out.println(String.format("Subject: %s, Predicate: %s, Object: %s",
-//						st.getSubject().getLocalName(), st.getPredicate().getLocalName(), st.getObject().toString()));
-//				System.out.println(st.getPredicate().getLocalName());
-				if (st.getSubject().getLocalName().equalsIgnoreCase("Substation")){
-					System.out.println("Substation: "+ st.getSubject().getLocalName());
-					StmtIterator stmtItr2 = st.getSubject().listProperties();
-					while (stmtItr2.hasNext()){
-						Statement stmt2 = stmtItr2.next();
-						System.out.println(stmt2.getPredicate().getLocalName());
-					}
-				}
-				if (st.getPredicate().getLocalName().equalsIgnoreCase("IdentifiedObject.name")){
-					System.out.println("Object is: "+ st.getObject().toString());
-				}
-				
-				if (st.getPredicate().getLocalName().equalsIgnoreCase("IdentifiedObject.alias")){
-					System.out.println("Object is: "+ st.getObject().toString());
-				}
-				if (st.getPredicate().getLocalName().equalsIgnoreCase("type") && 
-						st.getSubject().getLocalName().equalsIgnoreCase("Substation")){
-					System.out.println("Substation: "+ st.getSubject().getLocalName());
-					StmtIterator stmtItr2 = st.getSubject().listProperties();
-					while (stmtItr2.hasNext()){
-						Statement stmt2 = stmtItr2.next();
-						System.out.println(stmt2.getPredicate().getLocalName());
-					}
-				}
-				originalMrids.add(st.getSubject().getLocalName());
-				if (st.getPredicate().getLocalName().contains("pathName")){
-					System.out.println("Path name: "+st.getPredicate().getLocalName() + " -> "+st.getObject().toString());
-				}
-			}
-			
-			// Contains an overal list of the string version of the mrids.
-			Set<String> mridSet = new HashSet<>();
-			
-			// Contains an overall list of mrids that are found in the top file or after mapping from the different
-			// csv files to get the mrid.  If the value is null, then there wasn't a need to lookup the rdf:id from
-			// alternate means.
-			Map<Resource, String> mridMap = new HashMap<>();
-			
-			// This contains the entries that need to be looked up using the csv files and the netmon.id map in order
-			// to find the mird.
-			Set<Resource> todoSubjects = new HashSet<>();
-			
-			Model aModel = ModelFactory.createDefaultModel();
-			FileManager.get().readModel(aModel, 
-					"C:/temp/cim_state_variable_test/mark_export_stnet_dts_20150518_170619_top.xml");
-			
-			StmtIterator stmtIter1 = aModel.listStatements();
-			while (stmtIter1.hasNext()) {
-				Statement st = stmtIter1.next();
-				if (st.getSubject().getLocalName().startsWith("_")){
-					mridMap.put(st.getSubject(), null);
-					mridsFromTop.add(st.getSubject().getLocalName());
-//					if (originalModelMrids.contains(st.getSubject().getLocalName())){
-//						System.out.println("Found mrid: "+ st.getSubject().getLocalName());
-//					}
-				}
-				else{
-					todoSubjects.add(st.getSubject());
-				}
-			}
-			
-			
-			
-			if(true)return;
-			attemptToFindMrids(todoSubjects);
-			
-			
-			
-			if (originalMrids.containsAll(mridsFromTop)){
-				System.out.println("All top mrids are present in original dataset.");
-			}
-			else{
-				System.out.println("Some mrids from top were not present in original dataset.");
-			}
-			
-			
-		
-			// StmtIterator stmtIter = rdfModel.listStatements(new
-			// SimpleSelector(null, RDF.type, Esca60Vocab.SUBSTATION_OBJECT));
+		// Load the exported cim file into memory and then loop over the
+		// subjects and
+		// add there mrids to the originalMrids variable.
+		Model rdfModel = EscaVocab.readModel(new File(
+				"C:/temp/cim_state_variable_test/export_cim.xml"));
 
-			while (stmtIter.hasNext()) {
-				Statement stmt = stmtIter.nextStatement();
-				Resource subject = stmt.getSubject();
-				Resource newRes = ResourceFactory.createResource(subject.getLocalName());
-				//Resource newRes = rdfModel.createResource(EscaVocab.URI_ROOT+subject.getLocalName());
-				System.out.println(subject);
-				if (rdfModel.contains(null, RDF.value, newRes)){ //.containsResource(newRes)){ //.contains(newRes, null, (RDFNode) null)){
-					System.out.println("FinALLY!");
-				}
-				String fqn = EscaVocab.URI_ROOT+subject.getLocalName();
-				System.out.println(fqn);
-				Resource fullCimResource = rdfModel.getResource(fqn);
-				
-				StmtIterator stmtItr2 = fullCimResource.listProperties();
+		StmtIterator stmtIter = rdfModel.listStatements();
+		while (stmtIter.hasNext()) {
+			Statement st = stmtIter.next();
+
+			// System.out.println(String.format("Subject: %s, Predicate: %s, Object: %s",
+			// st.getSubject().getLocalName(), st.getPredicate().getLocalName(),
+			// st.getObject().toString()));
+			// System.out.println(st.getPredicate().getLocalName());
+			if (st.getSubject().getLocalName().equalsIgnoreCase("Substation")) {
+				System.out.println("Substation: "
+						+ st.getSubject().getLocalName());
+				StmtIterator stmtItr2 = st.getSubject().listProperties();
 				while (stmtItr2.hasNext()) {
-					Statement stmtfqn = stmtItr2.next();
-					System.out.println("Found: "+stmtfqn.getSubject());
+					Statement stmt2 = stmtItr2.next();
+					System.out.println(stmt2.getPredicate().getLocalName());
 				}
-				
 			}
-			
-//			ResIterator resItr = aModel.listSubjects();
-//			
-//			while(resItr.hasNext()){
-//				Resource res1 = resItr.next(); 
-//								
-//				System.out.println(res1.getId());
-//			}
-//			
-//			System.out.println("bah");
-			
+			if (st.getPredicate().getLocalName()
+					.equalsIgnoreCase("IdentifiedObject.name")) {
+				System.out.println("Object is: " + st.getObject().toString());
+			}
 
-//			rdfModel = EscaVocab.readModel(new File("C:/temp/cim_state_variable_test/mark_export_stnet_dts_20150518_170619_top.xml"));
-//			System.out.println("Num Terminals: "+findRdfType(EscaVocab.TERMINAL_OBJECT).size());
-//			for(Resource res: findRdfType(EscaVocab.TERMINAL_OBJECT)){
-//				afterMrids.add(res.getLocalName());
-//			}
-//			
-//			if(afterMrids.removeAll(beforeMrids)){
-//				System.out.println("At least one element was removed YAY!");
-//				System.out.println("There were "+afterMrids.size()+" not in big cim");
-//				for(String r:afterMrids){
-//					System.out.println(r);
-//				}
-//			}
-//			
-//			performMatchProceedure(afterMrids);
-			
-			
-			//rdfModel = EscaVocab.readModel(file.getAbsoluteFile());
-		
+			if (st.getPredicate().getLocalName()
+					.equalsIgnoreCase("IdentifiedObject.alias")) {
+				System.out.println("Object is: " + st.getObject().toString());
+			}
+			if (st.getPredicate().getLocalName().equalsIgnoreCase("type")
+					&& st.getSubject().getLocalName()
+							.equalsIgnoreCase("Substation")) {
+				System.out.println("Substation: "
+						+ st.getSubject().getLocalName());
+				StmtIterator stmtItr2 = st.getSubject().listProperties();
+				while (stmtItr2.hasNext()) {
+					Statement stmt2 = stmtItr2.next();
+					System.out.println(stmt2.getPredicate().getLocalName());
+				}
+			}
+			originalMrids.add(st.getSubject().getLocalName());
+			if (st.getPredicate().getLocalName().contains("pathName")) {
+				System.out.println("Path name: "
+						+ st.getPredicate().getLocalName() + " -> "
+						+ st.getObject().toString());
+			}
+		}
+
+		// Contains an overal list of the string version of the mrids.
+		Set<String> mridSet = new HashSet<>();
+
+		// Contains an overall list of mrids that are found in the top file or
+		// after mapping from the different
+		// csv files to get the mrid. If the value is null, then there wasn't a
+		// need to lookup the rdf:id from
+		// alternate means.
+		Map<Resource, String> mridMap = new HashMap<>();
+
+		// This contains the entries that need to be looked up using the csv
+		// files and the netmon.id map in order
+		// to find the mird.
+		Set<Resource> todoSubjects = new HashSet<>();
+
+		Model aModel = ModelFactory.createDefaultModel();
+		FileManager
+				.get()
+				.readModel(aModel,
+						"C:/temp/cim_state_variable_test/mark_export_stnet_dts_20150518_170619_top.xml");
+
+		StmtIterator stmtIter1 = aModel.listStatements();
+		while (stmtIter1.hasNext()) {
+			Statement st = stmtIter1.next();
+			if (st.getSubject().getLocalName().startsWith("_")) {
+				mridMap.put(st.getSubject(), null);
+				mridsFromTop.add(st.getSubject().getLocalName());
+				// if
+				// (originalModelMrids.contains(st.getSubject().getLocalName())){
+				// System.out.println("Found mrid: "+
+				// st.getSubject().getLocalName());
+				// }
+			} else {
+				todoSubjects.add(st.getSubject());
+			}
+		}
+
 	}
 	
 	public static void main(String[] args) throws Exception {
 		MatchMrids matcher = new MatchMrids();
 		
 		matcher.loadStationsFromCsv();
-		matcher.loadRdfData();
+		matcher.loadCimRdfData();
+		matcher.loadTopRdfData();
+		matcher.loadSvRdfData();
+		
 		
 		
 		matcher.writeData();
