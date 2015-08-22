@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -500,11 +501,16 @@ public class MatchMrids {
 		return obj;
 	}
 	
+	private JsonObject getBusById(int id){
+		JsonObject model = modelRoot.get("model").getAsJsonObject();
+		return model.get("bus-"+id).getAsJsonObject();
+	}
+	
 	private void buildModel(){
 		
 		JsonObject model = modelRoot.get("model").getAsJsonObject();
 		
-		Set<Integer> uniqueIds = new HashSet<>(); // = new Mapped<>();
+		Set<Integer> uniqueIds = new LinkedHashSet<>(); // = new Mapped<>();
 		// Loop over the nodes and create unique buses from the i__bs_nd property.
 		for (JsonElement ele: modelRoot.get("node").getAsJsonArray()){
 			JsonObject nd = ele.getAsJsonObject();
@@ -512,46 +518,93 @@ public class MatchMrids {
 		}
 		
 		JsonArray buses = modelRoot.get("buses").getAsJsonArray();
-		
+				
 		for (Integer it: uniqueIds){
 			JsonObject obj = new JsonObject();
 			obj.addProperty("type", "bus");
 			obj.addProperty("id", it);
+			JsonArray nodes = new JsonArray();
+			obj.add("nodes", nodes);
 			
 			buses.add(obj);			
 			model.add("bus-"+it.toString(), obj);
+			
+			// Add nodes to the bus object.
+			for (JsonElement ele: modelRoot.get("node").getAsJsonArray()){
+				JsonObject nd = ele.getAsJsonObject();
+				if (nd.get("i__bs_nd").getAsInt() == obj.get("id").getAsInt()){
+					nodes.add(nd);
+				}
+			}
 		}
 		
 		// First loop over stations
 		for (JsonElement ele: modelRoot.get("stations").getAsJsonArray()){
-			JsonObject obj = ele.getAsJsonObject();
+			JsonObject stationObj = ele.getAsJsonObject();
 			
-			model.add("station"+obj.get("id"), obj);
+			model.add("station"+stationObj.get("id"), stationObj);
 			
+			for (JsonElement ele2: modelRoot.get("buses").getAsJsonArray()){
+				JsonObject busObj = ele2.getAsJsonObject();
 			
-			// Now lets loop over kv
-			for (JsonElement ele1: modelRoot.get("kv").getAsJsonArray()){
-				JsonObject kvObj = ele1.getAsJsonObject();
-				
-				// Match the kv to the station.
-				if (obj.get("id").getAsInt() == kvObj.get("p__st_id").getAsInt()){
-					obj.add("kv-"+kvObj.get("id"), kvObj);
-				}
-				
-				for (JsonElement ele2: modelRoot.get("cap").getAsJsonArray()){
-					JsonObject capObj = ele2.getAsJsonObject();
+				// Now lets loop over kv
+				for (JsonElement ele3: modelRoot.get("kv").getAsJsonArray()){
+					JsonObject kvObj = ele3.getAsJsonObject();
+
+					// If kv and bus match.
+					if (kvObj.get("i__bs_kv").getAsInt() == busObj.get("id").getAsInt()){
+						
+						// If the kv is part of this station.
+						if (kvObj.get("p__st_id").getAsInt() == stationObj.get("id").getAsInt()){
+							busObj.addProperty("vl", kvObj.get("vl_kv").getAsNumber());
+							busObj.add("kv", kvObj);
+							stationObj.add("bus-"+busObj.get("id").getAsInt(), busObj);
+							
+							JsonArray capacitors = new JsonArray();
+							for (JsonElement ele4: modelRoot.get("cap").getAsJsonArray()){
+								JsonObject capObj = ele4.getAsJsonObject();
+								
+								if (kvObj.get("id").getAsInt() == capObj.get("p__kv_id").getAsInt()){
+									capacitors.add(capObj);
+								}
+							}
+							if (capacitors.size() > 0){
+								busObj.add("capacitors", capacitors);
+							}
+							
+							JsonArray auxArray = new JsonArray();
+							for (JsonElement ele4: modelRoot.get("aux").getAsJsonArray()){
+								JsonObject auxObj = ele4.getAsJsonObject();
+								
+								if (kvObj.get("id").getAsInt() == auxObj.get("p__kv_id").getAsInt()){
+									auxArray.add(auxObj);
+								}
+							}
+							if (auxArray.size() > 0){
+								busObj.add("aux", auxArray);
+							}
+						}
 					
-					if (kvObj.get("id").getAsInt() == capObj.get("p__kv_id").getAsInt()){
-						kvObj.add("cap-"+capObj.get("id"), capObj);
+
+						
+						
+//						for (JsonElement ele4: modelRoot.get("cap").getAsJsonArray()){
+//							JsonObject capObj = ele4.getAsJsonObject();
+//							
+//							if (kvObj.get("id").getAsInt() == capObj.get("p__kv_id").getAsInt()){
+//								kvObj.add("cap-"+capObj.get("id"), capObj);
+//							}
+//						}
+//						
+//						for (JsonElement ele4: modelRoot.get("cap").getAsJsonArray()){
+//							JsonObject auxObj = ele4.getAsJsonObject();
+//							
+//							if (kvObj.get("id").getAsInt() == auxObj.get("p__kv_id").getAsInt()){
+//								kvObj.add("cap-"+auxObj.get("id"), auxObj);
+//							}
+//						}
 					}
-				}
-				
-				for (JsonElement ele2: modelRoot.get("cap").getAsJsonArray()){
-					JsonObject auxObj = ele2.getAsJsonObject();
-					
-					if (kvObj.get("id").getAsInt() == auxObj.get("p__kv_id").getAsInt()){
-						kvObj.add("cap-"+auxObj.get("id"), auxObj);
-					}
+						
 				}
 			}
 		}
@@ -824,6 +877,7 @@ public class MatchMrids {
 			
 			
 			loadStationsFromCsv();
+			if(true)return;
 			attemptToFindMrids(todoSubjects);
 			
 			
