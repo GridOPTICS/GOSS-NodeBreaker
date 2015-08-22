@@ -524,6 +524,30 @@ public class MatchMrids {
 		return null;
 	}
 	
+	private String findFullEquipmentFromEquipString(String equipString){
+		for(JsonElement ele: modelRoot.get("idmap").getAsJsonArray()){
+			JsonObject obj = ele.getAsJsonObject();
+			if (obj.get("name").getAsString().startsWith(equipString)){
+				return obj.get("name").getAsString();
+			}
+		}
+		return null;
+	}
+	
+	private List<String> getNetMonNodeStrings(JsonObject busObj){
+		List<String> nodeStrings = new ArrayList<>();
+		// 
+		if (busObj.has("nodes") && busObj.has("st_name")){
+			
+			for (JsonElement nodeEle: busObj.get("nodes").getAsJsonArray()){
+				JsonObject nodeObj = nodeEle.getAsJsonObject();
+				String toPrint = "ST."+busObj.get("st_name").getAsString()+".ND."+nodeObj.get("name").getAsString();
+				nodeStrings.add(toPrint);
+			}
+		}
+		return nodeStrings;
+	}
+	
 	private List<String> getNetMonAuxStrings(JsonObject busObj){
 		List<String> capStrings = new ArrayList<>();
 		if (busObj.has("aux")){
@@ -536,7 +560,7 @@ public class MatchMrids {
 		}
 		return capStrings;
 	}
-	
+		
 	private List<String> getNetMonCapStrings(JsonObject busObj){
 		List<String> capStrings = new ArrayList<>();
 		if (busObj.has("capacitors")){
@@ -720,15 +744,25 @@ public class MatchMrids {
 			if (busObj.has("capacitors")){
 				for(String s: getNetMonCapStrings(busObj)){
 					String mrid = findMridFromEquipString(s);
-					System.out.println(s + " -> "+mrid);
+					String equip = findFullEquipmentFromEquipString(s);
+					System.out.println(s + " -> "+mrid+ " -> "+equip);
 				}
 			}
 			
 			if (busObj.has("aux")){
 				for(String s: getNetMonAuxStrings(busObj)){
 					String mrid = findMridFromEquipString(s);
-					System.out.println(s + " -> "+mrid);
+					String equip = findFullEquipmentFromEquipString(s);
+					System.out.println(s + " -> "+mrid+ " -> "+equip);
 				}
+			}
+			
+			if (busObj.has("nodes")){
+				for(String s: getNetMonNodeStrings(busObj)){
+					String mrid = findMridFromEquipString(s);
+					String equip = findFullEquipmentFromEquipString(s);
+					System.out.println(s + " -> "+mrid+ " -> "+equip);
+				} 
 			}
 		}
 		
@@ -914,6 +948,7 @@ public class MatchMrids {
 		
 		matcher.loadStationsFromCsv();
 		matcher.loadRdfData();
+		
 		
 		matcher.writeData();
 	}
