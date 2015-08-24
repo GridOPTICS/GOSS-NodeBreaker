@@ -74,9 +74,17 @@ public class MatchMrids {
 	 * 					   /buses
 	 *                   /
 	 */
-	private JsonObject modelRoot;
+	private JsonObject jsonCsvModelRoot;
 	
+	private JsonObject topModelRoot;
 	
+	private JsonObject svModelRoot;
+	
+	/**
+	 * A processed model file network that was produced from a cim model
+	 * file.
+	 */
+	private Network cimNetworkBusBranch;
 	
 	/**
 	 * The list of mrids from the export_cim.xml file.
@@ -254,7 +262,7 @@ public class MatchMrids {
 	}
 	
 	private String findMridFromEquipString(String equipString){
-		for(JsonElement ele: modelRoot.get("idmap").getAsJsonArray()){
+		for(JsonElement ele: jsonCsvModelRoot.get("idmap").getAsJsonArray()){
 			JsonObject obj = ele.getAsJsonObject();
 			if (obj.get("name").getAsString().startsWith(equipString)){
 				return obj.get("id").getAsString();
@@ -264,7 +272,7 @@ public class MatchMrids {
 	}
 	
 	private String findFullEquipmentFromEquipString(String equipString){
-		for(JsonElement ele: modelRoot.get("idmap").getAsJsonArray()){
+		for(JsonElement ele: jsonCsvModelRoot.get("idmap").getAsJsonArray()){
 			JsonObject obj = ele.getAsJsonObject();
 			if (obj.get("name").getAsString().startsWith(equipString)){
 				return obj.get("name").getAsString();
@@ -315,16 +323,16 @@ public class MatchMrids {
 	
 	private void buildModel(){
 		
-		JsonObject model = modelRoot.get("model").getAsJsonObject();
+		JsonObject model = jsonCsvModelRoot.get("model").getAsJsonObject();
 		
 		Set<Integer> uniqueIds = new LinkedHashSet<>(); // = new Mapped<>();
 		// Loop over the nodes and create unique buses from the i__bs_nd property.
-		for (JsonElement ele: modelRoot.get("node").getAsJsonArray()){
+		for (JsonElement ele: jsonCsvModelRoot.get("node").getAsJsonArray()){
 			JsonObject nd = ele.getAsJsonObject();
 			uniqueIds.add(nd.get("i__bs_nd").getAsInt());
 		}
 		
-		JsonArray buses = modelRoot.get("buses").getAsJsonArray();
+		JsonArray buses = jsonCsvModelRoot.get("buses").getAsJsonArray();
 				
 		for (Integer it: uniqueIds){
 			JsonObject obj = new JsonObject();
@@ -337,7 +345,7 @@ public class MatchMrids {
 			model.add(PRE_BUS+it.toString(), obj);
 			
 			// Add nodes to the bus object.
-			for (JsonElement ele: modelRoot.get("node").getAsJsonArray()){
+			for (JsonElement ele: jsonCsvModelRoot.get("node").getAsJsonArray()){
 				JsonObject nd = ele.getAsJsonObject();
 				if (nd.get("i__bs_nd").getAsInt() == obj.get("id").getAsInt()){
 					nodes.add(nd);
@@ -346,16 +354,16 @@ public class MatchMrids {
 		}
 		
 		// First loop over stations
-		for (JsonElement ele: modelRoot.get("stations").getAsJsonArray()){
+		for (JsonElement ele: jsonCsvModelRoot.get("stations").getAsJsonArray()){
 			JsonObject stationObj = ele.getAsJsonObject();
 			
 			model.add("station"+stationObj.get("id"), stationObj);
 			
-			for (JsonElement ele2: modelRoot.get("buses").getAsJsonArray()){
+			for (JsonElement ele2: jsonCsvModelRoot.get("buses").getAsJsonArray()){
 				JsonObject busObj = ele2.getAsJsonObject();
 			
 				// Now lets loop over kv
-				for (JsonElement ele3: modelRoot.get("kv").getAsJsonArray()){
+				for (JsonElement ele3: jsonCsvModelRoot.get("kv").getAsJsonArray()){
 					JsonObject kvObj = ele3.getAsJsonObject();
 
 					// If kv and bus match.
@@ -370,7 +378,7 @@ public class MatchMrids {
 							stationObj.add(PRE_BUS+busObj.get("id").getAsInt(), busObj);
 							
 							JsonArray capacitors = new JsonArray();
-							for (JsonElement ele4: modelRoot.get("cap").getAsJsonArray()){
+							for (JsonElement ele4: jsonCsvModelRoot.get("cap").getAsJsonArray()){
 								JsonObject capObj = ele4.getAsJsonObject();
 								
 								if (kvObj.get("id").getAsInt() == capObj.get("p__kv_id").getAsInt()){
@@ -382,7 +390,7 @@ public class MatchMrids {
 							}
 							
 							JsonArray auxArray = new JsonArray();
-							for (JsonElement ele4: modelRoot.get("aux").getAsJsonArray()){
+							for (JsonElement ele4: jsonCsvModelRoot.get("aux").getAsJsonArray()){
 								JsonObject auxObj = ele4.getAsJsonObject();
 								
 								if (kvObj.get("id").getAsInt() == auxObj.get("p__kv_id").getAsInt()){
@@ -400,14 +408,14 @@ public class MatchMrids {
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		try {
-			FileUtils.write(new File("model.json"), gson.toJson(modelRoot));
+			FileUtils.write(new File("model.json"), gson.toJson(jsonCsvModelRoot));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		
-		System.out.println(gson.toJson(modelRoot));
+		System.out.println(gson.toJson(jsonCsvModelRoot));
 		
 	}
 
@@ -426,11 +434,11 @@ public class MatchMrids {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		
 		// Create the root object that will be available in the class.
-		modelRoot = new JsonObject();
+		jsonCsvModelRoot = new JsonObject();
 		
 		// This array is going to be created from the node array in the buildModel function
 		JsonArray busArray = new JsonArray();
-		modelRoot.add("buses", busArray);
+		jsonCsvModelRoot.add("buses", busArray);
 		
 		// All the different csv files will be loaded into the arrays below.
 		JsonArray stationArray = new JsonArray();
@@ -441,43 +449,43 @@ public class MatchMrids {
 		JsonArray idmapArray = new JsonArray();
 		
 		JsonObject model = new JsonObject();
-		modelRoot.add("model", model);
+		jsonCsvModelRoot.add("model", model);
 		
 				
 		for (CSVRecord rec: stationrecords){			
 			stationArray.add(buildStation(rec));
 		}
-		modelRoot.add("stations", stationArray);
+		jsonCsvModelRoot.add("stations", stationArray);
 		
 		for (CSVRecord rec: auxrecords){			
 			auxArray.add(buildAux(rec));
 		}		
-		modelRoot.add("aux", auxArray);
+		jsonCsvModelRoot.add("aux", auxArray);
 		
 		for (CSVRecord rec: kvrecords){			
 			kvArray.add(buildKv(rec));
 		}		
-		modelRoot.add("kv", kvArray);
+		jsonCsvModelRoot.add("kv", kvArray);
 				
 		for (CSVRecord rec: capacitorrecords){			
 			capArray.add(buildCap(rec));
 		}
-		modelRoot.add("cap", capArray);
+		jsonCsvModelRoot.add("cap", capArray);
 		
 		for (CSVRecord rec: noderecords){			
 			nodeArray.add(buildNode(rec));
 		}
-		modelRoot.add("node", nodeArray);
+		jsonCsvModelRoot.add("node", nodeArray);
 		
 		for (CSVRecord rec: idmaprecords){			
 			idmapArray.add(buildIdMap(rec));
 		}
-		modelRoot.add("idmap", idmapArray);
+		jsonCsvModelRoot.add("idmap", idmapArray);
 		
 		// Now that the data is loaded into the rootModel populate the model property.
 		buildModel();
 		
-		for(JsonElement busEle: modelRoot.get("buses").getAsJsonArray()){
+		for(JsonElement busEle: jsonCsvModelRoot.get("buses").getAsJsonArray()){
 			JsonObject busObj = busEle.getAsJsonObject();
 			
 			if (busObj.has("capacitors")){
