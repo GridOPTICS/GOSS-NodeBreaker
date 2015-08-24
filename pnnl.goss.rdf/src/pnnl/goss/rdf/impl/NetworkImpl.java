@@ -1114,4 +1114,9 @@ public class NetworkImpl implements Network {
 		return null;
 	}
 
+	@Override
+	public EscaType getByMrid(String mrid) {
+		return escaTypes.get(mrid);
+	}
+
 }
