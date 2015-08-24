@@ -636,6 +636,60 @@ public class MatchMrids {
 
 	}
 	
+	/**
+	 * This function attempts to match nodes from the csv file and the
+	 * Network model that is set on the object.  It will populate an internal
+	 * state for the objects that it matches.
+	 */
+	public void matchNodes(){
+		
+		JsonArray idMap = jsonCsvModelRoot.get("idmap").getAsJsonArray();
+		
+		Map<String, JsonObject> foundObject = new LinkedHashMap<>();
+		Map<String, EscaType> foundNetworkObject = new LinkedHashMap<>();
+		
+		List<String> notFoundFromCsv = new ArrayList<>();
+		
+		for(JsonElement ele: idMap){
+			
+			boolean found = false;
+			JsonObject idObj = ele.getAsJsonObject();
+			// Retrieve the mrid from the idmap which does not have an underscore in front
+			// of it like it does in the cim file.
+			String mrid = idObj.get("id").getAsString();
+			
+			EscaType esca = cimNetworkBusBranch.getByMrid(("_"+mrid));
+			
+			if (esca != null){
+				foundObject.put(esca.getMrid(), idObj);
+				foundNetworkObject.put(esca.getMrid(), esca);
+			}
+			else{
+				notFoundFromCsv.add(idObj.get("id").getAsString());
+			}
+			
+		}
+		System.out.println("-----------------------------------------------------------------------");
+		System.out.println("Found");
+		for (String s: foundObject.keySet()){
+			JsonObject obj = foundObject.get(s);
+			System.out.println(obj.toString());
+		}
+		System.out.println("***********************************************************************");
+		System.out.println("Not Found");
+		for (String s: notFoundFromCsv){
+			JsonObject obj = null;
+			for(JsonElement ele: idMap){
+				JsonObject o = ele.getAsJsonObject();
+				if (o.get("id").getAsString().equals(s)){
+					obj = o;
+					break;
+				}
+			}
+			System.out.println(s+ " "+ obj.toString());
+		}
+		
+	}
 	public static void main(String[] args) throws Exception {
 		MatchMrids matcher = new MatchMrids();
 		
