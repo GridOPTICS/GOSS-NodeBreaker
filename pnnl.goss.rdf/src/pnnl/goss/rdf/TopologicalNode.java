@@ -1,5 +1,6 @@
 package pnnl.goss.rdf;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface TopologicalNode {
@@ -10,7 +11,9 @@ public interface TopologicalNode {
 	public static final String TOPO_NODE_IS_SWING = "TOPO_NODE_IS_SWING";
 	
 	
-	List<Terminal> getTerminals();
+	Collection<Terminal> getTerminals();
+	
+	Collection<Equipment> getEquipment();
 	
 	String getIdentifier();
 	

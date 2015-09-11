@@ -156,24 +156,28 @@ public class NodeBreakerServiceImpl implements NodeBreakerService {
 			window.loadTypeMap();
 
 			EscaTypes escaTypes = window.getEscaTypeMap();
-
-			for(EscaType a: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)) {
-				log.debug("For cn: "+ a.getMrid() + " # terminals: "+ a.getRefersToMe(EscaVocab.TERMINAL_OBJECT).size());
-			}
-			
-			EscaType type = escaTypes.get("_2583601325004599187");
-			for (String key: type.getLiterals().keySet()){
-				log.debug("key: "+ key + " value: " + type.getLiteralValue(key));
-			}
-			
-			for(EscaType t: type.getDirectLinks()){
-				log.debug("Direct: "+ type);
-				for (String key: t.getLiterals().keySet()){
-					log.debug("key: "+ key + " value: " + t.getLiteralValue(key));
-				}
-			}
-			
-;			System.out.println("NUM TERMINALS: " + escaTypes.getByResourceType(EscaVocab.TERMINAL_OBJECT).size());
+//			
+//			for(EscaType esca:  escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT)){
+//				log.debug(esca.toString());
+//			}
+//
+//			for(EscaType a: escaTypes.getByResourceType(EscaVocab.CONNECTIVITYNODE_OBJECT)) {
+//				log.debug("For cn: "+ a.getMrid() + " # terminals: "+ a.getRefersToMe(EscaVocab.TERMINAL_OBJECT).size());
+//			}
+//			
+//			EscaType type = escaTypes.get("_2583601325004599187");
+//			for (String key: type.getLiterals().keySet()){
+//				log.debug("key: "+ key + " value: " + type.getLiteralValue(key));
+//			}
+//			
+//			for(EscaType t: type.getDirectLinks()){
+//				log.debug("Direct: "+ type);
+//				for (String key: t.getLiterals().keySet()){
+//					log.debug("key: "+ key + " value: " + t.getLiteralValue(key));
+//				}
+//			}
+//			
+//			System.out.println("NUM TERMINALS: " + escaTypes.getByResourceType(EscaVocab.TERMINAL_OBJECT).size());
 			
 			Network network = new NetworkImpl(escaTypes);
 			String key = UUID.randomUUID().toString();

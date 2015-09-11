@@ -1,6 +1,7 @@
 package pnnl.goss.rdf.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,9 +10,12 @@ import java.util.Set;
 
 
 
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import pnnl.goss.rdf.Equipment;
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.Terminal;
 import pnnl.goss.rdf.TopologicalBranch;
@@ -25,9 +29,30 @@ public class TopologicalNodeImpl implements TopologicalNode {
 	
 	EscaType substation;
 	TopologicalIsland topologicalIsland;
-	final List<Terminal> terminals = new ArrayList<>();
+	
 	final List<EscaType> transformers = new ArrayList<>();
 	final List<TopologicalBranch> branches = new ArrayList<>();
+	
+	final Set<ConnectivityNode> connectivityNodes = new LinkedHashSet<>();
+	final Set<Terminal> terminals = new LinkedHashSet<>();
+	final Set<Equipment> equipment = new LinkedHashSet<>();
+	
+	public void addEquipment(Equipment equipment){
+		this.equipment.add(equipment);
+	}
+	
+	public void addConnectivityNode(ConnectivityNode cn){
+		this.connectivityNodes.add(cn); 
+	}
+	
+	public void addTerminal(Terminal terminal){
+		this.terminals.add(terminal);
+	}
+	
+		
+	public Collection<Equipment> getEquipment(){
+		return this.equipment;
+	}
 	
 	public TopologicalNodeImpl addBranch(TopologicalBranch branch){
 		branches.add(branch);
@@ -77,13 +102,13 @@ public class TopologicalNodeImpl implements TopologicalNode {
 		this.baseVoltageEsca = v;
 	}
 
-	List<ConnectivityNode> connectivityNodes = new ArrayList<>();
-
-	protected void setConnectivityNodes(List<ConnectivityNode> nodes) {
-		this.connectivityNodes = nodes;
-	}
 	
-	public List<ConnectivityNode> getConnectivityNodes(){
+
+//	protected void setConnectivityNodes(List<ConnectivityNode> nodes) {
+//		this.connectivityNodes = nodes;
+//	}
+	
+	public Collection<ConnectivityNode> getConnectivityNodes(){
 		return this.connectivityNodes;
 	}
 
@@ -226,7 +251,7 @@ public class TopologicalNodeImpl implements TopologicalNode {
 
 	@Override
 	public List<Terminal> getTerminals() {
-		return terminals;
+		return new ArrayList<Terminal>(terminals);
 	}
 
 	@Override

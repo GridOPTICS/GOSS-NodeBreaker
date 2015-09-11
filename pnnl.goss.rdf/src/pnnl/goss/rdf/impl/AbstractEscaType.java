@@ -18,7 +18,10 @@ import pnnl.goss.rdf.server.EscaVocab;
 
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 
 public class AbstractEscaType implements EscaType {
     private static Logger log = LoggerFactory.getLogger(AbstractEscaType.class);
@@ -43,6 +46,31 @@ public class AbstractEscaType implements EscaType {
      *  to this set.
      */
     protected Map<String, EscaType> refersToMe = new LinkedHashMap<>();
+    
+    protected void initialize(){
+    	    	
+    	StmtIterator itr = this.resource.listProperties();
+
+		while (itr.hasNext()) {
+			Statement stmt = itr.nextStatement();
+			RDFNode node = stmt.getObject();
+			Property prop = stmt.getPredicate();
+			if (node.isResource()) {
+				Resource res = node.asResource();
+				
+				// Skip the type because it has already been loaded.
+				if (!prop.getLocalName().equals("type")) {
+					this.addDirectLink(prop.getLocalName(), DefaultEscaType.construct(this.resource, this.dataType, this.mrid));
+				}
+			}
+			
+			if (node.isLiteral()){
+				this.addLiteral(prop.getLocalName(), stmt.getLiteral());
+				
+				//esca.addLiteral(node.get, value);
+			}
+		}
+    }
 
     /* (non-Javadoc)
      * @see pnnl.goss.rdf.EscaType#addDirectLink(java.lang.String, pnnl.goss.rdf.EscaType)
@@ -50,7 +78,7 @@ public class AbstractEscaType implements EscaType {
     @Override
     public void addDirectLink(String propertyName, EscaType link) {
         if (link != null){
-            log.debug("Adding link property: "+propertyName+" to esca obj: "+link.getName());
+            //log.debug("Adding link property: "+propertyName+" to esca obj: "+link.getName());
             directLinks.put(propertyName, link);
         }
         else{
@@ -209,7 +237,7 @@ public class AbstractEscaType implements EscaType {
      */
     @Override
     public void addLiteral(String key, Literal value){
-        log.debug("Adding literal key: "+key+" value "+ value+" to datatype: "+dataType);
+        //log.debug("Adding literal key: "+key+" value "+ value+" to datatype: "+dataType);
         literals.put(key,  value);
     }
 

@@ -1,5 +1,9 @@
 package pnnl.goss.rdf.impl;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,6 +19,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import pnnl.goss.rdf.Equipment;
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
 import pnnl.goss.rdf.Network;
@@ -60,6 +65,20 @@ public class NetworkImpl implements Network {
         return Collections.unmodifiableCollection(topologicalIslands.values());
     }
     
+    /**
+     * Recursively add the current and child equipment mrids.
+     * 
+     * @param done Set of already added items.
+     * @param esca Current equipment to add to the list.
+     */
+    private void addChildren(Set<String> done, EscaType esca){
+    	done.add(esca.getIdentifier());
+    	
+    	for(EscaType child: esca.getRefersToMe()){
+    		addChildren(done, child);
+    	}    	
+    }
+    
     private void printSelf(Set<String> done, EscaType esca, int tabs){
     	log.debug(getTabs(tabs)+ esca.toString());
     	
@@ -92,39 +111,60 @@ public class NetworkImpl implements Network {
                 + " elements.");
         log.debug("# subgeo: " + escaTypes.getByResourceType(EscaVocab.SUBGEOGRAPHICALREGION_OBJECT).size());
         
-        EscaType substation = escaTypes.get("_8300407115104535728");
+        // Checking construction of data here.  This maps to NEPOOL EAST DOUGLAS substation.
+        EscaType substation = escaTypes.get("_6839792406095191712");
         
-        Set<String> done = new HashSet<>();
-        int tabs = 0;
-        printSelf(done, substation, tabs);
-    
-        System.out.println("CONFORM LOADS");
-        done = new HashSet<>();
-        tabs = 0;
-        for (EscaType et: escaTypes.getByResourceType(EscaVocab.SHUNTCOMPENSATOR_OBJECT)){
-        	printSelf(done, et, tabs);
+        for(EscaType vl: substation.getRefersToMe(EscaVocab.VOLTAGELEVEL_OBJECT)){
+        	System.out.println("Voltage Level: "+vl);
+        	for(EscaType cn : vl.getRefersToMe(EscaVocab.CONNECTIVITYNODE_OBJECT)){
+        		System.out.println(cn);
+        	}        	
         }
         
-        done = new HashSet<>();
-        tabs = 0;
-        for (EscaType et: escaTypes.getByResourceType(EscaVocab.SYNCHRONOUSMACHINE_OBJECT)){
-        	printSelf(done, et, tabs);
-        }
-        
-        log.debug("# Substations: " + escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT).size());
-        done = new HashSet<>();
-        tabs = 0;
-        for (EscaType et: escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT)){
-        	printSelf(done, et, tabs);
-        }
-        
-        log.debug("# AREAS: "+escaTypes.getByResourceType(EscaVocab.HOSTCONTROLAREA_OBJECT));
-        done = new HashSet<>();
-        tabs = 0;
-        for (EscaType et: escaTypes.getByResourceType(EscaVocab.HOSTCONTROLAREA_OBJECT)){
-        	printSelf(done, et, tabs);
-        }
-        
+//        // The set of all mrid's that are conatined within the substation.
+//        Set<String> mridsContained = new HashSet<>();
+//        addChildren(mridsContained, substation);
+//        System.out.println(mridsContained.size() + " unique pieces of equipment in substation "+ substation);
+////        for(String mrid : mridsContained){
+////        	System.out.println(escaTypes.get(mrid));
+////        }
+//        
+//        
+//        
+//        
+//        
+//        Set<String> done = new HashSet<>();
+//        int tabs = 0;       
+//        
+//        printSelf(done, substation, tabs);
+//    
+//        System.out.println("CONFORM LOADS");
+//        done = new HashSet<>();
+//        tabs = 0;
+//        for (EscaType et: escaTypes.getByResourceType(EscaVocab.SHUNTCOMPENSATOR_OBJECT)){
+//        	printSelf(done, et, tabs);
+//        }
+//        
+//        done = new HashSet<>();
+//        tabs = 0;
+//        for (EscaType et: escaTypes.getByResourceType(EscaVocab.SYNCHRONOUSMACHINE_OBJECT)){
+//        	printSelf(done, et, tabs);
+//        }
+//        
+//        log.debug("# Substations: " + escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT).size());
+//        done = new HashSet<>();
+//        tabs = 0;
+//        for (EscaType et: escaTypes.getByResourceType(EscaVocab.SUBSTATION_OBJECT)){
+//        	printSelf(done, et, tabs);
+//        }
+//        
+//        log.debug("# AREAS: "+escaTypes.getByResourceType(EscaVocab.HOSTCONTROLAREA_OBJECT));
+//        done = new HashSet<>();
+//        tabs = 0;
+//        for (EscaType et: escaTypes.getByResourceType(EscaVocab.HOSTCONTROLAREA_OBJECT)){
+//        	printSelf(done, et, tabs);
+//        }
+//        
 //        
 //        log.debug("# AcLineSegments: "
 //                + escaTypes.getByResourceType(EscaVocab.ACLINESEGMENT_OBJECT).size());
@@ -758,42 +798,59 @@ public class NetworkImpl implements Network {
 
         Property switchOpenProp = EscaVocab.SWITCH_NORMALOPEN;
 
+        // mrid -> process status
         Map<String, Boolean> connectivityNodeProcessedStatus = new LinkedHashMap<>();
 
         Map<String, EscaType> terminalItems = new LinkedHashMap<>();
         Map<String, Boolean> terminalProcessedStatus = new LinkedHashMap<>();
 
-        ConnectivityNode processingConnectivityNode  = null;
+        ConnectivityNode currentCNprocessing  = null;
+        /** 
+         * Seed the cn set with what should be all within the same topo node.
+ 
+            Voltage Level: VoltageLevel <_5505300742886984436>Path: NEPOOL EAST DOUGLAS 345
+			ConnectivityNode <_1840224399349129597>Path: NEPOOL EAST DOUGLAS 345 12
+			ConnectivityNode <_6279151181226250948>Path: NEPOOL EAST DOUGLAS 345 14
+			ConnectivityNode <_4869632258510537886>Path: NEPOOL EAST DOUGLAS 345 15
+			ConnectivityNode <_3086006253602334131>Path: NEPOOL EAST DOUGLAS 345 11
+			ConnectivityNode <_6620027605289252366>Path: NEPOOL EAST DOUGLAS 345 13
+			ConnectivityNode <_7944692843891545977>Path: NEPOOL EAST DOUGLAS 345 10
+			ConnectivityNode <_8167009859332035442>Path: NEPOOL EAST DOUGLAS 345 16
+         */
+        currentCNprocessing = (ConnectivityNode)connectivityNodes.get("_7944692843891545977");
         
         // Initialize status of all connectivity nodes.
         for (String k: connectivityNodes.keySet()) {
             connectivityNodeProcessedStatus.put(k, false);
             // Start processing with the first node in the keyset.
-            if (processingConnectivityNode == null){
-            	processingConnectivityNode = (ConnectivityNode)connectivityNodes.get(k);
+            if (currentCNprocessing == null){
+            	currentCNprocessing = (ConnectivityNode)connectivityNodes.get(k);
             }
         }
 
         log.debug("Building Topology");
         
         // Define a new node/bus
-        TopologicalNodeImpl topologicalNode = new TopologicalNodeImpl();
-        topologicalNode.setIdentifier("T" + topologicalNodes.size());
-        topologicalNodes.put(topologicalNode.getIdentifier(), topologicalNode);
+        TopologicalNodeImpl currentTopoNode = new TopologicalNodeImpl();
+        currentTopoNode.setIdentifier("T" + topologicalNodes.size());
+        topologicalNodes.put(currentTopoNode.getIdentifier(), currentTopoNode);
         debugStep("Creating new topology node "
-                + topologicalNode.getIdentifier());
+                + currentTopoNode.getIdentifier());
         
         // Add the connectivity node to the topological node.
-        topologicalNode.getConnectivityNodes().add(processingConnectivityNode);
+        currentTopoNode.addConnectivityNode(currentCNprocessing);
 
 
-        while (processingConnectivityNode != null) {
+        while (currentCNprocessing != null) {
 
-            debugStep("\tProcessing ", processingConnectivityNode);
+            debugStep("\tProcessing ", currentCNprocessing);
+            if(currentCNprocessing.getMrid().equalsIgnoreCase("_6839792406095191712")){
+            	System.out.println("STOP!");
+            }
 
             // Add terminals connected to the connectivityNode to the list of
             // to be processed terminals.
-            for(EscaType z: processingConnectivityNode.getTerminalsAsEscaType()){
+            for(EscaType z: currentCNprocessing.getTerminalsAsEscaType()){
                 if (!terminalItems.containsKey(z.getMrid())){
                     terminalItems.put(z.getMrid(), z);
                     terminalProcessedStatus.put(z.getMrid(), false);
@@ -802,7 +859,7 @@ public class NetworkImpl implements Network {
             }
 
             // Mark current node as being processed.
-            connectivityNodeProcessedStatus.put(processingConnectivityNode.getMrid(), true);
+            connectivityNodeProcessedStatus.put(currentCNprocessing.getMrid(), true);
 
             Terminal processingTerminal = null;
             // Get a terminal to process
@@ -818,9 +875,9 @@ public class NetworkImpl implements Network {
 
                 // Equipment associated with the terminal.
                 Collection<EscaType> equipment = ((TerminalImpl) processingTerminal).getEquipment();
-                if (!topologicalNode.hasTerminal(processingTerminal.getMrid())){
-                    topologicalNode.getTerminals().add(processingTerminal);
-                    ((TerminalImpl)processingTerminal).setTopologicalNode(topologicalNode);
+                if (!currentTopoNode.hasTerminal(processingTerminal.getMrid())){
+                    currentTopoNode.addTerminal(processingTerminal);
+                    ((TerminalImpl)processingTerminal).setTopologicalNode(currentTopoNode);
                 }
 
                 for (EscaType eq : equipment) {
@@ -843,10 +900,15 @@ public class NetworkImpl implements Network {
 //                                    }
                                 }
                             }
+                            
+                            currentTopoNode.addEquipment((Equipment) new EquipmentImpl(eq));
                         }
                         else{
                             debugStep("\t\tSwitch open.");
                         }
+                        
+                        
+
                     } else if (eq.isResourceType(EscaVocab.BUSBARSECTION_OBJECT)){
                         // Add terminals that are connected to the bus bar section to
                         // be processed.
@@ -861,6 +923,8 @@ public class NetworkImpl implements Network {
                                 log.debug("BB adding: "+t);
                             }
                         }
+                        
+                        currentTopoNode.addEquipment((Equipment) new EquipmentImpl(eq));
                     }
                     else if (eq.isResourceType(connectivityNodeRes)) {
 
@@ -877,7 +941,7 @@ public class NetworkImpl implements Network {
                                 }
                             }
 
-                            topologicalNode.getConnectivityNodes().add(node);
+                            currentTopoNode.addConnectivityNode(node);
                             // node has been consumed now that we have put all the terminals in the
                             // to be processlist.
                             connectivityNodeProcessedStatus.put(node.getMrid(), true);
@@ -887,7 +951,7 @@ public class NetworkImpl implements Network {
                         }
 
                     } else {
-                        // debugStep("Other Equipment Found: ", eq);
+                        debugStep("\t\t****Other Equipment Found: ", eq);
                     }
                 }
 
@@ -910,24 +974,51 @@ public class NetworkImpl implements Network {
 
             // mark the current node as processed and get the next one to be
             // processed.
-            connectivityNodeProcessedStatus.put(processingConnectivityNode.getMrid(), true);
-            processingConnectivityNode = null;
+            connectivityNodeProcessedStatus.put(currentCNprocessing.getMrid(), true);
+            currentCNprocessing = null;
             // Grab the next connectivity node that hasn't been processed.
             for (String t: connectivityNodes.keySet()){
                 if (connectivityNodeProcessedStatus.get(t) == false){
-                    processingConnectivityNode = (ConnectivityNode)connectivityNodes.get(t);
+                    currentCNprocessing = (ConnectivityNode)connectivityNodes.get(t);
                     break;
                 }
             }
-
-            if (processingConnectivityNode != null){
-                topologicalNode = new TopologicalNodeImpl();
-                topologicalNode.setIdentifier("T" + topologicalNodes.size());
-                topologicalNodes.put(topologicalNode.getIdentifier(), topologicalNode);
+           
+            if (currentCNprocessing != null){
+            	File fout = new File(currentTopoNode.getIdentifier()+".txt");
+            	PrintWriter out = null;
+            	try {
+					 out = new PrintWriter(fout);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            	
+            	debugStep(out, "For: "+ currentTopoNode.getIdentifier());
+            	debugStep(out, "CN");
+            	for(ConnectivityNode cn: currentTopoNode.getConnectivityNodes()){
+            		debugStep(out, "\t"+cn);
+                }
+            	debugStep(out, "End CN");
+            	debugStep(out, "TERMS");
+            	for(Terminal term: currentTopoNode.getTerminals()){
+            		debugStep(out, "\t"+term);
+                }
+            	debugStep(out, "End TERMS");
+            	debugStep(out, "EQUIP");
+            	for(Equipment equip: currentTopoNode.getEquipment()){
+            		debugStep(out, "\t"+equip);
+                }
+            	debugStep(out, "End EQUIP");
+            	out.close();
+            	
+                currentTopoNode = new TopologicalNodeImpl();
+                currentTopoNode.setIdentifier("T" + topologicalNodes.size());
+                topologicalNodes.put(currentTopoNode.getIdentifier(), currentTopoNode);
                 debugStep("Creating new topology node "
-                        + topologicalNode.getIdentifier());
+                        + currentTopoNode.getIdentifier());
                 // Add the connectivity node to the topological node.
-                topologicalNode.getConnectivityNodes().add(processingConnectivityNode);
+                currentTopoNode.addConnectivityNode(currentCNprocessing);
             }
         }
 
@@ -982,10 +1073,19 @@ public class NetworkImpl implements Network {
             log.debug(t.toString());
         }
     }
-
-    private static void debugStep(String message, EscaType escaType) {
-        if (escaType.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME) != null) {
-            log.debug(message
+    
+    private static void debugStep(PrintWriter out, String message){
+    	out.println(message);
+    }
+    		
+    private static void debugStep(PrintStream out, String message, EscaType escaType){
+    	debugStep(message, escaType);
+    	out.println(getDebugString(message, escaType));
+    }
+    
+    private static String getDebugString(String message, EscaType escaType){
+    	if (escaType.getLiteralValue(EscaVocab.IDENTIFIEDOBJECT_PATHNAME) != null) {
+            return (message
                     + " "
                     + escaType.getDataType()
                     + " ("
@@ -999,11 +1099,15 @@ public class NetworkImpl implements Network {
             // ") ["+escaType.getLiteralValue(Esca60Vocab.IDENTIFIEDOBJECT_PATHNAME)+
             // "]");
         } else {
-            log.debug(message + " " + escaType.getDataType() + " ("
+        	return (message + " " + escaType.getDataType() + " ("
                     + escaType.getMrid() + ")");
             // System.out.println(message+" "+escaType.getDataType()+
             // " ("+escaType.getMrid()+ ")");
         }
+    }
+
+    private static void debugStep(String message, EscaType escaType) {
+        log.debug(getDebugString(message, escaType));
     }
 
     private void debugSetOfLiterals(Resource resourceType) {

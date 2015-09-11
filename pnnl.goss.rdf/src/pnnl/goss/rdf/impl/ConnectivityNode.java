@@ -3,6 +3,7 @@ package pnnl.goss.rdf.impl;
 import java.io.InvalidObjectException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class ConnectivityNode extends AbstractEscaType {
 	 */
 	public Set<TerminalImpl> getTerminals(){
 		if(terminals == null){
-			terminals = new HashSet<TerminalImpl>();
+			terminals = new LinkedHashSet<TerminalImpl>();
 			for(EscaType t: this.getRefersToMe(EscaVocab.TERMINAL_OBJECT)) {
 				TerminalImpl tt = (TerminalImpl)t;
 				try {
@@ -86,7 +87,7 @@ public class ConnectivityNode extends AbstractEscaType {
 		return terminals;
 	}
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Set<EscaType> getTerminalsAsEscaType(){
 		return (Set) getTerminals(); // Collections.unmodifiableSet((Set<EscaType>) getTerminals());
 	}
