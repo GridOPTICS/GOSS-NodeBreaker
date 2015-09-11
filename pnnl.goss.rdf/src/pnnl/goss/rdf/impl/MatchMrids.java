@@ -652,12 +652,236 @@ public class MatchMrids {
 
 	}
 	
+	private String getTypeOfSubject(Resource subject) {
+		StmtIterator stmtItr = subject.listProperties();
+		while (stmtItr.hasNext()) {
+			Statement stmt = stmtItr.nextStatement();
+			Property pred = stmt.getPredicate();
+
+			if (pred.getLocalName().equals("type")) {
+
+				// System.out.println(stmt.getObject().toString());
+				// System.out.println(stmt.getObject().asResource().getLocalName());
+				return stmt.getObject().asResource().getLocalName();
+
+			}
+
+		}
+
+		return null;
+	}
+	
+	private void addLiterals(Resource res, JsonObject jsonObj){
+		StmtIterator itr = res.listProperties();
+		
+		while (itr.hasNext()){
+			Statement stmt = itr.nextStatement();
+			RDFNode node = stmt.getObject();
+			Property prop = stmt.getPredicate();
+			
+			if (node.isLiteral()){
+				jsonObj.addProperty(prop.getLocalName(), stmt.getLiteral().getString());
+			}
+		}
+	}
+	
+	private void addLinks(Resource resource, JsonObject jsonObj){
+		StmtIterator itr = resource.listProperties();
+
+		while (itr.hasNext()) {
+			Statement stmt = itr.nextStatement();
+			RDFNode node = stmt.getObject();
+			Property prop = stmt.getPredicate();
+			if (node.isResource()) {
+				Resource otherResource = node.asResource();
+				String dataType = getTypeOfSubject(otherResource);
+				JsonObject otherObj = new JsonObject();
+				
+				otherObj.addProperty("type", dataType);
+				otherObj.addProperty("id", otherResource.getLocalName());
+				addLiterals(otherResource, otherObj);
+				
+				jsonObj.add(otherResource.getLocalName(), otherObj);
+			}
+		}
+		
+	}
+
+	
+	private void loadTopRdfData(){
+		Model m = ModelFactory.createDefaultModel();
+		FileManager.get().readModel(m, "C:/temp/cim_state_variable_test/mark_export_stnet_dts_20150518_170619_top.xml");
+		
+		JsonArray islands = new JsonArray();
+		JsonArray terminals = new JsonArray();
+		JsonArray topicalNodes = new JsonArray();
+		topModelRoot = new JsonObject();
+		
+		// Load all of the subjects into json based upon type
+		ResIterator resItr = m.listSubjects();
+		
+		Set<String> types = new LinkedHashSet<>();
+		while(resItr.hasNext()){
+			
+			Resource res = resItr.next();
+			String dataType = getTypeOfSubject(res);
+			JsonObject obj = new JsonObject();
+			obj.addProperty("type", dataType);
+			obj.addProperty("id", res.getLocalName());
+			addLiterals(res, obj);
+			addLinks(res, obj);
+			/*
+			 * Terminal
+TopologicalIsland
+TopologicalNode
+			 */
+			if (dataType.equals("ToplogicalNode")){
+				topicalNodes.add(obj);
+			}
+			else if(dataType.equals("Terminal")){
+				terminals.add(obj);
+			}
+			else { // Topoisland
+				islands.add(obj);
+			}
+			//System.out.println(getTypeOfSubject(res));
+			//System.out.println(res.getLocalName());
+			
+		}
+		
+		if (islands.size() > 0){
+			topModelRoot.add("islands", islands);
+		}
+		
+		if (topicalNodes.size() > 0){
+			topModelRoot.add("topicalNodes", topicalNodes);
+		}
+		
+		if (terminals.size() > 0){
+			topModelRoot.add("terminals", terminals);
+		}
+		
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		try {
+			FileUtils.write(new File("top.json"), gson.toJson(topModelRoot));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+
+//		for(String s: types){
+//			System.out.println(s);
+//		}
+		
+//		StmtIterator stmtIter1 = m.listStatements();
+//		while (stmtIter1.hasNext()) {
+//			Statement st = stmtIter1.next();
+//			
+//			if (st.getObject().isResource()){
+//				Resource rs = st.getObject().asResource();//.getResource();
+//				if (rs.getLocalName().equals("ToplogicalNode")){
+//					System.out.println("WOOT");
+//				}
+//				System.out.println(rs);
+//				StmtIterator propIterator = rs.listProperties();
+//				while(propIterator.hasNext()){
+//					Statement propStmt = propIterator.next();
+//					
+//					System.out.println("PROP: " + propStmt);
+//				}
+//				
+//			}
+//			
+//			
+////			if (st.)
+////			Resource rs = st.getObject().asResource();
+////			st.getProperty(arg0)
+////			System.out.println(st);
+////			System.out.println(st.getObject());
+////			System.out.println(st.getPredicate());
+////			System.out.println(st.getSubject());
+//			
+//		}
+		
+	}
+	
+	private int getNumNodesInCsvSubstation(String substation){
+		int count = 0;
+		for(JsonElement el: jsonCsvModelRoot.get("buses").getAsJsonArray()){
+			JsonObject obj = el.getAsJsonObject();
+			if (obj.has("st_name")){
+				if (obj.get("st_name").getAsString().toUpperCase().equals(substation.toUpperCase())){
+					count += 1;
+				}	
+			} 
+//			else{
+//				System.out.println("No st_name param in: "+obj.toString());
+//			}
+			
+		}
+			
+		return count;
+	}
+	
+	private int getNumNodesInCimSubstation(String substation){
+		int count = 0;
+		for(TopologicalNode tn: cimNetworkBusBranch.getTopologicalNodes()){
+			
+			if (tn.getSubstationName().toUpperCase().contains(substation.toUpperCase())){
+				count += 1;
+			}
+		}
+			
+		return count;
+	}
+	
+	
+	
+	public void matchTopologicalNodes(){
+		
+		//System.out.println("Substation\t# Cim\t # Csv");
+		String fmt = "%20s%10s%10s";
+		Set<String> notFound = new HashSet<>();
+		System.out.println("Attempting to match nodes in substations between cim and csv");
+		System.out.println(String.format(fmt, "Substation", "#Cim", "#Csv"));
+		
+		for(JsonElement ele: jsonCsvModelRoot.get("stations").getAsJsonArray()){
+			JsonObject obj = ele.getAsJsonObject();
+			
+			if(obj.has("name")){
+				String substation = obj.get("name").getAsString();
+//		
+				int cimValue = getNumNodesInCimSubstation(substation);
+				int csvValue = getNumNodesInCsvSubstation(substation);
+				
+				System.out.println(String.format(fmt, substation, cimValue, csvValue));
+			}
+			else{
+				notFound.add(obj.toString());
+				//System.out.println("Substation not found for: "+obj.toString());
+			}			
+		}
+		
+		System.out.println("The following topo nodes were not found.");
+		for(String s: notFound){
+			System.out.println(s);
+		}
+	}
+	
+	private boolean matchTopologicalNode(TopologicalNode node){
+		// Returns true if the station is the same.
+		
+		return true;
+	}
+	
 	/**
 	 * This function attempts to match nodes from the csv file and the
 	 * Network model that is set on the object.  It will populate an internal
 	 * state for the objects that it matches.
 	 */
-	public void matchNodes(){
+	public void matchResourceIdentifiers(){
 		
 		JsonArray idMap = jsonCsvModelRoot.get("idmap").getAsJsonArray();
 		
@@ -705,7 +929,48 @@ public class MatchMrids {
 			System.out.println(s+ " "+ obj.toString());
 		}
 		
+		if (notFoundFromCsv.size() == 0){
+			System.out.println("None");
+		}
+		System.out.println("***********************************************************************");
 	}
+	
+	
+	private void loadSvRdfData(){
+		Model m = ModelFactory.createDefaultModel();
+		FileManager.get().readModel(m, "C:/temp/cim_state_variable_test/mark_export_stnet_dts_20150518_170619_sv.xml");
+		
+		JsonArray islands = new JsonArray();
+		JsonArray terminals = new JsonArray();
+		JsonArray topicalNodes = new JsonArray();
+		svModelRoot = new JsonObject();
+		
+		// Load all of the subjects into json based upon type
+		ResIterator resItr = m.listSubjects();
+		
+		Set<String> types = new LinkedHashSet<>();
+		while(resItr.hasNext()){
+			
+			Resource res = resItr.next();
+			String dataType = getTypeOfSubject(res);
+			JsonObject obj = new JsonObject();
+			obj.addProperty("type", dataType);
+			obj.addProperty("id", res.getLocalName());
+			addLiterals(res, obj);
+			addLinks(res, obj);
+			svModelRoot.add(res.getLocalName(), obj);
+		}
+		
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		try {
+			FileUtils.write(new File("sv.json"), gson.toJson(svModelRoot));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public static void main(String[] args) throws Exception {
 		MatchMrids matcher = new MatchMrids();
 		
