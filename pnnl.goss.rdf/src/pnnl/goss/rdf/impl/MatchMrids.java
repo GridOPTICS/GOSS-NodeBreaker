@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,11 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 
+import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
+import pnnl.goss.rdf.Network;
+import pnnl.goss.rdf.NodeBreakerService;
+import pnnl.goss.rdf.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
 
 import com.google.gson.Gson;
@@ -30,6 +35,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.ResIterator;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
@@ -100,6 +108,14 @@ public class MatchMrids {
 	
 	private Map<FileType, List<CSVRecord>> csvDataMap;
 	
+	/**
+	 * Set the network to compare to the model csv and idmap files from
+	 * the alsom simulation.
+	 * 
+	 * @param network
+	 */
+	public void setCimNetwork(Network network){
+		cimNetworkBusBranch = network;
 	}
 	
 		
@@ -485,6 +501,9 @@ public class MatchMrids {
 		// Now that the data is loaded into the rootModel populate the model property.
 		buildModel();
 		
+		System.out.println("Populate csv models with mrid and equipment for capacitors, aux and nodes.");
+		System.out.println("  null -> null implies that there was no entry for the item in the netmon idmap.");
+		System.out.println("  EX: ST.DOUGLAS.ND.11 -> null -> null then ST.DOUGLAS.ND.11 isn't in netmon idmap");
 		for(JsonElement busEle: jsonCsvModelRoot.get("buses").getAsJsonArray()){
 			JsonObject busObj = busEle.getAsJsonObject();
 			
@@ -492,7 +511,7 @@ public class MatchMrids {
 				for(String s: getNetMonCapStrings(busObj)){
 					String mrid = findMridFromEquipString(s);
 					String equip = findFullEquipmentFromEquipString(s);
-					System.out.println(s + " -> "+mrid+ " -> "+equip);
+					System.out.println("Cap " + s + " -> "+mrid+ " -> "+equip);
 				}
 			}
 			
@@ -500,7 +519,7 @@ public class MatchMrids {
 				for(String s: getNetMonAuxStrings(busObj)){
 					String mrid = findMridFromEquipString(s);
 					String equip = findFullEquipmentFromEquipString(s);
-					System.out.println(s + " -> "+mrid+ " -> "+equip);
+					System.out.println("Aux " + s + " -> "+mrid+ " -> "+equip);
 				}
 			}
 			
@@ -508,13 +527,10 @@ public class MatchMrids {
 				for(String s: getNetMonNodeStrings(busObj)){
 					String mrid = findMridFromEquipString(s);
 					String equip = findFullEquipmentFromEquipString(s);
-					System.out.println(s + " -> "+mrid+ " -> "+equip);
+					System.out.println("Node " + s + " -> "+mrid+ " -> "+equip);
 				} 
 			}
-		}
-		
-		System.out.println(modelRoot.toString());
-		
+		}		
 	}
 	
 	private void attemptToFindMrids(Set<Resource> subjects){
@@ -693,13 +709,22 @@ public class MatchMrids {
 	public static void main(String[] args) throws Exception {
 		MatchMrids matcher = new MatchMrids();
 		
+		String testFile = "C:/temp/cim_state_variable_test/export_cim.xml";
+		NodeBreakerService svc = new NodeBreakerServiceImpl();
+		String networkKey = svc.processNetwork(testFile);
+		Network network = svc.getNetwork(networkKey);
+		matcher.setCimNetwork(network);
 		matcher.loadStationsFromCsv();
-		matcher.loadCimRdfData();
-		matcher.loadTopRdfData();
-		matcher.loadSvRdfData();
+		matcher.matchResourceIdentifiers();
+		matcher.matchTopologicalNodes();
+		
+		
+		//matcher.loadCimRdfData();
+		//matcher.loadTopRdfData();
+		//matcher.loadSvRdfData();
 		
 		
 		
-		matcher.writeData();
+		//matcher.writeData();
 	}
 }
