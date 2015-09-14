@@ -1,5 +1,6 @@
 package pnnl.goss.rdf;
 
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.List;
 
@@ -14,6 +15,9 @@ public interface TopologicalNode {
 	Collection<Terminal> getTerminals();
 	
 	Collection<Equipment> getEquipment();
+	
+	
+	void printDebug(PrintStream out);
 	
 	String getIdentifier();
 	

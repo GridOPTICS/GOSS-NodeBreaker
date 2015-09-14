@@ -1,10 +1,12 @@
 package pnnl.goss.rdf.impl;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
 
 
 
@@ -52,6 +54,21 @@ public class TopologicalNodeImpl implements TopologicalNode {
 		
 	public Collection<Equipment> getEquipment(){
 		return this.equipment;
+	}
+	
+	public void printDebug(PrintStream out){
+		out.println("Debug output for TN: "+this.identifier);
+		out.println("Connectivity Nodes: ");
+		for(ConnectivityNode cn: this.getConnectivityNodes()){
+			out.println(cn);
+		}
+		out.println("Terminals: ");
+		for(Terminal t: this.getTerminals()){
+			out.println(t);
+		}
+		out.println("Generation Units: ");
+		out.println("Transformers: ");
+		
 	}
 	
 	public TopologicalNodeImpl addBranch(TopologicalBranch branch){
@@ -160,10 +177,11 @@ public class TopologicalNodeImpl implements TopologicalNode {
 
 	private void initialize() {
 
-		if (hasBeenInitialized)
+		if (hasBeenInitialized){
 			return;
+		}
 
-		 for(ConnectivityNode element: connectivityNodes){
+		for(ConnectivityNode element: connectivityNodes){
 			 element.setToplogicalNode(this);	 
 		
 			 if (this.voltageLevel == null){
@@ -183,7 +201,7 @@ public class TopologicalNodeImpl implements TopologicalNode {
 		 }
 		 
 		 if (voltageLevel == null){
-			 log.error("Voltage level not present for TN: " + this.identifier);
+			 //log.error("Voltage level not present for TN: " + this.identifier);
 			 hasBeenInitialized = true;
 			 return;
 		 }
