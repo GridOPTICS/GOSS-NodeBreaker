@@ -21,10 +21,12 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 
+import pnnl.goss.rdf.Equipment;
 import pnnl.goss.rdf.EscaType;
 import pnnl.goss.rdf.InvalidArgumentException;
 import pnnl.goss.rdf.Network;
 import pnnl.goss.rdf.NodeBreakerService;
+import pnnl.goss.rdf.Terminal;
 import pnnl.goss.rdf.TopologicalNode;
 import pnnl.goss.rdf.server.EscaVocab;
 
@@ -707,6 +709,18 @@ public class MatchMrids {
 		
 	}
 
+	private void findTopInCim(){
+		for(JsonElement node : topModelRoot.get("terminals").getAsJsonArray()){
+			JsonObject obj = node.getAsJsonObject();
+			
+			String id = obj.get("id").getAsString();
+			if (id.startsWith("_")){
+				System.out.println(this.cimNetworkBusBranch.getByMrid(id));
+			}
+			//System.out.println(obj.get("id").getAsString()); 
+			
+		}
+	}
 	
 	private void loadTopRdfData(){
 		Model m = ModelFactory.createDefaultModel();
@@ -827,6 +841,21 @@ TopologicalNode
 	
 	private int getNumNodesInCimSubstation(String substation){
 		int count = 0;
+		
+		
+//		for(TopologicalNode tn: cimNetworkBusBranch.getTopologicalNodes()){
+//			
+//			if (tn.getSubstationName().contains("DOUGLAS")){
+//				System.out.println(tn);
+//				for(Terminal tm : tn.getTerminals()){
+//					System.out.println("\tTerminal: "+tm);
+//				}
+//				for(Equipment eq: tn.getEquipment()){
+//					System.out.println("Equipment: " + eq);
+//				}
+//			}
+//		}
+		
 		for(TopologicalNode tn: cimNetworkBusBranch.getTopologicalNodes()){
 			
 			if (tn.getSubstationName().toUpperCase().contains(substation.toUpperCase())){
@@ -863,7 +892,7 @@ TopologicalNode
 				//System.out.println("Substation not found for: "+obj.toString());
 			}			
 		}
-		
+		if (true) return;
 		System.out.println("The following topo nodes were not found.");
 		for(String s: notFound){
 			System.out.println(s);
@@ -980,8 +1009,16 @@ TopologicalNode
 		Network network = svc.getNetwork(networkKey);
 		matcher.setCimNetwork(network);
 		matcher.loadStationsFromCsv();
-		matcher.matchResourceIdentifiers();
-		matcher.matchTopologicalNodes();
+		
+		matcher.loadTopRdfData();
+		
+		matcher.findTopInCim();
+		
+		for(TopologicalNode tn: network.getTopologicalNodes()){
+			tn.printDebug(System.out);
+		}
+		//matcher.matchResourceIdentifiers();
+		//matcher.matchTopologicalNodes();
 		
 		
 		//matcher.loadCimRdfData();
